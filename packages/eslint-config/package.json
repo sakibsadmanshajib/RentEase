@@ -1,0 +1,16 @@
+{
+    "name": "@rentease/eslint-config",
+    "version": "0.0.0",
+    "private": true,
+    "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "eslint-config-turbo": "^2.6.1",
+        "eslint-config-prettier": "^9.1.0"
+    },
+    "peerDependencies": {
+        "eslint": "^9.0.0"
+    }
+}

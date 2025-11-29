@@ -1,0 +1,10 @@
+{
+    "extends": "@rentease/ts-config/nestjs.json",
+    "compilerOptions": {
+        "outDir": "./dist"
+    },
+    "exclude": [
+        "dist",
+        "node_modules"
+    ]
+}
