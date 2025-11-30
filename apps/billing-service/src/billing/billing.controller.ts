@@ -1,6 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { BillingService } from './billing.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
+import { RecordPaymentDto } from './dto/record-payment.dto';
+import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 
 @Controller('invoices')
@@ -30,5 +32,41 @@ export class BillingController {
     @Delete(':id')
     remove(@Param('id') id: string) {
         return this.billingService.remove(id);
+    }
+    @Post('payments')
+    recordPayment(@Body() recordPaymentDto: RecordPaymentDto) {
+        return this.billingService.recordPayment(recordPaymentDto);
+    }
+
+    @Get('ledger')
+    getLedger(@Query('tenantId') tenantId: string) {
+        return this.billingService.getLedger(tenantId);
+    }
+
+    // ============ EXPENSE ENDPOINTS ============
+
+    @Post('expenses')
+    createExpense(@Body() createExpenseDto: CreateExpenseDto) {
+        return this.billingService.createExpense(createExpenseDto);
+    }
+
+    @Get('expenses')
+    getExpenses(@Query() filters: any) {
+        return this.billingService.getExpenses(filters);
+    }
+
+    @Get('expenses/:id')
+    getExpenseById(@Param('id') id: string) {
+        return this.billingService.getExpenseById(id);
+    }
+
+    @Patch('expenses/:id')
+    updateExpense(@Param('id') id: string, @Body() updates: any) {
+        return this.billingService.updateExpense(id, updates);
+    }
+
+    @Delete('expenses/:id')
+    deleteExpense(@Param('id') id: string) {
+        return this.billingService.deleteExpense(id);
     }
 }

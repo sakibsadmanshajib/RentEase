@@ -16,6 +16,9 @@
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.12.1",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "devDependencies": {
     "axios": "^1.13.2",
     "eslint": "^9.39.1",

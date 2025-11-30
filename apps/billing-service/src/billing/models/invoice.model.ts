@@ -10,6 +10,48 @@ export class Invoice extends Model {
     id!: string;
 
     @Column({
+        type: DataType.STRING,
+        allowNull: false,
+    })
+    tenantId!: string;
+
+    @Column({
+        type: DataType.STRING,
+        allowNull: true,
+    })
+    leaseId?: string;
+
+    @Column({
+        type: DataType.STRING,
+        allowNull: true,
+    })
+    invoiceNumber?: string;
+
+    @Column({
+        type: DataType.DATE,
+        allowNull: true,
+    })
+    issueDate?: Date;
+
+    @Column({
+        type: DataType.DATE,
+        allowNull: false,
+    })
+    dueDate!: Date;
+
+    @Column({
+        type: DataType.DATE,
+        allowNull: true,
+    })
+    periodStart?: Date;
+
+    @Column({
+        type: DataType.DATE,
+        allowNull: true,
+    })
+    periodEnd?: Date;
+
+    @Column({
         type: DataType.DECIMAL(10, 2),
         allowNull: false,
     })
@@ -17,9 +59,9 @@ export class Invoice extends Model {
 
     @Column({
         type: DataType.STRING,
-        allowNull: false,
+        defaultValue: 'USD',
     })
-    tenantId!: string; // Foreign key to Tenant
+    currency!: string;
 
     @Column({
         type: DataType.STRING,
@@ -28,8 +70,8 @@ export class Invoice extends Model {
     status!: string;
 
     @Column({
-        type: DataType.DATE,
-        allowNull: false,
+        type: DataType.JSON,
+        allowNull: true,
     })
-    dueDate!: Date;
+    lineItems?: any;
 }
