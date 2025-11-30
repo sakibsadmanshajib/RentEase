@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { Property } from '../property/models/property.model';
-import { Lease } from '../property/models/lease.model';
+import { Property, Unit, Lease, LeaseOccupant } from '../property/models/all.models';
+// import { Tenant } from '../tenant/models/tenant.model';
 
 @Module({
     imports: [

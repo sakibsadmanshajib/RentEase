@@ -1,0 +1,129 @@
+
+> property-service@0.0.1 start /home/sakib/RentEase/apps/property-service
+> nest start
+
+[32m[Nest] 25777  - [39m11/29/2025, 11:53:12 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[31m[Nest] 25777  - [39m11/29/2025, 11:53:13 PM [31m  ERROR[39m [38;5;3m[SequelizeModule] [39m[31mUnable to connect to the database. Retrying (1)...[39m
+Error: Unit has not been defined
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize@6.37.7_pg-hstore@2.3.4_pg@8.16.3/node_modules/sequelize/src/sequelize.js:483:13)
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:30:26)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:52:46
+    at Array.forEach (<anonymous>)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:50:26
+    at Array.forEach (<anonymous>)
+    at Sequelize.associateModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:46:16)
+    at Sequelize.addModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:38:14)
+    at new Sequelize (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:20:22)
+    at /home/sakib/RentEase/node_modules/.pnpm/@nestjs+sequelize@11.0.1_@nestjs+common@10.4.20_class-transformer@0.5.1_class-validator_19a5812437a8e97a0c2edf1c0ae07558/node_modules/@nestjs/sequelize/dist/sequelize-core.module.js:118:19
+[32m[Nest] 25777  - [39m11/29/2025, 11:53:13 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 25777  - [39m11/29/2025, 11:53:13 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDatabaseModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 25777  - [39m11/29/2025, 11:53:13 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSequelizeModule dependencies initialized[39m[38;5;3m +0ms[39m
+[31m[Nest] 25777  - [39m11/29/2025, 11:53:16 PM [31m  ERROR[39m [38;5;3m[SequelizeModule] [39m[31mUnable to connect to the database. Retrying (2)...[39m
+Error: Unit has not been defined
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize@6.37.7_pg-hstore@2.3.4_pg@8.16.3/node_modules/sequelize/src/sequelize.js:483:13)
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:30:26)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:52:46
+    at Array.forEach (<anonymous>)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:50:26
+    at Array.forEach (<anonymous>)
+    at Sequelize.associateModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:46:16)
+    at Sequelize.addModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:38:14)
+    at new Sequelize (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:20:22)
+    at /home/sakib/RentEase/node_modules/.pnpm/@nestjs+sequelize@11.0.1_@nestjs+common@10.4.20_class-transformer@0.5.1_class-validator_19a5812437a8e97a0c2edf1c0ae07558/node_modules/@nestjs/sequelize/dist/sequelize-core.module.js:118:19
+[31m[Nest] 25777  - [39m11/29/2025, 11:53:19 PM [31m  ERROR[39m [38;5;3m[SequelizeModule] [39m[31mUnable to connect to the database. Retrying (3)...[39m
+Error: Unit has not been defined
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize@6.37.7_pg-hstore@2.3.4_pg@8.16.3/node_modules/sequelize/src/sequelize.js:483:13)
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:30:26)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:52:46
+    at Array.forEach (<anonymous>)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:50:26
+    at Array.forEach (<anonymous>)
+    at Sequelize.associateModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:46:16)
+    at Sequelize.addModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:38:14)
+    at new Sequelize (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:20:22)
+    at /home/sakib/RentEase/node_modules/.pnpm/@nestjs+sequelize@11.0.1_@nestjs+common@10.4.20_class-transformer@0.5.1_class-validator_19a5812437a8e97a0c2edf1c0ae07558/node_modules/@nestjs/sequelize/dist/sequelize-core.module.js:118:19
+[31m[Nest] 25777  - [39m11/29/2025, 11:53:22 PM [31m  ERROR[39m [38;5;3m[SequelizeModule] [39m[31mUnable to connect to the database. Retrying (4)...[39m
+Error: Unit has not been defined
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize@6.37.7_pg-hstore@2.3.4_pg@8.16.3/node_modules/sequelize/src/sequelize.js:483:13)
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:30:26)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:52:46
+    at Array.forEach (<anonymous>)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:50:26
+    at Array.forEach (<anonymous>)
+    at Sequelize.associateModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:46:16)
+    at Sequelize.addModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:38:14)
+    at new Sequelize (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:20:22)
+    at /home/sakib/RentEase/node_modules/.pnpm/@nestjs+sequelize@11.0.1_@nestjs+common@10.4.20_class-transformer@0.5.1_class-validator_19a5812437a8e97a0c2edf1c0ae07558/node_modules/@nestjs/sequelize/dist/sequelize-core.module.js:118:19
+[31m[Nest] 25777  - [39m11/29/2025, 11:53:25 PM [31m  ERROR[39m [38;5;3m[SequelizeModule] [39m[31mUnable to connect to the database. Retrying (5)...[39m
+Error: Unit has not been defined
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize@6.37.7_pg-hstore@2.3.4_pg@8.16.3/node_modules/sequelize/src/sequelize.js:483:13)
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:30:26)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:52:46
+    at Array.forEach (<anonymous>)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:50:26
+    at Array.forEach (<anonymous>)
+    at Sequelize.associateModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:46:16)
+    at Sequelize.addModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:38:14)
+    at new Sequelize (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:20:22)
+    at /home/sakib/RentEase/node_modules/.pnpm/@nestjs+sequelize@11.0.1_@nestjs+common@10.4.20_class-transformer@0.5.1_class-validator_19a5812437a8e97a0c2edf1c0ae07558/node_modules/@nestjs/sequelize/dist/sequelize-core.module.js:118:19
+[31m[Nest] 25777  - [39m11/29/2025, 11:53:28 PM [31m  ERROR[39m [38;5;3m[SequelizeModule] [39m[31mUnable to connect to the database. Retrying (6)...[39m
+Error: Unit has not been defined
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize@6.37.7_pg-hstore@2.3.4_pg@8.16.3/node_modules/sequelize/src/sequelize.js:483:13)
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:30:26)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:52:46
+    at Array.forEach (<anonymous>)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:50:26
+    at Array.forEach (<anonymous>)
+    at Sequelize.associateModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:46:16)
+    at Sequelize.addModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:38:14)
+    at new Sequelize (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:20:22)
+    at /home/sakib/RentEase/node_modules/.pnpm/@nestjs+sequelize@11.0.1_@nestjs+common@10.4.20_class-transformer@0.5.1_class-validator_19a5812437a8e97a0c2edf1c0ae07558/node_modules/@nestjs/sequelize/dist/sequelize-core.module.js:118:19
+[31m[Nest] 25777  - [39m11/29/2025, 11:53:31 PM [31m  ERROR[39m [38;5;3m[SequelizeModule] [39m[31mUnable to connect to the database. Retrying (7)...[39m
+Error: Unit has not been defined
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize@6.37.7_pg-hstore@2.3.4_pg@8.16.3/node_modules/sequelize/src/sequelize.js:483:13)
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:30:26)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:52:46
+    at Array.forEach (<anonymous>)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:50:26
+    at Array.forEach (<anonymous>)
+    at Sequelize.associateModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:46:16)
+    at Sequelize.addModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:38:14)
+    at new Sequelize (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:20:22)
+    at /home/sakib/RentEase/node_modules/.pnpm/@nestjs+sequelize@11.0.1_@nestjs+common@10.4.20_class-transformer@0.5.1_class-validator_19a5812437a8e97a0c2edf1c0ae07558/node_modules/@nestjs/sequelize/dist/sequelize-core.module.js:118:19
+[31m[Nest] 25777  - [39m11/29/2025, 11:53:34 PM [31m  ERROR[39m [38;5;3m[SequelizeModule] [39m[31mUnable to connect to the database. Retrying (8)...[39m
+Error: Unit has not been defined
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize@6.37.7_pg-hstore@2.3.4_pg@8.16.3/node_modules/sequelize/src/sequelize.js:483:13)
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:30:26)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:52:46
+    at Array.forEach (<anonymous>)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:50:26
+    at Array.forEach (<anonymous>)
+    at Sequelize.associateModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:46:16)
+    at Sequelize.addModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:38:14)
+    at new Sequelize (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:20:22)
+    at /home/sakib/RentEase/node_modules/.pnpm/@nestjs+sequelize@11.0.1_@nestjs+common@10.4.20_class-transformer@0.5.1_class-validator_19a5812437a8e97a0c2edf1c0ae07558/node_modules/@nestjs/sequelize/dist/sequelize-core.module.js:118:19
+[31m[Nest] 25777  - [39m11/29/2025, 11:53:37 PM [31m  ERROR[39m [38;5;3m[SequelizeModule] [39m[31mUnable to connect to the database. Retrying (9)...[39m
+Error: Unit has not been defined
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize@6.37.7_pg-hstore@2.3.4_pg@8.16.3/node_modules/sequelize/src/sequelize.js:483:13)
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:30:26)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:52:46
+    at Array.forEach (<anonymous>)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:50:26
+    at Array.forEach (<anonymous>)
+    at Sequelize.associateModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:46:16)
+    at Sequelize.addModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:38:14)
+    at new Sequelize (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:20:22)
+    at /home/sakib/RentEase/node_modules/.pnpm/@nestjs+sequelize@11.0.1_@nestjs+common@10.4.20_class-transformer@0.5.1_class-validator_19a5812437a8e97a0c2edf1c0ae07558/node_modules/@nestjs/sequelize/dist/sequelize-core.module.js:118:19
+[31m[Nest] 25777  - [39m11/29/2025, 11:53:37 PM [31m  ERROR[39m [38;5;3m[ExceptionHandler] [39m[31mUnit has not been defined[39m
+Error: Unit has not been defined
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize@6.37.7_pg-hstore@2.3.4_pg@8.16.3/node_modules/sequelize/src/sequelize.js:483:13)
+    at Sequelize.model (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:30:26)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:52:46
+    at Array.forEach (<anonymous>)
+    at /home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:50:26
+    at Array.forEach (<anonymous>)
+    at Sequelize.associateModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:46:16)
+    at Sequelize.addModels (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:38:14)
+    at new Sequelize (/home/sakib/RentEase/node_modules/.pnpm/sequelize-typescript@2.1.6_@types+node@20.19.25_@types+validator@13.15.10_reflect-metad_6bd4321a66c7b0655a42a7d1be7b7f21/node_modules/sequelize-typescript/dist/sequelize/sequelize/sequelize.js:20:22)
+    at /home/sakib/RentEase/node_modules/.pnpm/@nestjs+sequelize@11.0.1_@nestjs+common@10.4.20_class-transformer@0.5.1_class-validator_19a5812437a8e97a0c2edf1c0ae07558/node_modules/@nestjs/sequelize/dist/sequelize-core.module.js:118:19
+ ELIFECYCLE  Command failed with exit code 1.

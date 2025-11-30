@@ -5,6 +5,8 @@ import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { Invitation } from './models/invitation.model';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class TenantService {
@@ -13,6 +15,7 @@ export class TenantService {
         private tenantModel: typeof Tenant,
         @InjectModel(Invitation)
         private invitationModel: typeof Invitation,
+        private readonly httpService: HttpService,
     ) { }
 
     async create(createTenantDto: CreateTenantDto): Promise<Tenant> {
@@ -41,6 +44,24 @@ export class TenantService {
         }
     }
 
+    async suspend(id: string): Promise<Tenant> {
+        const tenant = await this.findOne(id);
+        if (!tenant) {
+            throw new NotFoundException('Tenant not found');
+        }
+        tenant.subscriptionStatus = 'suspended';
+        return tenant.save();
+    }
+
+    async activate(id: string): Promise<Tenant> {
+        const tenant = await this.findOne(id);
+        if (!tenant) {
+            throw new NotFoundException('Tenant not found');
+        }
+        tenant.subscriptionStatus = 'active';
+        return tenant.save();
+    }
+
     async createInvitation(tenantId: string, email: string, roleId: string): Promise<Invitation> {
         const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         const expiresAt = new Date();
@@ -56,7 +77,7 @@ export class TenantService {
         });
     }
 
-    async acceptInvitation(token: string): Promise<Invitation> {
+    async acceptInvitation(token: string, userId: string): Promise<Invitation> {
         const invitation = await this.invitationModel.findOne({ where: { token } });
         if (!invitation) {
             throw new NotFoundException('Invitation not found');
@@ -72,11 +93,18 @@ export class TenantService {
             throw new BadRequestException('Invitation expired');
         }
 
-        // TODO: Call Identity Service to create UserTenantMembership
-        // For now, we just mark it as accepted.
-        // In a real implementation, we would likely need the userId of the user accepting the invite.
-        // If the user doesn't exist, they might need to register first.
-        // This flow assumes the user is already logged in or registers as part of acceptance.
+        // Call Identity Service to create UserTenantMembership
+        try {
+            await firstValueFrom(
+                this.httpService.post(`http://localhost:3001/users/${userId}/tenants`, {
+                    tenantId: invitation.tenantId,
+                    roleId: invitation.roleId,
+                })
+            );
+        } catch (error) {
+            console.error('Failed to create membership in Identity Service', error);
+            throw new BadRequestException('Failed to create membership');
+        }
 
         invitation.status = 'accepted';
         await invitation.save();

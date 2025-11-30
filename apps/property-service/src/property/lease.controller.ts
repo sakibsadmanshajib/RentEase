@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { LeaseService } from './lease.service';
 import { CreateLeaseDto } from './dto/create-lease.dto';
+import { Lease } from './models/all.models';
 
 @Controller('leases')
 export class LeaseController {
@@ -12,8 +13,8 @@ export class LeaseController {
     }
 
     @Get()
-    findAll() {
-        return this.leaseService.findAll();
+    findAll(@Query('unitId') unitId?: string) {
+        return this.leaseService.findAll(unitId);
     }
 
     @Get(':id')
@@ -21,8 +22,21 @@ export class LeaseController {
         return this.leaseService.findOne(id);
     }
 
-    @Get('tenant/:tenantId')
-    findByTenant(@Param('tenantId') tenantId: string) {
-        return this.leaseService.findByTenant(tenantId);
+    @Post(':id/activate')
+    activate(@Param('id') id: string) {
+        return this.leaseService.activate(id);
+    }
+
+    @Post(':id/terminate')
+    terminate(@Param('id') id: string) {
+        return this.leaseService.terminate(id);
+    }
+
+    @Post(':id/occupants')
+    addOccupant(
+        @Param('id') id: string,
+        @Body('userId') userId: string,
+    ) {
+        return this.leaseService.addOccupant(id, userId);
     }
 }

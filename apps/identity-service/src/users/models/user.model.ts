@@ -30,13 +30,33 @@ export class User extends Model {
         type: DataType.STRING,
         allowNull: true,
     })
-    firstName?: string;
+    get firstName(): string | undefined {
+        const value = this.getDataValue('firstName');
+        return value ? EncryptionService.decrypt(value) : undefined;
+    }
+    set firstName(value: string | undefined) {
+        if (value) {
+            this.setDataValue('firstName', EncryptionService.encrypt(value));
+        } else {
+            this.setDataValue('firstName', value);
+        }
+    }
 
     @Column({
         type: DataType.STRING,
         allowNull: true,
     })
-    lastName?: string;
+    get lastName(): string | undefined {
+        const value = this.getDataValue('lastName');
+        return value ? EncryptionService.decrypt(value) : undefined;
+    }
+    set lastName(value: string | undefined) {
+        if (value) {
+            this.setDataValue('lastName', EncryptionService.encrypt(value));
+        } else {
+            this.setDataValue('lastName', value);
+        }
+    }
 
     @Column({
         type: DataType.STRING,

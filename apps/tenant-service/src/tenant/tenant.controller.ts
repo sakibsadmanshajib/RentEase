@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TenantService } from './tenant.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
@@ -41,8 +42,22 @@ export class TenantController {
         return this.tenantService.createInvitation(id, email, roleId);
     }
 
+    @Post(':id/suspend')
+    suspend(@Param('id') id: string) {
+        return this.tenantService.suspend(id);
+    }
+
+    @Post(':id/activate')
+    activate(@Param('id') id: string) {
+        return this.tenantService.activate(id);
+    }
+
     @Post('invitations/:token/accept')
-    acceptInvitation(@Param('token') token: string) {
-        return this.tenantService.acceptInvitation(token);
+    @UseGuards(JwtAuthGuard)
+    acceptInvitation(
+        @Param('token') token: string,
+        @Request() req: any,
+    ) {
+        return this.tenantService.acceptInvitation(token, req.user.id);
     }
 }

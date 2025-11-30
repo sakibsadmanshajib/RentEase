@@ -5,8 +5,13 @@ import { TenantController } from './tenant.controller';
 import { Tenant } from './models/tenant.model';
 import { Invitation } from './models/invitation.model';
 
+import { HttpModule } from '@nestjs/axios';
+
 @Module({
-    imports: [SequelizeModule.forFeature([Tenant, Invitation])],
+    imports: [
+        SequelizeModule.forFeature([Tenant, Invitation]),
+        HttpModule,
+    ],
     controllers: [TenantController],
     providers: [TenantService],
 })

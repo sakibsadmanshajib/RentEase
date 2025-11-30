@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from '../users/models/user.model';
-import { UnauthorizedException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -13,14 +14,41 @@ export class AuthService {
         private jwtService: JwtService
     ) { }
 
+    async validateUser(email: string, pass: string): Promise<User | null> {
+        const user = await this.userModel.findOne({ where: { email } });
+        if (user && user.password && await bcrypt.compare(pass, user.password)) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { password, ...result } = user.toJSON();
+            return user;
+        }
+        return null;
+    }
+
     async login(loginDto: LoginDto) {
-        const user = await this.userModel.findOne({ where: { email: loginDto.email } });
+        const user = await this.validateUser(loginDto.email, loginDto.password);
         if (!user) {
             throw new UnauthorizedException('Invalid credentials');
         }
 
-        // TODO: Validate password (e.g. bcrypt.compare)
-        // if (!bcrypt.compareSync(loginDto.password, user.password)) ...
+        const payload = { email: user.email, sub: user.id };
+        return {
+            access_token: this.jwtService.sign(payload),
+        };
+    }
+
+    async register(registerDto: RegisterDto) {
+        const existingUser = await this.userModel.findOne({ where: { email: registerDto.email } });
+        if (existingUser) {
+            throw new ConflictException('User already exists');
+        }
+
+        const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+        const user = await this.userModel.create({
+            ...registerDto,
+            password: hashedPassword,
+        });
+
+        // TODO: Create default UserTenantMembership if needed
 
         const payload = { email: user.email, sub: user.id };
         return {

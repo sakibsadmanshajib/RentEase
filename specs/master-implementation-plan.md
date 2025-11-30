@@ -14,18 +14,26 @@
 **Goal**: Fully functional backend services with domain logic and databases.
 
 ### 2.1 Identity & Access Service
-- [ ] Implement RBAC (Roles, Permissions) fully.
-- [ ] Implement `UserTenantMembership` for multi-tenancy.
-- [ ] Secure PII storage.
+- [x] Implement RBAC (Roles, Permissions) fully.
+    - *Details*: Implemented `RolesGuard` with `nestjs-cls` for tenant context. Supports global and tenant-specific roles.
+- [x] Implement `UserTenantMembership` for multi-tenancy.
+    - *Details*: Created `UsersService` and `UsersController` to manage memberships. Added `POST /users/:userId/tenants` and `GET /users/me`.
+- [x] Secure PII storage.
+    - *Status*: `phone`, `firstName`, and `lastName` are encrypted via `EncryptionService`. `email` is plain text for uniqueness checks.
 
 ### 2.2 Tenant & Directory Service
-- [ ] Implement Organization lifecycle (Create/Suspend).
-- [ ] Implement Staff Invitations flow.
+- [x] Implement Organization lifecycle (Create/Suspend).
+    - *Details*: Added `suspend`/`activate` endpoints in `TenantController`.
+- [x] Implement Staff Invitations flow.
+    - *Details*: Updated `acceptInvitation` to call Identity Service via `HttpModule` to create membership. Protected endpoint with `JwtAuthGuard`.
 
 ### 2.3 Property & Lease Service
-- [ ] Implement Unit management.
-- [ ] Implement full Lease lifecycle (Draft -> Active -> Expired).
-- [ ] Add Occupant tracking.
+- [x] Implement Unit management.
+    - *Details*: Implemented `Unit` model with status (VACANT/OCCUPIED). Added CRUD endpoints in `UnitController`.
+- [x] Implement full Lease lifecycle (Draft -> Active -> Expired).
+    - *Details*: Implemented `Lease` model with statuses (DRAFT, ACTIVE, TERMINATED). Added `activate` and `terminate` endpoints that automatically update Unit status.
+- [x] Add Occupant tracking.
+    - *Details*: Implemented `LeaseOccupant` model linking Leases to Users. Added `POST /leases/:id/occupants` endpoint.
 
 ### 2.4 Billing & Ledger Service
 - [ ] Implement Double-Entry Ledger core.
