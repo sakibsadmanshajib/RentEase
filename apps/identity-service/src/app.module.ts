@@ -3,9 +3,13 @@ import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
 import { ClsModule } from 'nestjs-cls';
 import { UsersModule } from './users/users.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
     imports: [
+        ConfigModule.forRoot({
+            isGlobal: true,
+        }),
         ClsModule.forRoot({
             global: true,
             middleware: {

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Unit } from './models/all.models';
+import { Unit } from './models/unit.model';
 import { CreateUnitDto } from './dto/create-unit.dto';
 
 @Injectable()

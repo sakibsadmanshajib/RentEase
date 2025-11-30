@@ -7,7 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "turbo dev",
     "start": "turbo start",
-    "build": "turbo build"
+    "build": "turbo build",
+    "verify:identity": "./scripts/verify-identity.sh",
+    "verify:tenant": "./scripts/verify-tenant.sh",
+    "verify:property": "./scripts/verify-property.sh"
   },
   "keywords": [],
   "author": "",

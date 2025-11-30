@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
 import { UnitService } from './unit.service';
 import { CreateUnitDto } from './dto/create-unit.dto';
-import { Unit } from './models/all.models';
+import { Unit } from './models/unit.model';
 
 @Controller('units')
 export class UnitController {

@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
-import { SequelizeModule } from '@nestjs/sequelize';
-import { PropertyController } from './property.controller';
 import { PropertyService } from './property.service';
-import { Property, Unit, Lease, LeaseOccupant } from './models/all.models';
+import { PropertyController } from './property.controller';
+import { SequelizeModule } from '@nestjs/sequelize';
+import { Property } from './models/property.model';
+import { Unit } from './models/unit.model';
+import { Lease } from './models/lease.model';
+import { LeaseOccupant } from './models/lease-occupant.model';
 
 import { UnitController } from './unit.controller';
 import { UnitService } from './unit.service';

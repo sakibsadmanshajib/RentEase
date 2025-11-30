@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Lease, LeaseOccupant, Unit } from './models/all.models';
+import { Lease } from './models/lease.model';
+import { LeaseOccupant } from './models/lease-occupant.model';
+import { Unit } from './models/unit.model';
 import { CreateLeaseDto } from './dto/create-lease.dto';
 
 @Injectable()

@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { LeaseService } from './lease.service';
 import { CreateLeaseDto } from './dto/create-lease.dto';
-import { Lease } from './models/all.models';
+import { Lease } from './models/lease.model';
 
 @Controller('leases')
 export class LeaseController {

@@ -1,9 +1,16 @@
 import { Module } from '@nestjs/common';
 import { BillingModule } from './billing/billing.module';
 import { DatabaseModule } from './database/database.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-    imports: [DatabaseModule, BillingModule],
+    imports: [
+        ConfigModule.forRoot({
+            isGlobal: true,
+        }),
+        DatabaseModule,
+        BillingModule,
+    ],
     controllers: [],
     providers: [],
 })

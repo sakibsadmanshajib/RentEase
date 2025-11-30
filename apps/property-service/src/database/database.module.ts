@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { Property, Unit, Lease, LeaseOccupant } from '../property/models/all.models';
+import { Property } from '../property/models/property.model';
+import { Unit } from '../property/models/unit.model';
+import { Lease } from '../property/models/lease.model';
+import { LeaseOccupant } from '../property/models/lease-occupant.model';
 // import { Tenant } from '../tenant/models/tenant.model';
 
 @Module({
