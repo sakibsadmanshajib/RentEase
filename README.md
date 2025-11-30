@@ -38,7 +38,7 @@ The application is decomposed into the following domain services:
 *   **Expense & Reporting Service:** Analytics and reports.
 *   **Audit & Compliance Service:** System-wide audit logs.
 
-For detailed architecture specifications, please refer to [specs/architecture.md](specs/architecture.md).
+For detailed architecture specifications, please refer to the [Project Wiki](https://github.com/sakibsadmanshajib/RentEase/wiki).
 
 ## 🚦 Getting Started
 
@@ -78,6 +78,6 @@ The project includes scripts to verify the functionality of core services:
 
 ## 📝 Documentation
 
-*   [Architecture Spec](specs/architecture.md)
-*   [Master Implementation Plan](specs/master-implementation-plan.md)
-*   [Design Decisions](specs/design-decisions.md)
+*   [Architecture Spec](https://github.com/sakibsadmanshajib/RentEase/wiki/Architecture)
+*   [Master Implementation Plan](https://github.com/sakibsadmanshajib/RentEase/wiki/Master-Implementation-Plan)
+*   [Design Decisions](https://github.com/sakibsadmanshajib/RentEase/wiki/Design-Decisions)
