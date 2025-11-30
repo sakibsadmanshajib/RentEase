@@ -3,18 +3,14 @@ import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule);
+    const app = await NestFactory.create(AppModule, {
+        logger: ['log', 'error', 'warn'],
+    });
 
-    // Enable JSON-only responses
-    app.useGlobalPipes(new ValidationPipe({
-        transform: true,
-        whitelist: true,
-    }));
-
-    // Disable HTML error pages - always return JSON
+    // Enable CORS
     app.enableCors();
 
     await app.listen(3004);
-    Logger.log(`Billing Service is running on: ${await app.getUrl()}`, 'Bootstrap');
+    Logger.log('Billing Service is running on: http://localhost:3004', 'Bootstrap');
 }
 bootstrap();

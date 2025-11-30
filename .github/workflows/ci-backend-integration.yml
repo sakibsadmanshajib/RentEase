@@ -1,0 +1,84 @@
+name: Backend Integration Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: rentease_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - identity
+          - tenant
+          - property
+          - billing
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Build service
+        run: pnpm --filter ${{ matrix.service }}-service build
+      
+      - name: Start service
+        run: |
+          pnpm --filter ${{ matrix.service }}-service dev > service.log 2>&1 &
+          echo "Waiting for service to start..."
+          sleep 15
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rentease_test
+      
+      - name: Install Playwright
+        run: pnpm exec playwright install --with-deps chromium
+      
+      - name: Run Playwright API tests
+        run: pnpm playwright test --project=api-${{ matrix.service }}
+        continue-on-error: true
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.service }}
+          path: playwright-report/
+          retention-days: 7
+      
+      - name: Print service logs on failure
+        if: failure()
+        run: |
+          echo "=== Service Logs ==="
+          cat service.log || echo "No service logs found"

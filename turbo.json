@@ -10,8 +10,23 @@
                 ".next/**"
             ]
         },
-        "lint": {},
+        "lint": {
+            "dependsOn": []
+        },
         "dev": {
+            "cache": false,
+            "persistent": true
+        },
+        "test": {
+            "dependsOn": []
+        },
+        "test:unit": {
+            "dependsOn": [],
+            "outputs": [
+                "coverage/**"
+            ]
+        },
+        "test:watch": {
             "cache": false,
             "persistent": true
         }

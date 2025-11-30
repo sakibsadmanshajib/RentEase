@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Invoice } from '../billing/models/invoice.model';
+import { LedgerAccount } from '../billing/models/ledger-account.model';
+import { LedgerEntry } from '../billing/models/ledger-entry.model';
+import { Payment } from '../billing/models/payment.model';
+import { Expense } from '../billing/models/expense.model';
 
 @Module({
     imports: [
@@ -13,7 +17,7 @@ import { Invoice } from '../billing/models/invoice.model';
             database: 'rentease',
             autoLoadModels: true,
             synchronize: true,
-            models: [Invoice],
+            models: [Invoice, LedgerAccount, LedgerEntry, Payment, Expense],
         }),
     ],
 })

@@ -117,8 +117,13 @@ export class BillingService {
         return this.ledgerEntryModel.findAll({ where: { tenantId } });
     }
 
-    async findAll(): Promise<Invoice[]> {
-        return this.invoiceModel.findAll();
+    async findAll(filters?: { tenantId?: string; leaseId?: string; status?: string }): Promise<Invoice[]> {
+        const where: any = {};
+        if (filters?.tenantId) where.tenantId = filters.tenantId;
+        if (filters?.leaseId) where.leaseId = filters.leaseId;
+        if (filters?.status) where.status = filters.status;
+
+        return this.invoiceModel.findAll({ where });
     }
 
     async findOne(id: string): Promise<Invoice | null> {

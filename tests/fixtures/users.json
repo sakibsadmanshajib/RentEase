@@ -1,0 +1,28 @@
+{
+    "users": [
+        {
+            "email": "landlord@test.com",
+            "password": "SecurePass123!",
+            "firstName": "John",
+            "lastName": "Landlord",
+            "phone": "+1234567890",
+            "role": "landlord"
+        },
+        {
+            "email": "manager@test.com",
+            "password": "SecurePass123!",
+            "firstName": "Jane",
+            "lastName": "Manager",
+            "phone": "+1234567891",
+            "role": "property_manager"
+        },
+        {
+            "email": "tenant@test.com",
+            "password": "SecurePass123!",
+            "firstName": "Bob",
+            "lastName": "Tenant",
+            "phone": "+1234567892",
+            "role": "tenant"
+        }
+    ]
+}

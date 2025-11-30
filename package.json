@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "pnpm test:unit && pnpm test:api",
+    "test:unit": "turbo test:unit",
+    "test:api": "playwright test --grep @api",
+    "test:integration": "playwright test tests/integration",
+    "test:e2e": "playwright test tests/e2e",
+    "test:ci": "pnpm test:unit && pnpm test:api && pnpm test:integration && pnpm test:e2e",
     "dev": "turbo dev",
     "start": "turbo start",
     "build": "turbo build",
@@ -20,9 +25,12 @@
     "node": ">=24.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^24.10.1",
     "axios": "^1.13.2",
     "eslint": "^9.39.1",
     "prettier": "^3.7.2",
+    "sequelize": "^6.37.7",
     "ts-node": "^10.9.2",
     "turbo": "^2.6.1",
     "typescript": "^5.9.3"
