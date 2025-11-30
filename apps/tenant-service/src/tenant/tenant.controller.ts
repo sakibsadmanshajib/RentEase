@@ -31,4 +31,18 @@ export class TenantController {
     remove(@Param('id') id: string) {
         return this.tenantService.remove(id);
     }
+
+    @Post(':id/invitations')
+    createInvitation(
+        @Param('id') id: string,
+        @Body('email') email: string,
+        @Body('roleId') roleId: string,
+    ) {
+        return this.tenantService.createInvitation(id, email, roleId);
+    }
+
+    @Post('invitations/:token/accept')
+    acceptInvitation(@Param('token') token: string) {
+        return this.tenantService.acceptInvitation(token);
+    }
 }

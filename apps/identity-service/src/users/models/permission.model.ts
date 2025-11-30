@@ -1,11 +1,9 @@
 import { Column, Model, Table, DataType, BelongsToMany } from 'sequelize-typescript';
-import { User } from './user.model';
-import { UserRole } from './user-role.model';
-import { Permission } from './permission.model';
+import { Role } from './role.model';
 import { RolePermission } from './role-permission.model';
 
 @Table
-export class Role extends Model {
+export class Permission extends Model {
     @Column({
         type: DataType.UUID,
         defaultValue: DataType.UUIDV4,
@@ -18,7 +16,7 @@ export class Role extends Model {
         allowNull: false,
         unique: true,
     })
-    name!: string;
+    name!: string; // e.g., 'property:create'
 
     @Column({
         type: DataType.STRING,
@@ -26,9 +24,6 @@ export class Role extends Model {
     })
     description?: string;
 
-    @BelongsToMany(() => User, () => UserRole)
-    users!: User[];
-
-    @BelongsToMany(() => Permission, () => RolePermission)
-    permissions!: Permission[];
+    @BelongsToMany(() => Role, () => RolePermission)
+    roles!: Role[];
 }

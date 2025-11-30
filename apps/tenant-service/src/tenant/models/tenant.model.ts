@@ -62,4 +62,23 @@ export class Tenant extends Model {
         defaultValue: 'US',
     })
     region?: string;
+
+    @Column({
+        type: DataType.STRING,
+        allowNull: false,
+        unique: true,
+    })
+    slug!: string;
+
+    @Column({
+        type: DataType.JSONB,
+        allowNull: true,
+    })
+    settings?: any;
+
+    @Column({
+        type: DataType.STRING,
+        defaultValue: 'active', // active, suspended, trial
+    })
+    subscriptionStatus?: string;
 }
