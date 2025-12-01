@@ -39,7 +39,7 @@ test.describe('Billing Service - Payments @api', () => {
         expect(response.status()).toBe(201);
         const payment = await response.json();
         expect(payment).toHaveProperty('id');
-        expect(payment.amount).toBe(1000);
+        expect(parseFloat(payment.amount)).toBe(1000);
         expect(payment.invoiceId).toBe(invoiceId);
     });
 

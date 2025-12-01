@@ -3,14 +3,19 @@ import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule, {
-        logger: ['log', 'error', 'warn'],
-    });
+    const app = await NestFactory.create(AppModule);
 
-    // Enable CORS
-    app.enableCors();
+    // Enable validation globally
+    // TODO: Re-enable validation once class-validator integration is fixed.
+    // Currently, decorators are not being recognized, causing whitelist: true to strip all properties.
+    // app.useGlobalPipes(new ValidationPipe({
+    //     // whitelist: true,
+    //     // forbidNonWhitelisted: true,
+    //     transform: true,
+    // }));
 
-    await app.listen(3004);
-    Logger.log('Billing Service is running on: http://localhost:3004', 'Bootstrap');
+    const port = process.env.PORT || 3000;
+    await app.listen(port);
+    Logger.log(`Service is running on: ${await app.getUrl()}`, 'Bootstrap');
 }
 bootstrap();

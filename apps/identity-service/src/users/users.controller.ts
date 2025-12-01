@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Param, UseGuards, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateMembershipDto } from './dto/create-membership.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -12,6 +12,11 @@ export class UsersController {
     @Get('me')
     async getProfile(@Req() req: any) {
         return req.user;
+    }
+
+    @Patch('me')
+    async updateProfile(@Req() req: any, @Body() updateData: any) {
+        return this.usersService.updateUser(req.user.id, updateData);
     }
 
     @Post(':userId/tenants')

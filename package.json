@@ -6,11 +6,12 @@
   "scripts": {
     "test": "pnpm test:unit && pnpm test:api",
     "test:unit": "turbo test:unit",
-    "test:api": "playwright test --grep @api",
+    "test:api": "API_ONLY=true playwright test --grep @api",
     "test:integration": "playwright test tests/integration",
     "test:e2e": "playwright test tests/e2e",
     "test:ci": "pnpm test:unit && pnpm test:api && pnpm test:integration && pnpm test:e2e",
     "dev": "turbo dev",
+    "dev:backend": "turbo dev --filter='!web' --filter='!api-gateway'",
     "start": "turbo start",
     "build": "turbo build",
     "verify:identity": "./scripts/verify-identity.sh",
@@ -34,5 +35,8 @@
     "ts-node": "^10.9.2",
     "turbo": "^2.6.1",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "umzug": "^3.8.2"
   }
 }

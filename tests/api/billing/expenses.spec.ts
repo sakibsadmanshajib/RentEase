@@ -21,10 +21,15 @@ test.describe('Billing Service - Expenses @api', () => {
             data: expenseData
         });
 
+        console.log('BASE_URL:', BASE_URL);
+        if (response.status() !== 201) {
+            console.log('Response status:', response.status());
+            console.log('Response body:', await response.text());
+        }
         expect(response.status()).toBe(201);
         const expense = await response.json();
         expect(expense).toHaveProperty('id');
-        expect(expense.amount).toBe(250);
+        expect(parseFloat(expense.amount)).toBe(250);
         expect(expense.category).toBe('REPAIR');
         expect(expense.isRecurring).toBe(false);
     });

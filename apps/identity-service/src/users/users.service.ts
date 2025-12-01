@@ -17,6 +17,17 @@ export class UsersService {
         private membershipModel: typeof UserTenantMembership,
     ) { }
 
+    async updateUser(userId: string, updateData: any) {
+        const user = await this.userModel.findByPk(userId);
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        await user.update(updateData);
+        const { password, ...userWithoutPassword } = user.toJSON();
+        return userWithoutPassword;
+    }
+
     async addMembership(userId: string, createMembershipDto: CreateMembershipDto) {
         const user = await this.userModel.findByPk(userId);
         if (!user) {

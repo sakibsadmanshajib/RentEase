@@ -4,6 +4,13 @@ import { Role } from './role.model';
 
 @Table
 export class UserTenantMembership extends Model {
+    @Column({
+        type: DataType.UUID,
+        defaultValue: DataType.UUIDV4,
+        primaryKey: true,
+    })
+    id!: string;
+
     @ForeignKey(() => User)
     @Column({
         type: DataType.UUID,
@@ -23,7 +30,7 @@ export class UserTenantMembership extends Model {
     @ForeignKey(() => Role)
     @Column({
         type: DataType.UUID,
-        allowNull: false,
+        allowNull: true,
     })
     roleId!: string;
 

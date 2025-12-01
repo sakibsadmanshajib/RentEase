@@ -22,7 +22,7 @@ test.describe('Billing Service - Invoices @api', () => {
         expect(response.status()).toBe(201);
         const invoice = await response.json();
         expect(invoice).toHaveProperty('id');
-        expect(invoice.amount).toBe(1500);
+        expect(parseFloat(invoice.amount)).toBe(1500);
         expect(invoice.status).toBe('PENDING');
         expect(invoice.tenantId).toBe(tenantId);
     });
@@ -103,6 +103,6 @@ test.describe('Billing Service - Invoices @api', () => {
 
         const invoice = await response.json();
         expect(invoice.id).toBe(createdInvoice.id);
-        expect(invoice.amount).toBe(750);
+        expect(parseFloat(invoice.amount)).toBe(750);
     });
 });

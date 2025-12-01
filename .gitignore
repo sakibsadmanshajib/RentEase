@@ -1,7 +1,23 @@
 node_modules
-dist
 .turbo
-.DS_Store
+dist/
 .env
+.env.local
+
+# Test artifacts and reports
+test-results/
+playwright-report/
+playwright/.cache/
+coverage/
 *.log
+
+# IDE and OS files
+.DS_Store
+.vscode/
+.idea/
+
+# Build artifacts
+*.tsbuildinfo
+.next/
+out/og
 coverage

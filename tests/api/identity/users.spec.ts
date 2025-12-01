@@ -1,4 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { v4 as uuidv4 } from 'uuid';
+
+// ... (imports)
+
+// ... inside test
+// ... (imports)
 import { AuthHelper } from '../../helpers/auth.helper';
 import { ApiHelper } from '../../helpers/api.helper';
 
@@ -101,8 +107,8 @@ test.describe('Identity Service - Users @api', () => {
         const user = await userResponse.json();
 
         const membershipData = {
-            tenantId: `tenant-${ApiHelper.generateTestId()}`,
-            roleId: 'role-123'
+            tenantId: uuidv4()
+            // roleId: uuidv4() // Role ID is optional and requires existing role
         };
 
         const response = await request.post(`${BASE_URL}/users/${user.id}/tenants`, {

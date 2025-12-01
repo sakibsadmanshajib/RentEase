@@ -31,8 +31,12 @@ export class AuthService {
         }
 
         const payload = { email: user.email, sub: user.id };
+        const accessToken = this.jwtService.sign(payload);
+        const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+
         return {
-            access_token: this.jwtService.sign(payload),
+            accessToken,
+            refreshToken,
         };
     }
 
@@ -50,8 +54,12 @@ export class AuthService {
 
         // TODO: Create default UserTenantMembership if needed
 
+        // Return user object without password, plus access token for convenience
+        const { password, ...userWithoutPassword } = user.toJSON();
         const payload = { email: user.email, sub: user.id };
+
         return {
+            ...userWithoutPassword,
             access_token: this.jwtService.sign(payload),
         };
     }

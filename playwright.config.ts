@@ -80,8 +80,8 @@ export default defineConfig({
         },
     ],
 
-    // Web server for E2E tests (disabled in CI, services managed externally)
-    webServer: process.env.CI ? undefined : {
+    // Web server for E2E tests only (disabled for API tests and CI)
+    webServer: (process.env.CI || process.env.API_ONLY) ? undefined : {
         command: 'pnpm dev',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,

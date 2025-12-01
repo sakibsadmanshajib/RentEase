@@ -76,9 +76,17 @@ export class BillingService {
             status: 'COMPLETED',
         } as any);
 
-        // 2. Update Invoice Status (Simplified: Assume full payment for now)
-        // In real world, check if total payments >= invoice amount
-        invoice.status = 'PAID';
+        // 2. Update Invoice Status
+        const payments = await this.paymentModel.findAll({ where: { invoiceId: invoice.id } });
+        const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+
+        if (totalPaid >= Number(invoice.amount)) {
+            invoice.status = 'PAID';
+        } else if (totalPaid > 0) {
+            invoice.status = 'PARTIAL';
+        } else {
+            invoice.status = 'PENDING';
+        }
         await invoice.save();
 
         // 3. Ledger Entries

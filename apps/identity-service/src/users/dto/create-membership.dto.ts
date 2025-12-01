@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsUUID, IsOptional } from 'class-validator';
 
 export class CreateMembershipDto {
     @IsUUID()
@@ -6,6 +6,6 @@ export class CreateMembershipDto {
     tenantId!: string;
 
     @IsUUID()
-    @IsNotEmpty()
-    roleId!: string;
+    @IsOptional()
+    roleId?: string;
 }
