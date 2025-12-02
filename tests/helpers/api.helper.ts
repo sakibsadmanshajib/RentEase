@@ -27,7 +27,6 @@ export class ApiHelper {
             : '';
 
         const response = await context.get(url + queryString);
-        await context.dispose();
         return response;
     }
 
@@ -41,7 +40,6 @@ export class ApiHelper {
     ) {
         const context = await this.createAuthenticatedContext(token);
         const response = await context.post(url, { data });
-        await context.dispose();
         return response;
     }
 
@@ -55,7 +53,6 @@ export class ApiHelper {
     ) {
         const context = await this.createAuthenticatedContext(token);
         const response = await context.patch(url, { data });
-        await context.dispose();
         return response;
     }
 
@@ -68,7 +65,6 @@ export class ApiHelper {
     ) {
         const context = await this.createAuthenticatedContext(token);
         const response = await context.delete(url);
-        await context.dispose();
         return response;
     }
 

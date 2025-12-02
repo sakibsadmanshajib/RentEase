@@ -32,15 +32,21 @@ export default function PropertiesPage() {
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [newProperty, setNewProperty] = useState({ name: "", address: "" })
 
+    const [editingProperty, setEditingProperty] = useState<Property | null>(null)
+
     useEffect(() => {
         fetchProperties()
     }, [])
 
     async function fetchProperties() {
         try {
-            const data = await api.get('/properties')
+            console.log("Fetching properties...")
+            const data = await api.get(`/properties?t=${Date.now()}`)
+            console.log("Fetched properties:", data)
+            console.log('Fetched properties IDs:', data.map((p: any) => p.id))
             setProperties(data)
         } catch (err: any) {
+            console.error("Error fetching properties:", err)
             setError(err.message)
         } finally {
             setIsLoading(false)
@@ -49,13 +55,41 @@ export default function PropertiesPage() {
 
     async function handleCreateProperty(e: React.FormEvent) {
         e.preventDefault()
+        console.log("Creating property:", newProperty)
         try {
-            await api.post('/properties', {
+            const res = await api.post('/properties', {
                 ...newProperty,
                 tenantId: "none", // Mock tenant ID for now
             })
+            console.log("Property created:", res)
             setIsDialogOpen(false)
             setNewProperty({ name: "", address: "" })
+            fetchProperties()
+        } catch (err: any) {
+            console.error("Error creating property:", err)
+            setError(err.message)
+        }
+    }
+
+    async function handleUpdateProperty(e: React.FormEvent) {
+        e.preventDefault()
+        if (!editingProperty) return
+        try {
+            await api.patch(`/properties/${editingProperty.id}`, {
+                name: editingProperty.name,
+                address: editingProperty.address
+            })
+            setEditingProperty(null)
+            fetchProperties()
+        } catch (err: any) {
+            setError(err.message)
+        }
+    }
+
+    async function handleDeleteProperty(id: string) {
+        if (!confirm("Are you sure you want to delete this property?")) return
+        try {
+            await api.delete(`/properties/${id}`)
             fetchProperties()
         } catch (err: any) {
             setError(err.message)
@@ -109,6 +143,39 @@ export default function PropertiesPage() {
                         </form>
                     </DialogContent>
                 </Dialog>
+
+                <Dialog open={!!editingProperty} onOpenChange={(open) => !open && setEditingProperty(null)}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Edit Property</DialogTitle>
+                        </DialogHeader>
+                        <form onSubmit={handleUpdateProperty}>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="edit-name">Property Name</Label>
+                                    <Input
+                                        id="edit-name"
+                                        value={editingProperty?.name || ""}
+                                        onChange={(e) => setEditingProperty(prev => prev ? { ...prev, name: e.target.value } : null)}
+                                        required
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="edit-address">Address</Label>
+                                    <Input
+                                        id="edit-address"
+                                        value={editingProperty?.address || ""}
+                                        onChange={(e) => setEditingProperty(prev => prev ? { ...prev, address: e.target.value } : null)}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button type="submit">Update Property</Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
 
             {error && (
@@ -139,6 +206,10 @@ export default function PropertiesPage() {
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
                                     <MapPin className="h-4 w-4" />
                                     <span>{property.address}</span>
+                                </div>
+                                <div className="flex gap-2 mt-4">
+                                    <Button variant="outline" size="sm" onClick={() => setEditingProperty(property)}>Edit</Button>
+                                    <Button variant="destructive" size="sm" onClick={() => handleDeleteProperty(property.id)}>Delete</Button>
                                 </div>
                             </CardContent>
                         </Card>

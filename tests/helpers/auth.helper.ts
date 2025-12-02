@@ -20,11 +20,13 @@ export class AuthHelper {
         phone: string;
     }): Promise<any> {
         const context = await request.newContext();
+        console.log(`Registering user at ${this.baseUrl}/auth/register with data:`, JSON.stringify(userData));
         const response = await context.post(`${this.baseUrl}/auth/register`, {
             data: userData
         });
 
         if (!response.ok()) {
+            console.log(`Registration response: ${response.status()} ${await response.text()}`);
             throw new Error(`Registration failed: ${response.status()} ${await response.text()}`);
         }
 

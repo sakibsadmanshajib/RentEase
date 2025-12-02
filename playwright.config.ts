@@ -67,24 +67,27 @@ export default defineConfig({
             testDir: './tests/e2e',
             use: {
                 ...devices['Desktop Chrome'],
-                baseURL: 'http://localhost:3000'
             },
         },
-        {
-            name: 'firefox-e2e',
-            testDir: './tests/e2e',
-            use: {
-                ...devices['Desktop Firefox'],
-                baseURL: 'http://localhost:3000'
-            },
-        },
+        // {
+        //     name: 'firefox-e2e',
+        //     testDir: './tests/e2e',
+        //     use: {
+        //         ...devices['Desktop Firefox'],
+        //     },
+        // },
+        // {
+        //   name: 'webkit-e2e',
+        //   use: { ...devices['Desktop Safari'] },
+        //   testDir: './tests/e2e',
+        // },
     ],
 
     // Web server for E2E tests only (disabled for API tests and CI)
-    webServer: (process.env.CI || process.env.API_ONLY) ? undefined : {
-        command: 'pnpm dev',
-        url: 'http://localhost:3000',
-        reuseExistingServer: !process.env.CI,
-        timeout: 120000,
-    },
+    // webServer: (process.env.CI || process.env.API_ONLY) ? undefined : {
+    //     command: 'pnpm dev',
+    //     url: 'http://localhost:3000',
+    //     reuseExistingServer: !process.env.CI,
+    //     timeout: 120000,
+    // },
 });

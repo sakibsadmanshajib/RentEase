@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Building, Users, FileText, Settings, LogOut } from "lucide-react"
+import { LayoutDashboard, Building, Users, FileText, Settings, LogOut, DollarSign } from "lucide-react"
 
 const sidebarItems = [
     {
@@ -18,14 +18,24 @@ const sidebarItems = [
         icon: Building,
     },
     {
-        title: "Tenant Portal",
-        href: "/dashboard/tenant",
+        title: "Tenants",
+        href: "/dashboard/tenants",
         icon: Users,
     },
     {
         title: "Leases",
         href: "/dashboard/leases",
         icon: FileText,
+    },
+    {
+        title: "Tenant Portal",
+        href: "/dashboard/tenant",
+        icon: Users,
+    },
+    {
+        title: "Billing",
+        href: "/dashboard/billing",
+        icon: DollarSign,
     },
     {
         title: "Settings",

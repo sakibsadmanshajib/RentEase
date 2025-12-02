@@ -26,7 +26,8 @@ export default function LoginPage() {
         const password = formData.get("password") as string
 
         try {
-            await login({ email, password })
+            const response = await login({ email, password })
+            localStorage.setItem('token', response.accessToken)
             router.push("/dashboard")
         } catch (err: any) {
             setError(err.message)
@@ -82,7 +83,7 @@ export default function LoginPage() {
                                         required
                                     />
                                 </div>
-                                <Button className="w-full" disabled={isLoading}>
+                                <Button className="w-full" disabled={isLoading} type="submit">
                                     {isLoading && (
                                         <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                                     )}

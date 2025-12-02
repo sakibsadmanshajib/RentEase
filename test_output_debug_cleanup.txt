@@ -1,0 +1,72 @@
+
+Running 1 test using 1 worker
+
+[1A[2K[1/1] [chromium-e2e] › tests/e2e/tenant-crud.spec.ts:22:9 › Tenant CRUD E2E › Landlord can create, edit, and delete a tenant
+[1A[2K[chromium-e2e] › tests/e2e/tenant-crud.spec.ts:22:9 › Tenant CRUD E2E › Landlord can create, edit, and delete a tenant
+Registering user at http://localhost:4000/auth/register with data: {"email":"landlord-tenant-1764645163659@example.com","password":"Password123!","firstName":"Landlord","lastName":"Tenant","phone":"555-0123"}
+
+[1A[2KPAGE LOG: Failed to load resource: the server responded with a status of 404 (Not Found)
+
+[1A[2KPAGE LOG: Failed to load resource: the server responded with a status of 404 (Not Found)
+
+[1A[2KPAGE LOG: Failed to load resource: the server responded with a status of 404 (Not Found)
+
+[1A[2KPAGE LOG: Failed to load resource: the server responded with a status of 404 (Not Found)
+
+[1A[2KPAGE LOG: Failed to load resource: the server responded with a status of 404 (Not Found)
+
+[1A[2KPAGE LOG: Failed to load resource: the server responded with a status of 404 (Not Found)
+
+[1A[2KPAGE LOG: Failed to load resource: the server responded with a status of 404 (Not Found)
+
+[1A[2KPAGE LOG: Failed to load resource: the server responded with a status of 404 (Not Found)
+
+[1A[2KPAGE LOG: Failed to load resource: the server responded with a status of 404 (Not Found)
+
+[1A[2KPAGE LOG: Failed to load resource: the server responded with a status of 404 (Not Found)
+
+[1A[2KPAGE LOG: The resource http://localhost:3002/_next/static/media/e4af272ccee01ff0-s.p.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.
+
+[1A[2K  1) [chromium-e2e] › tests/e2e/tenant-crud.spec.ts:22:9 › Tenant CRUD E2E › Landlord can create, edit, and delete a tenant 
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveURL[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Expected: [32m"http://localhost:3002/[7mdashboard[27m"[39m
+    Received: [31m"http://localhost:3002/[7mauth/login?email=landlord-tenant-1764645163659%40example.com&password=Password123%21[27m"[39m
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toHaveURL" with timeout 5000ms[22m
+    [2m    9 × unexpected value "http://localhost:3002/auth/login?email=landlord-tenant-1764645163659%40example.com&password=Password123%21"[22m
+
+
+      32 |         await page.fill('input[name="password"]', landlordData.password);
+      33 |         await page.click('button[type="submit"]');
+    > 34 |         await expect(page).toHaveURL(`${WEB_URL}/dashboard`);
+         |                            ^
+      35 |
+      36 |         // Navigate to Tenants
+      37 |         await page.click('a[href="/dashboard/tenants"]');
+        at /home/sakib/RentEase/tests/e2e/tenant-crud.spec.ts:34:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/tenant-crud-Tenant-CRUD-E2-3602f-te-edit-and-delete-a-tenant-chromium-e2e/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/tenant-crud-Tenant-CRUD-E2-3602f-te-edit-and-delete-a-tenant-chromium-e2e/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/tenant-crud-Tenant-CRUD-E2-3602f-te-edit-and-delete-a-tenant-chromium-e2e/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/tenant-crud-Tenant-CRUD-E2-3602f-te-edit-and-delete-a-tenant-chromium-e2e/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/tenant-crud-Tenant-CRUD-E2-3602f-te-edit-and-delete-a-tenant-chromium-e2e/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[1A[2K  1 failed
+    [chromium-e2e] › tests/e2e/tenant-crud.spec.ts:22:9 › Tenant CRUD E2E › Landlord can create, edit, and delete a tenant 

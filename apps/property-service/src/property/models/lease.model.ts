@@ -1,6 +1,6 @@
 import { Column, Model, Table, DataType } from 'sequelize-typescript';
 
-@Table({ tableName: 'Leases_v2' })
+@Table({ tableName: 'Leases' })
 export class Lease extends Model {
     @Column({
         type: DataType.UUID,
@@ -9,15 +9,23 @@ export class Lease extends Model {
     })
     id!: string;
 
-    // @ForeignKey(() => Unit)
+    @Column({
+        type: DataType.STRING,
+        allowNull: false,
+    })
+    tenantId!: string;
+
     @Column({
         type: DataType.UUID,
         allowNull: false,
     })
-    unitId!: string;
+    propertyId!: string;
 
-    // @BelongsTo(() => Unit)
-    // unit!: Unit;
+    @Column({
+        type: DataType.UUID,
+        allowNull: true,
+    })
+    unitId?: string;
 
     @Column({
         type: DataType.DATE,
@@ -34,15 +42,13 @@ export class Lease extends Model {
     @Column({
         type: DataType.DECIMAL(10, 2),
         allowNull: false,
+        field: 'monthlyRent',
     })
     rentAmount!: number;
 
     @Column({
         type: DataType.STRING,
-        defaultValue: 'DRAFT', // DRAFT, ACTIVE, EXPIRED, TERMINATED
+        defaultValue: 'DRAFT',
     })
     status!: string;
-
-    // @HasMany(() => LeaseOccupant)
-    // occupants!: LeaseOccupant[];
 }

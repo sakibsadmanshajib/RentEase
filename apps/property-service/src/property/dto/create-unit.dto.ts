@@ -7,7 +7,7 @@ export class CreateUnitDto {
 
     @IsString()
     @IsNotEmpty()
-    name!: string;
+    unitNumber!: string;
 
     @IsString()
     @IsOptional()

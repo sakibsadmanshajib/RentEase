@@ -1,7 +1,7 @@
 import { Column, Model, Table, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
 import { Property } from './property.model';
 
-@Table({ tableName: 'Units_v2' })
+@Table({ tableName: 'Units' })
 export class Unit extends Model {
     @Column({
         type: DataType.UUID,
@@ -9,6 +9,12 @@ export class Unit extends Model {
         primaryKey: true,
     })
     id!: string;
+
+    @Column({
+        type: DataType.STRING,
+        allowNull: false,
+    })
+    tenantId!: string;
 
     @ForeignKey(() => Property)
     @Column({
@@ -24,14 +30,11 @@ export class Unit extends Model {
         type: DataType.STRING,
         allowNull: false,
     })
-    name!: string;
+    unitNumber!: string;
 
     @Column({
         type: DataType.STRING,
-        defaultValue: 'VACANT', // VACANT, OCCUPIED, MAINTENANCE
+        defaultValue: 'available', // Migration says 'available', model said 'VACANT'. Migration wins.
     })
     status!: string;
-
-    // @HasMany(() => Lease)
-    // leases!: any[];
 }

@@ -30,10 +30,10 @@ export class LeaseService {
 
     async findOne(id: string): Promise<Lease | null> {
         const lease = await this.leaseModel.findByPk(id);
-        if (lease) {
-            const occupants = await this.occupantModel.findAll({ where: { leaseId: id } });
-            lease.setDataValue('occupants', occupants);
-        }
+        // if (lease) {
+        //     const occupants = await this.occupantModel.findAll({ where: { leaseId: id } });
+        //     lease.setDataValue('occupants', occupants);
+        // }
         return lease;
     }
 
@@ -79,5 +79,19 @@ export class LeaseService {
             throw new NotFoundException('Lease not found');
         }
         return this.occupantModel.create({ leaseId, userId });
+    }
+    async update(id: string, updateLeaseDto: any): Promise<Lease> {
+        const lease = await this.findOne(id);
+        if (!lease) {
+            throw new NotFoundException('Lease not found');
+        }
+        return lease.update(updateLeaseDto);
+    }
+
+    async remove(id: string): Promise<void> {
+        const lease = await this.findOne(id);
+        if (lease) {
+            await lease.destroy();
+        }
     }
 }

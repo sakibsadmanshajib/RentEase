@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Patch, Delete } from '@nestjs/common';
 import { LeaseService } from './lease.service';
 import { CreateLeaseDto } from './dto/create-lease.dto';
 import { Lease } from './models/lease.model';
@@ -38,5 +38,15 @@ export class LeaseController {
         @Body('userId') userId: string,
     ) {
         return this.leaseService.addOccupant(id, userId);
+    }
+
+    @Patch(':id')
+    update(@Param('id') id: string, @Body() updateLeaseDto: any) {
+        return this.leaseService.update(id, updateLeaseDto);
+    }
+
+    @Delete(':id')
+    remove(@Param('id') id: string) {
+        return this.leaseService.remove(id);
     }
 }
