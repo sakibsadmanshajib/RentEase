@@ -9,9 +9,8 @@ const BILLING_URL = process.env.BILLING_SERVICE_URL || 'http://localhost:3004';
 // Run this test serially to avoid resource contention
 test.describe.configure({ mode: 'serial' });
 
-// Skip this test - requires payment date field to be passed in API calls
-// The full billing lifecycle test needs API fixes to work reliably.
-test.describe.skip('Billing Lifecycle E2E @e2e', () => {
+// Full billing lifecycle test - Invoice, Payment, Ledger
+test.describe('Billing Lifecycle E2E @e2e', () => {
     let landlordAuth: AuthHelper;
     let tenantAuth: AuthHelper;
     let landlordToken: string;
@@ -114,7 +113,7 @@ test.describe.skip('Billing Lifecycle E2E @e2e', () => {
             leaseId,
             amount: 1500,
             dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            items: [
+            lineItems: [
                 { description: 'Rent for December', amount: 1500 }
             ]
         });

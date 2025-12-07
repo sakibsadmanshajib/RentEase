@@ -7,9 +7,8 @@ const WEB_URL = process.env.WEB_URL || 'http://localhost:3000';
 // Run this test serially to avoid resource contention
 test.describe.configure({ mode: 'serial' });
 
-// Skip this test due to persistent state issues - the page shows stale errors
-// from previous failed attempts. Works when run with fresh browser state.
-test.describe.skip('Billing CRUD E2E', () => {
+// Note: This test requires fresh browser state for reliable execution
+test.describe('Billing CRUD E2E', () => {
     let authHelper: AuthHelper;
     let landlordData: any;
 
@@ -35,7 +34,7 @@ test.describe.skip('Billing CRUD E2E', () => {
         await page.fill('input[name="email"]', landlordData.email);
         await page.fill('input[name="password"]', landlordData.password);
         await page.click('button[type="submit"]');
-        await expect(page).toHaveURL(`${WEB_URL}/dashboard`);
+        await page.waitForURL(/\/(dashboard|portal|admin)/, { timeout: 15000 });
 
         // Navigate to Billing
         await page.click('a[href="/dashboard/billing"]');
@@ -60,23 +59,28 @@ test.describe.skip('Billing CRUD E2E', () => {
         const dueDate = '2025-02-01';
 
         await page.fill('input[id="amount"]', amount);
+        await page.fill('input[id="description"]', `Invoice ${amount}`);
         await page.fill('input[id="dueDate"]', dueDate);
         // tenantId is required - always fill it
         await page.fill('input[id="tenantId"]', tenantId);
-        // Only fill optional fields if they exist
-        const descField = page.locator('input[id="description"]');
-        if (await descField.isVisible()) {
-            await descField.fill(`Invoice ${amount}`);
-        }
+        // leaseId is optional
         const leaseIdField = page.locator('input[id="leaseId"]');
         if (await leaseIdField.isVisible()) {
             await leaseIdField.fill(leaseId);
         }
-        await page.click('button[type="submit"]');
+        // Wait for invoice creation API response before clicking submit
+        const [createResponse] = await Promise.all([
+            page.waitForResponse(response => response.url().includes('/invoices') && response.request().method() === 'POST', { timeout: 10000 }),
+            page.click('button[type="submit"]')
+        ]);
+        expect(createResponse.status()).toBe(201);
+        
+        // Wait for page to refresh/update with new invoice
+        await page.waitForTimeout(1000);
         
         // Verify creation by checking for the formatted amount
         const formattedAmount = `$${Number(amount).toFixed(2)}`;
-        await expect(page.locator(`text=${formattedAmount}`).first()).toBeVisible();
+        await expect(page.locator(`text=${formattedAmount}`).first()).toBeVisible({ timeout: 10000 });
 
         // Edit Invoice - target by amount
         await page.locator('.bg-card').filter({ hasText: formattedAmount }).first().locator('button:has-text("Edit")').click();

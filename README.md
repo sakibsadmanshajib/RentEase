@@ -99,9 +99,17 @@ The project maintains a comprehensive E2E test suite using Playwright.
 ### Running Tests
 
 ```bash
-# Run full E2E suite
-npx playwright test
+# Run all tests (unit, API, integration, E2E)
+pnpm test:ci
+
+# Run API tests only
+pnpm test:api
+
+# Run E2E tests only (uses --workers=1 for stability)
+pnpm test:e2e
 
 # View HTML Report
-npx playwright show-report
+pnpm exec playwright show-report
 ```
+
+> **Note:** E2E tests run with `--workers=1` to prevent flaky failures from parallel execution and resource contention.

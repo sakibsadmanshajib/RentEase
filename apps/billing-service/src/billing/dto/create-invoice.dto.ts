@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, IsDateString, IsObject } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsDateString, IsObject, IsArray } from 'class-validator';
 
 export class CreateInvoiceDto {
     @IsString()
@@ -39,11 +39,10 @@ export class CreateInvoiceDto {
     description?: string;
 
     @IsOptional()
-    @IsObject()
-    lineItems?: any;
+    @IsArray()
+    lineItems?: any[];
 
     @IsOptional()
     @IsObject()
     items?: any;
 }
-

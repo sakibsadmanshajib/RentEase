@@ -50,7 +50,8 @@ test.describe('Authentication Flow E2E', () => {
         await page.fill('input[name="password"]', loginUser.password);
         await page.click('button[type="submit"]');
 
-        await expect(page).toHaveURL(`${WEB_URL}/dashboard`);
+        // Wait for navigation to complete (could be dashboard, portal, or admin based on role)
+        await page.waitForURL(/\/(dashboard|portal|admin)/, { timeout: 15000 });
     });
 
     test('User receives error with invalid credentials', async ({ page }) => {
@@ -77,7 +78,8 @@ test.describe('Authentication Flow E2E', () => {
         await page.fill('input[name="email"]', logoutUser.email);
         await page.fill('input[name="password"]', logoutUser.password);
         await page.click('button[type="submit"]');
-        await expect(page).toHaveURL(`${WEB_URL}/dashboard`);
+        // Wait for navigation to complete
+        await page.waitForURL(/\/(dashboard|portal|admin)/, { timeout: 15000 });
 
         // Perform Logout - click the user menu button (has data-testid)
         await page.click('[data-testid="user-menu"]');

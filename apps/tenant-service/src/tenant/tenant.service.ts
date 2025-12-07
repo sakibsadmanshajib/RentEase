@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { ConfigService } from '@nestjs/config';
 import { Tenant } from './models/tenant.model';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
@@ -16,6 +17,7 @@ export class TenantService {
         @InjectModel(Invitation)
         private invitationModel: typeof Invitation,
         private readonly httpService: HttpService,
+        private readonly configService: ConfigService,
     ) { }
 
     async create(createTenantDto: CreateTenantDto, userId?: string): Promise<Tenant> {
@@ -37,9 +39,11 @@ export class TenantService {
             // Create membership for the creator (as Admin/Owner of this tenant)
             try {
                 await firstValueFrom(
-                    this.httpService.post(`http://localhost:3001/users/${userId}/tenants`, {
+                    this.httpService.post(`http://localhost:3001/internal/users/${userId}/tenants`, {
                         tenantId: tenant.id,
                         roleId: null, // Default role or null
+                    }, {
+                        headers: { 'X-Service-Token': this.configService.get('SERVICE_SECRET') }
                     })
                 );
             } catch (error) {
@@ -147,9 +151,11 @@ export class TenantService {
         // Call Identity Service to create UserTenantMembership
         try {
             await firstValueFrom(
-                this.httpService.post(`http://localhost:3001/users/${userId}/tenants`, {
+                this.httpService.post(`http://localhost:3001/internal/users/${userId}/tenants`, {
                     tenantId: invitation.tenantId,
                     roleId: invitation.roleId,
+                }, {
+                    headers: { 'X-Service-Token': this.configService.get('SERVICE_SECRET') }
                 })
             );
         } catch (error) {

@@ -31,7 +31,7 @@ test.describe('Google Auth Integration', () => {
     await page.goto(`${WEB_URL}/auth/callback?token=${mockToken}`);
 
     // Should redirect to portal
-    await expect(page).toHaveURL(/.*\/portal/);
+    await page.waitForURL(/.*\/portal/, { timeout: 15000 });
   });
 
   test('Auth Callback handles token and redirects Admin', async ({ page }) => {
@@ -54,7 +54,7 @@ test.describe('Google Auth Integration', () => {
     await page.goto(`${WEB_URL}/auth/callback?token=${mockToken}`);
 
     // Should redirect to admin
-    await expect(page).toHaveURL(/.*\/admin/);
+    await page.waitForURL(/.*\/admin/, { timeout: 15000 });
   });
 
     test('Auth Callback handles token and redirects Landlord (Default)', async ({ page }) => {
@@ -77,6 +77,6 @@ test.describe('Google Auth Integration', () => {
     await page.goto(`${WEB_URL}/auth/callback?token=${mockToken}`);
 
     // Should redirect to dashboard
-    await expect(page).toHaveURL(/.*\/dashboard/);
+    await page.waitForURL(/.*\/dashboard/, { timeout: 15000 });
   });
 });

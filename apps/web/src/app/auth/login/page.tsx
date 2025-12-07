@@ -35,15 +35,15 @@ export default function LoginPage() {
                 const user = await getProfile(response.accessToken);
                 
                 if (user.roles?.some((r: any) => r.name === 'Admin')) {
-                    router.push("/admin");
+                    await router.push("/admin");
                 } else if (user.tenantMemberships?.length > 0) {
-                    router.push("/portal");
+                    await router.push("/portal");
                 } else {
-                    router.push("/dashboard");
+                    await router.push("/dashboard");
                 }
             } catch (profileErr) {
                 console.error("Failed to fetch profile for redirection", profileErr);
-                router.push("/dashboard"); // Fallback
+                await router.push("/dashboard"); // Fallback
             }
 
         } catch (err: any) {

@@ -8,7 +8,7 @@
     "test:unit": "turbo test:unit",
     "test:api": "API_ONLY=true playwright test --grep @api",
     "test:integration": "playwright test tests/integration",
-    "test:e2e": "playwright test tests/e2e",
+    "test:e2e": "playwright test tests/e2e --workers=1",
     "test:ci": "pnpm test:unit && pnpm test:api && pnpm test:integration && pnpm test:e2e",
     "dev": "turbo dev",
     "dev:backend": "turbo dev --filter='!web' --filter='!api-gateway'",
