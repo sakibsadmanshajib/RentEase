@@ -118,7 +118,7 @@ export default function LoginPage() {
                                 </span>
                             </div>
                         </div>
-                        <Button variant="outline" type="button" disabled={isLoading} className="w-full" onClick={() => window.location.href = 'http://localhost:4000/auth/google'}>
+                        <Button variant="outline" type="button" disabled={isLoading} className="w-full" onClick={() => window.location.href = 'http://localhost:3001/auth/google'}>
                             Google
                         </Button>
                     </CardContent>

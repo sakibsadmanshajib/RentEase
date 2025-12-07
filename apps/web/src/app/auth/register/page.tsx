@@ -117,7 +117,7 @@ export default function RegisterPage() {
                                 </span>
                             </div>
                         </div>
-                        <Button variant="outline" type="button" disabled={isLoading} className="w-full">
+                        <Button variant="outline" type="button" disabled={isLoading} className="w-full" onClick={() => window.location.href = 'http://localhost:3001/auth/google'}>
                             Google
                         </Button>
                     </CardContent>

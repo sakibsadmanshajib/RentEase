@@ -63,6 +63,17 @@ export class AuthService {
             access_token: this.jwtService.sign(payload),
         };
     }
+    async loginWithGoogle(user: User) {
+        const payload = { email: user.email, sub: user.id };
+        const accessToken = this.jwtService.sign(payload);
+        const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+
+        return {
+            accessToken,
+            refreshToken,
+        };
+    }
+
     async validateGoogleUser(googleUser: { email: string, firstName: string, lastName: string, picture: string, accessToken: string }) {
         let user = await this.userModel.findOne({ where: { email: googleUser.email } });
         if (!user) {
