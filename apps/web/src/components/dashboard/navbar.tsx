@@ -12,14 +12,35 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Bell } from "lucide-react"
+import { Bell, Loader2 } from "lucide-react"
+import { useUser } from "@/hooks/useUser"
 
 export function DashboardNavbar() {
     const router = useRouter()
+    const { user, loading } = useUser()
 
     function handleLogout() {
         localStorage.removeItem('token')
+        localStorage.removeItem('tenantId')
         router.push('/auth/login')
+    }
+
+    // Generate initials from user name
+    const getInitials = () => {
+        if (!user) return '?'
+        const first = user.firstName?.charAt(0) || ''
+        const last = user.lastName?.charAt(0) || ''
+        if (first || last) return (first + last).toUpperCase()
+        return user.email?.charAt(0).toUpperCase() || '?'
+    }
+
+    // Get display name
+    const getDisplayName = () => {
+        if (!user) return 'Loading...'
+        if (user.firstName || user.lastName) {
+            return `${user.firstName || ''} ${user.lastName || ''}`.trim()
+        }
+        return user.email?.split('@')[0] || 'User'
     }
 
     return (
@@ -37,17 +58,21 @@ export function DashboardNavbar() {
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="relative h-8 w-8 rounded-full" data-testid="user-menu">
                             <Avatar className="h-8 w-8">
-                                <AvatarImage src="/avatars/01.png" alt="@shadcn" />
-                                <AvatarFallback>JD</AvatarFallback>
+                                <AvatarImage src="/avatars/01.png" alt={getDisplayName()} />
+                                <AvatarFallback>
+                                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : getInitials()}
+                                </AvatarFallback>
                             </Avatar>
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56" align="end" forceMount>
                         <DropdownMenuLabel className="font-normal">
                             <div className="flex flex-col space-y-1">
-                                <p className="text-sm font-medium leading-none">John Doe</p>
+                                <p className="text-sm font-medium leading-none">
+                                    {loading ? 'Loading...' : getDisplayName()}
+                                </p>
                                 <p className="text-xs leading-none text-muted-foreground">
-                                    john@example.com
+                                    {loading ? '' : user?.email || ''}
                                 </p>
                             </div>
                         </DropdownMenuLabel>
@@ -68,3 +93,4 @@ export function DashboardNavbar() {
         </header>
     )
 }
+

@@ -4,6 +4,8 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from '../users/models/user.model';
+import { UserTenantMembership } from '../users/models/user-tenant-membership.model';
+import { Role } from '../users/models/role.model';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -11,6 +13,8 @@ export class AuthService {
     constructor(
         @InjectModel(User)
         private userModel: typeof User,
+        @InjectModel(UserTenantMembership)
+        private membershipModel: typeof UserTenantMembership,
         private jwtService: JwtService
     ) { }
 
@@ -24,19 +28,56 @@ export class AuthService {
         return null;
     }
 
+    /**
+     * Get user's primary tenant membership for JWT payload
+     */
+    private async getPrimaryMembership(userId: string): Promise<{tenantId?: string, roles: string[]}> {
+        const memberships = await this.membershipModel.findAll({
+            where: { userId },
+            include: [{ model: Role, attributes: ['name'] }],
+            order: [['createdAt', 'ASC']], // First created is primary
+        });
+
+        if (memberships.length === 0) {
+            return { tenantId: undefined, roles: [] };
+        }
+
+        const primary = memberships[0];
+        const roles = primary.role?.name ? [primary.role.name] : [];
+        
+        return {
+            tenantId: primary.tenantId,
+            roles,
+        };
+    }
+
+    /**
+     * Build JWT payload with tenant context
+     */
+    private async buildJwtPayload(user: User) {
+        const { tenantId, roles } = await this.getPrimaryMembership(user.id);
+        return {
+            email: user.email,
+            sub: user.id,
+            tenantId,
+            roles,
+        };
+    }
+
     async login(loginDto: LoginDto) {
         const user = await this.validateUser(loginDto.email, loginDto.password);
         if (!user) {
             throw new UnauthorizedException('Invalid credentials');
         }
 
-        const payload = { email: user.email, sub: user.id };
+        const payload = await this.buildJwtPayload(user);
         const accessToken = this.jwtService.sign(payload);
         const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
 
         return {
             accessToken,
             refreshToken,
+            tenantId: payload.tenantId, // Return tenantId for frontend storage
         };
     }
 
@@ -56,21 +97,24 @@ export class AuthService {
 
         // Return user object without password, plus access token for convenience
         const { password, ...userWithoutPassword } = user.toJSON();
-        const payload = { email: user.email, sub: user.id };
+        const payload = await this.buildJwtPayload(user);
 
         return {
             ...userWithoutPassword,
             access_token: this.jwtService.sign(payload),
+            tenantId: payload.tenantId, // Return tenantId for frontend storage
         };
     }
+
     async loginWithGoogle(user: User) {
-        const payload = { email: user.email, sub: user.id };
+        const payload = await this.buildJwtPayload(user);
         const accessToken = this.jwtService.sign(payload);
         const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
 
         return {
             accessToken,
             refreshToken,
+            tenantId: payload.tenantId, // Return tenantId for frontend storage
         };
     }
 
@@ -91,4 +135,39 @@ export class AuthService {
         }
         return user;
     }
+
+    /**
+     * Switch to a different tenant (for multi-org users)
+     */
+    async switchTenant(userId: string, targetTenantId: string) {
+        const user = await this.userModel.findByPk(userId);
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+
+        // Verify user has membership in target tenant
+        const membership = await this.membershipModel.findOne({
+            where: { userId, tenantId: targetTenantId },
+            include: [{ model: Role, attributes: ['name'] }],
+        });
+
+        if (!membership) {
+            throw new UnauthorizedException('No access to this tenant');
+        }
+
+        const roles = membership.role?.name ? [membership.role.name] : [];
+        const payload = {
+            email: user.email,
+            sub: user.id,
+            tenantId: targetTenantId,
+            roles,
+        };
+
+        return {
+            accessToken: this.jwtService.sign(payload),
+            refreshToken: this.jwtService.sign(payload, { expiresIn: '7d' }),
+            tenantId: targetTenantId,
+        };
+    }
 }
+

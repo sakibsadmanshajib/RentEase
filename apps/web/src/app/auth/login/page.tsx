@@ -29,6 +29,9 @@ export default function LoginPage() {
             const response = await login({ email, password })
             console.log('Login Response:', response);
             localStorage.setItem('token', response.accessToken)
+            if (response.tenantId) {
+                localStorage.setItem('tenantId', response.tenantId)
+            }
             
             // Fetch profile for role-based redirection
             try {

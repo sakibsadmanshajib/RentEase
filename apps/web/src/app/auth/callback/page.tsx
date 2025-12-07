@@ -12,8 +12,12 @@ function AuthCallbackContent() {
     useEffect(() => {
         const handleAuth = async () => {
             const token = searchParams.get("token")
+            const tenantId = searchParams.get("tenantId")
             if (token) {
                 localStorage.setItem("token", token)
+                if (tenantId) {
+                    localStorage.setItem("tenantId", tenantId)
+                }
                 
                 try {
                     const user = await getProfile(token)

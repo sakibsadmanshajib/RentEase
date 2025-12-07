@@ -3,6 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -26,7 +27,19 @@ export class AuthController {
     @Get('google/callback')
     @UseGuards(AuthGuard('google'))
     async googleAuthRedirect(@Req() req: any, @Res() res: any) {
-        const { accessToken } = await this.authService.loginWithGoogle(req.user);
-        res.redirect(`http://localhost:3000/auth/callback?token=${accessToken}`);
+        const { accessToken, tenantId } = await this.authService.loginWithGoogle(req.user);
+        const params = new URLSearchParams({ token: accessToken });
+        if (tenantId) {
+            params.set('tenantId', tenantId);
+        }
+        res.redirect(`http://localhost:3000/auth/callback?${params.toString()}`);
+    }
+
+    @Post('switch-tenant')
+    @UseGuards(JwtAuthGuard)
+    @HttpCode(200)
+    async switchTenant(@Req() req: any, @Body('tenantId') tenantId: string) {
+        return this.authService.switchTenant(req.user.id, tenantId);
     }
 }
+
