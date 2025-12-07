@@ -54,6 +54,11 @@ export default defineConfig({
             testDir: './tests/api/billing',
             use: { baseURL: 'http://localhost:3004' },
         },
+        {
+            name: 'api-gateway',
+            testDir: './tests/api/gateway',
+            use: { baseURL: 'http://localhost:4000' },
+        },
 
         // Integration Tests
         {

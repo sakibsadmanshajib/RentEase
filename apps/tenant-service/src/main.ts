@@ -12,7 +12,7 @@ async function bootstrap() {
         transform: true,
     }));
     
-    const port = process.env.PORT || 3005;
+    const port = process.env.PORT || 3002;
     await app.listen(port);
     Logger.log(`Service is running on: ${await app.getUrl()}`, 'Bootstrap');
 }

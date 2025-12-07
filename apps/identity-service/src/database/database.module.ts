@@ -1,21 +1,18 @@
 import { Module } from '@nestjs/common';
-import { SequelizeModule } from '@nestjs/sequelize';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { SequelizeModule } from '@nestjs/sequelize';
 import { User } from '../users/models/user.model';
 import { Role } from '../users/models/role.model';
 import { UserRole } from '../users/models/user-role.model';
 import { Permission } from '../users/models/permission.model';
 import { RolePermission } from '../users/models/role-permission.model';
 import { UserTenantMembership } from '../users/models/user-tenant-membership.model';
-import { MigrationService } from './migration.service';
 
 @Module({
     imports: [
-        ConfigModule.forRoot({
-            isGlobal: true,
-            envFilePath: ['.env', '.env.local'],
-        }),
+        ConfigModule,
         SequelizeModule.forRootAsync({
+            imports: [ConfigModule],
             inject: [ConfigService],
             useFactory: (configService: ConfigService) => ({
                 dialect: 'postgres',
@@ -25,12 +22,13 @@ import { MigrationService } from './migration.service';
                 password: configService.get('DB_PASSWORD', 'password'),
                 database: configService.get('DB_DATABASE', 'rentease'),
                 autoLoadModels: true,
-                synchronize: false, // Migration-based schema management
+                synchronize: false,
                 models: [User, Role, UserRole, Permission, RolePermission, UserTenantMembership],
+                logging: false,
             }),
         }),
     ],
-    providers: [MigrationService],
-    exports: [MigrationService],
+    providers: [],
+    exports: [SequelizeModule],
 })
 export class DatabaseModule { }

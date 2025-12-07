@@ -18,7 +18,7 @@ export class TenantService {
         private readonly httpService: HttpService,
     ) { }
 
-    async create(createTenantDto: CreateTenantDto): Promise<Tenant> {
+    async create(createTenantDto: CreateTenantDto, userId?: string): Promise<Tenant> {
         console.log('CreateTenantDto:', createTenantDto);
         const { firstName, lastName, email, phone, ...rest } = createTenantDto;
         const name = `${firstName} ${lastName}`;
@@ -31,7 +31,25 @@ export class TenantService {
             contactPhone: phone,
         };
         console.log('TenantData:', tenantData);
-        return this.tenantModel.create(tenantData);
+        const tenant = await this.tenantModel.create(tenantData);
+
+        if (userId) {
+            // Create membership for the creator (as Admin/Owner of this tenant)
+            try {
+                await firstValueFrom(
+                    this.httpService.post(`http://localhost:3001/users/${userId}/tenants`, {
+                        tenantId: tenant.id,
+                        roleId: null, // Default role or null
+                    })
+                );
+            } catch (error) {
+                console.error('Failed to create membership for creator', error);
+                // Don't fail the request, but log it. 
+                // In production, we might want to transaction this.
+            }
+        }
+        
+        return tenant;
     }
 
     async findAll(): Promise<Tenant[]> {

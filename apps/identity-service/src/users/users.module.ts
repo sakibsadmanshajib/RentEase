@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
@@ -21,7 +21,7 @@ import { AuthModule } from '../auth/auth.module';
             Permission,
             RolePermission
         ]),
-        AuthModule,
+        forwardRef(() => AuthModule),
     ],
     controllers: [UsersController],
     providers: [UsersService],

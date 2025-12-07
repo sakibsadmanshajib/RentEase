@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Param, HttpException, HttpStatus, Patch, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, HttpException, HttpStatus, Patch, Delete, Req } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { Request } from 'express';
 
 @Controller('leases')
 export class LeaseController {
@@ -10,9 +11,11 @@ export class LeaseController {
     constructor(private readonly httpService: HttpService) { }
 
     @Post()
-    async create(@Body() body: any) {
+    async create(@Body() body: any, @Req() req: Request) {
         const response = await firstValueFrom(
-            this.httpService.post(this.PROPERTY_SERVICE_URL, body).pipe(
+            this.httpService.post(this.PROPERTY_SERVICE_URL, body, {
+                headers: { Authorization: req.headers.authorization }
+            }).pipe(
                 catchError((error) => {
                     throw new HttpException(
                         error.response?.data || 'Failed to create lease',
@@ -25,9 +28,11 @@ export class LeaseController {
     }
 
     @Get()
-    async findAll() {
+    async findAll(@Req() req: Request) {
         const response = await firstValueFrom(
-            this.httpService.get(this.PROPERTY_SERVICE_URL).pipe(
+            this.httpService.get(this.PROPERTY_SERVICE_URL, {
+                headers: { Authorization: req.headers.authorization }
+            }).pipe(
                 catchError((error) => {
                     throw new HttpException(
                         error.response?.data || 'Failed to fetch leases',
@@ -40,9 +45,11 @@ export class LeaseController {
     }
 
     @Get(':id')
-    async findOne(@Param('id') id: string) {
+    async findOne(@Param('id') id: string, @Req() req: Request) {
         const response = await firstValueFrom(
-            this.httpService.get(`${this.PROPERTY_SERVICE_URL}/${id}`).pipe(
+            this.httpService.get(`${this.PROPERTY_SERVICE_URL}/${id}`, {
+                headers: { Authorization: req.headers.authorization }
+            }).pipe(
                 catchError((error) => {
                     throw new HttpException(
                         error.response?.data || 'Failed to fetch lease',
@@ -55,9 +62,11 @@ export class LeaseController {
     }
 
     @Get('tenant/:tenantId')
-    async findByTenant(@Param('tenantId') tenantId: string) {
+    async findByTenant(@Param('tenantId') tenantId: string, @Req() req: Request) {
         const response = await firstValueFrom(
-            this.httpService.get(`${this.PROPERTY_SERVICE_URL}/tenant/${tenantId}`).pipe(
+            this.httpService.get(`${this.PROPERTY_SERVICE_URL}/tenant/${tenantId}`, {
+                headers: { Authorization: req.headers.authorization }
+            }).pipe(
                 catchError((error) => {
                     throw new HttpException(
                         error.response?.data || 'Failed to fetch tenant leases',
@@ -70,9 +79,11 @@ export class LeaseController {
     }
 
     @Patch(':id')
-    async update(@Param('id') id: string, @Body() body: any) {
+    async update(@Param('id') id: string, @Body() body: any, @Req() req: Request) {
         const response = await firstValueFrom(
-            this.httpService.patch(`${this.PROPERTY_SERVICE_URL}/${id}`, body).pipe(
+            this.httpService.patch(`${this.PROPERTY_SERVICE_URL}/${id}`, body, {
+                headers: { Authorization: req.headers.authorization }
+            }).pipe(
                 catchError((error) => {
                     throw new HttpException(
                         error.response?.data || 'Failed to update lease',
@@ -85,9 +96,11 @@ export class LeaseController {
     }
 
     @Delete(':id')
-    async remove(@Param('id') id: string) {
+    async remove(@Param('id') id: string, @Req() req: Request) {
         const response = await firstValueFrom(
-            this.httpService.delete(`${this.PROPERTY_SERVICE_URL}/${id}`).pipe(
+            this.httpService.delete(`${this.PROPERTY_SERVICE_URL}/${id}`, {
+                headers: { Authorization: req.headers.authorization }
+            }).pipe(
                 catchError((error) => {
                     throw new HttpException(
                         error.response?.data || 'Failed to delete lease',

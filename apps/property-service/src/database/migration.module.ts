@@ -10,6 +10,7 @@ import { MigrationService } from './migration.service';
             envFilePath: ['.env', '.env.local'],
         }),
         SequelizeModule.forRootAsync({
+            imports: [ConfigModule],
             inject: [ConfigService],
             useFactory: (configService: ConfigService) => ({
                 dialect: 'postgres',

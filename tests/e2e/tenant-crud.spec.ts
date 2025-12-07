@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { AuthHelper } from '../helpers/auth.helper';
 
-const WEB_URL = process.env.WEB_URL || 'http://localhost:3002';
+const WEB_URL = process.env.WEB_URL || 'http://localhost:3000';
 
 test.describe('Tenant CRUD E2E', () => {
     let authHelper: AuthHelper;

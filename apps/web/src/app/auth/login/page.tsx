@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
-import { login } from "@/lib/auth"
+import { login, getProfile } from "@/lib/auth"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useState } from "react"
 import { motion } from "framer-motion"
@@ -27,8 +27,25 @@ export default function LoginPage() {
 
         try {
             const response = await login({ email, password })
+            console.log('Login Response:', response);
             localStorage.setItem('token', response.accessToken)
-            router.push("/dashboard")
+            
+            // Fetch profile for role-based redirection
+            try {
+                const user = await getProfile(response.accessToken);
+                
+                if (user.roles?.some((r: any) => r.name === 'Admin')) {
+                    router.push("/admin");
+                } else if (user.tenantMemberships?.length > 0) {
+                    router.push("/portal");
+                } else {
+                    router.push("/dashboard");
+                }
+            } catch (profileErr) {
+                console.error("Failed to fetch profile for redirection", profileErr);
+                router.push("/dashboard"); // Fallback
+            }
+
         } catch (err: any) {
             setError(err.message)
         } finally {
@@ -52,7 +69,7 @@ export default function LoginPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <form onSubmit={onSubmit}>
+                        <form onSubmit={onSubmit} method="post">
                             <div className="grid gap-4">
                                 {error && (
                                     <Alert variant="destructive">
@@ -101,7 +118,7 @@ export default function LoginPage() {
                                 </span>
                             </div>
                         </div>
-                        <Button variant="outline" type="button" disabled={isLoading} className="w-full">
+                        <Button variant="outline" type="button" disabled={isLoading} className="w-full" onClick={() => window.location.href = 'http://localhost:4000/auth/google'}>
                             Google
                         </Button>
                     </CardContent>

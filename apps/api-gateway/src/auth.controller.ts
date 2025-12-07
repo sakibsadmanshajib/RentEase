@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpException, HttpStatus, Get, Res, Req, Query } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -35,5 +35,17 @@ export class AuthController {
             ),
         );
         return response.data;
+    }
+
+    @Get('google')
+    googleAuth(@Res() res: any) {
+        res.redirect('http://localhost:3001/auth/google');
+    }
+
+    @Get('google/callback')
+    googleAuthCallback(@Res() res: any, @Query() query: any) {
+        // Construct query string manually to ensure all params like code, state etc are passed
+        const params = new URLSearchParams(query).toString();
+        res.redirect(`http://localhost:3001/auth/google/callback?${params}`);
     }
 }

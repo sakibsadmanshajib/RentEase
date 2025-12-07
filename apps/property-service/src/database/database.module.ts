@@ -1,19 +1,16 @@
 import { Module } from '@nestjs/common';
-import { SequelizeModule } from '@nestjs/sequelize';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { SequelizeModule } from '@nestjs/sequelize';
 import { Property } from '../property/models/property.model';
 import { Unit } from '../property/models/unit.model';
 import { Lease } from '../property/models/lease.model';
 import { LeaseOccupant } from '../property/models/lease-occupant.model';
-import { MigrationService } from './migration.service';
 
 @Module({
     imports: [
-        ConfigModule.forRoot({
-            isGlobal: true,
-            envFilePath: ['.env', '.env.local'],
-        }),
+        ConfigModule,
         SequelizeModule.forRootAsync({
+            imports: [ConfigModule],
             inject: [ConfigService],
             useFactory: (configService: ConfigService) => ({
                 dialect: 'postgres',
@@ -23,12 +20,12 @@ import { MigrationService } from './migration.service';
                 password: configService.get('DB_PASSWORD', 'password'),
                 database: configService.get('DB_DATABASE', 'rentease'),
                 autoLoadModels: true,
-                synchronize: false, // Migration-based schema management
-                models: [Property, Unit, Lease, LeaseOccupant], // FIXED: Added Unit and LeaseOccupant
+                synchronize: false,
+                models: [Property, Unit, Lease, LeaseOccupant],
             }),
         }),
     ],
-    providers: [MigrationService],
-    exports: [MigrationService],
+    providers: [],
+    exports: [SequelizeModule],
 })
 export class DatabaseModule { }

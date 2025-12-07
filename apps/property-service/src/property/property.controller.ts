@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException } from '@nestjs/common';
 import { PropertyService } from './property.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
@@ -19,17 +19,30 @@ export class PropertyController {
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.propertyService.findOne(id);
+    async findOne(@Param('id') id: string) {
+        const property = await this.propertyService.findOne(id);
+        if (!property) {
+            throw new NotFoundException(`Property with ID ${id} not found`);
+        }
+        return property;
     }
 
     @Patch(':id')
-    update(@Param('id') id: string, @Body() updatePropertyDto: UpdatePropertyDto) {
-        return this.propertyService.update(id, updatePropertyDto);
+    async update(@Param('id') id: string, @Body() updatePropertyDto: UpdatePropertyDto) {
+        const [affectedCount, updatedProperties] = await this.propertyService.update(id, updatePropertyDto);
+        if (affectedCount === 0) {
+            throw new NotFoundException(`Property with ID ${id} not found`);
+        }
+        return updatedProperties[0];
     }
 
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.propertyService.remove(id);
+    async remove(@Param('id') id: string) {
+        const property = await this.propertyService.findOne(id);
+        if (!property) {
+            throw new NotFoundException(`Property with ID ${id} not found`);
+        }
+        await this.propertyService.remove(id);
+        return { message: 'Property deleted successfully' };
     }
 }

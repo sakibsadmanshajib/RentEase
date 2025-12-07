@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, NotFoundException } from '@nestjs/common';
 import { BillingService } from './billing.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
@@ -34,18 +34,31 @@ export class BillingController {
     }
 
     @Get('expenses/:id')
-    getExpenseById(@Param('id') id: string) {
-        return this.billingService.getExpenseById(id);
+    async getExpenseById(@Param('id') id: string) {
+        const expense = await this.billingService.getExpenseById(id);
+        if (!expense) {
+            throw new NotFoundException(`Expense with ID ${id} not found`);
+        }
+        return expense;
     }
 
     @Patch('expenses/:id')
-    updateExpense(@Param('id') id: string, @Body() updates: any) {
+    async updateExpense(@Param('id') id: string, @Body() updates: any) {
+        const expense = await this.billingService.getExpenseById(id);
+        if (!expense) {
+            throw new NotFoundException(`Expense with ID ${id} not found`);
+        }
         return this.billingService.updateExpense(id, updates);
     }
 
     @Delete('expenses/:id')
-    deleteExpense(@Param('id') id: string) {
-        return this.billingService.deleteExpense(id);
+    async deleteExpense(@Param('id') id: string) {
+        const expense = await this.billingService.getExpenseById(id);
+        if (!expense) {
+            throw new NotFoundException(`Expense with ID ${id} not found`);
+        }
+        await this.billingService.deleteExpense(id);
+        return { message: 'Expense deleted successfully' };
     }
 
     // ============ INVOICE ENDPOINTS (parameterized routes last) ============
@@ -61,17 +74,31 @@ export class BillingController {
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.billingService.findOne(id);
+    async findOne(@Param('id') id: string) {
+        const invoice = await this.billingService.findOne(id);
+        if (!invoice) {
+            throw new NotFoundException(`Invoice with ID ${id} not found`);
+        }
+        return invoice;
     }
 
     @Patch(':id')
-    update(@Param('id') id: string, @Body() updateInvoiceDto: UpdateInvoiceDto) {
+    async update(@Param('id') id: string, @Body() updateInvoiceDto: UpdateInvoiceDto) {
+        const invoice = await this.billingService.findOne(id);
+        if (!invoice) {
+            throw new NotFoundException(`Invoice with ID ${id} not found`);
+        }
         return this.billingService.update(id, updateInvoiceDto);
     }
 
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.billingService.remove(id);
+    async remove(@Param('id') id: string) {
+        const invoice = await this.billingService.findOne(id);
+        if (!invoice) {
+            throw new NotFoundException(`Invoice with ID ${id} not found`);
+        }
+        await this.billingService.remove(id);
+        return { message: 'Invoice deleted successfully' };
     }
 }
+

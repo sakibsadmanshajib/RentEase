@@ -70,6 +70,12 @@ export class Invoice extends Model {
     status!: string;
 
     @Column({
+        type: DataType.STRING,
+        allowNull: true,
+    })
+    description?: string;
+
+    @Column({
         type: DataType.JSON,
         allowNull: true,
     })

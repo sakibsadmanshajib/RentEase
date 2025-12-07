@@ -35,6 +35,15 @@ export class CreateInvoiceDto {
     currency?: string;
 
     @IsOptional()
+    @IsString()
+    description?: string;
+
+    @IsOptional()
     @IsObject()
     lineItems?: any;
+
+    @IsOptional()
+    @IsObject()
+    items?: any;
 }
+

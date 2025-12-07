@@ -58,7 +58,7 @@ export default function RegisterPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <form onSubmit={onSubmit}>
+                        <form onSubmit={onSubmit} method="post">
                             <div className="grid gap-4">
                                 {error && (
                                     <Alert variant="destructive">
@@ -99,7 +99,7 @@ export default function RegisterPage() {
                                         required
                                     />
                                 </div>
-                                <Button className="w-full" disabled={isLoading}>
+                                <Button className="w-full" disabled={isLoading} type="submit">
                                     {isLoading && (
                                         <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                                     )}

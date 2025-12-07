@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -14,6 +15,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Bell } from "lucide-react"
 
 export function DashboardNavbar() {
+    const router = useRouter()
+
+    function handleLogout() {
+        localStorage.removeItem('token')
+        router.push('/auth/login')
+    }
+
     return (
         <header className="flex h-14 items-center gap-4 border-b bg-background px-6">
             <div className="flex-1">
@@ -27,7 +35,7 @@ export function DashboardNavbar() {
                 </Button>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                        <Button variant="ghost" className="relative h-8 w-8 rounded-full" data-testid="user-menu">
                             <Avatar className="h-8 w-8">
                                 <AvatarImage src="/avatars/01.png" alt="@shadcn" />
                                 <AvatarFallback>JD</AvatarFallback>
@@ -51,7 +59,7 @@ export function DashboardNavbar() {
                             Settings
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
                             Log out
                         </DropdownMenuItem>
                     </DropdownMenuContent>

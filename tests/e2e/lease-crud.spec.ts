@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { AuthHelper } from '../helpers/auth.helper';
 
-const WEB_URL = process.env.WEB_URL || 'http://localhost:3002';
+const WEB_URL = process.env.WEB_URL || 'http://localhost:3000';
 
 test.describe('Lease CRUD E2E', () => {
     let authHelper: AuthHelper;
@@ -32,7 +32,11 @@ test.describe('Lease CRUD E2E', () => {
         await expect(page).toHaveURL(`${WEB_URL}/dashboard/leases`);
 
         // Create Dependencies (Tenant and Property)
-        const tenantRes = await page.request.post(`${WEB_URL.replace('3002', '4000')}/tenants`, {
+        // Get token from localStorage
+        const token = await page.evaluate(() => localStorage.getItem('token'));
+
+        const tenantRes = await page.request.post(`${WEB_URL.replace('3000', '4000')}/tenants`, {
+            headers: { Authorization: `Bearer ${token}` },
             data: {
                 firstName: 'Lease',
                 lastName: 'Tenant',
@@ -43,7 +47,8 @@ test.describe('Lease CRUD E2E', () => {
         const tenant = await tenantRes.json();
         const tenantId = tenant.id;
 
-        const propertyRes = await page.request.post(`${WEB_URL.replace('3002', '4000')}/properties`, {
+        const propertyRes = await page.request.post(`${WEB_URL.replace('3000', '4000')}/properties`, {
+            headers: { Authorization: `Bearer ${token}` },
             data: {
                 name: 'Lease Test Property',
                 address: '123 Lease St',

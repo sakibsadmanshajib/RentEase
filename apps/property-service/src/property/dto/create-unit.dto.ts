@@ -12,4 +12,8 @@ export class CreateUnitDto {
     @IsString()
     @IsOptional()
     status?: string;
+
+    @IsUUID()
+    @IsOptional()
+    tenantId?: string;
 }

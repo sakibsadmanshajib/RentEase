@@ -26,6 +26,7 @@ test.describe('Billing Service - Ledger Integrity @api', () => {
                 tenantId,
                 invoiceId: invoice.id,
                 amount: 1000,
+                date: new Date().toISOString(),
                 method: 'CASH'
             }
         });
@@ -122,6 +123,7 @@ test.describe('Billing Service - Ledger Integrity @api', () => {
                 tenantId: testTenantId,
                 invoiceId: invoice.id,
                 amount: 800,
+                date: new Date().toISOString(),
                 method: 'CASH'
             }
         });

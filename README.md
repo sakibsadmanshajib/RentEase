@@ -29,15 +29,15 @@ RentEase follows **Domain-Driven Design (DDD)** principles and utilizes a **micr
 
 The application is decomposed into the following domain services:
 
-- **Identity & Access Service:** Users, roles, permissions, authentication.
-- **Tenant & Directory Service:** Landlord organizations, staff directory.
-- **Property & Lease Service:** Properties, units, leases, occupants.
-- **Billing & Ledger Service:** Invoices, payments, accounting ledger.
-- **Ticketing & Work Orders Service:** Maintenance requests.
-- **Messaging Service:** Direct messaging.
-- **Document Management Service:** File storage and management.
-- **Expense & Reporting Service:** Analytics and reports.
-- **Audit & Compliance Service:** System-wide audit logs.
+- **Identity & Access Service:** Users, roles, permissions, authentication. (Implemented)
+- **Tenant & Directory Service:** Landlord organizations, staff directory. (Implemented)
+- **Property & Lease Service:** Properties, units, leases, occupants. (Implemented)
+- **Billing & Ledger Service:** Invoices, payments, accounting ledger. (Implemented)
+- **Ticketing & Work Orders Service:** Maintenance requests. (Planned)
+- **Messaging Service:** Direct messaging. (Planned)
+- **Document Management Service:** File storage and management. (Planned)
+- **Expense & Reporting Service:** Analytics and reports. (Planned)
+- **Audit & Compliance Service:** System-wide audit logs. (Planned)
 
 For detailed architecture specifications, please refer to the [Project Wiki](https://github.com/sakibsadmanshajib/RentEase/wiki).
 
@@ -72,11 +72,11 @@ pnpm build
 
 ## ✅ Verification
 
-The project includes scripts to verify the functionality of core services:
+The project relies on Playwright for comprehensive API and E2E testing.
 
-- **Identity Service:** `./scripts/verify-identity.sh`
-- **Tenant Service:** `./scripts/verify-tenant.sh`
-- **Property Service:** `./scripts/verify-property.sh`
+> **Note:** The legacy shell scripts (`./scripts/verify-*.sh`) are deprecated and will be removed in future versions.
+
+Please refer to the [Test Implementation Design](wiki/Testing%20Implementation%20Design.md) for detailed testing strategies.
 
 ## 📝 Documentation
 

@@ -63,4 +63,21 @@ export class AuthService {
             access_token: this.jwtService.sign(payload),
         };
     }
+    async validateGoogleUser(googleUser: { email: string, firstName: string, lastName: string, picture: string, accessToken: string }) {
+        let user = await this.userModel.findOne({ where: { email: googleUser.email } });
+        if (!user) {
+            // Create user
+            const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+            const hashedPassword = await bcrypt.hash(randomPassword, 10);
+            
+            user = await this.userModel.create({
+                email: googleUser.email,
+                firstName: googleUser.firstName,
+                lastName: googleUser.lastName,
+                password: hashedPassword,
+                // picture: googleUser.picture // Assuming we might add picture later
+            });
+        }
+        return user;
+    }
 }

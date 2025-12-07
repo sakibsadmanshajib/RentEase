@@ -27,6 +27,53 @@ test.describe('Billing Service - Invoices @api', () => {
         expect(invoice.tenantId).toBe(tenantId);
     });
 
+    test('should reject invoice without tenantId (required field)', async ({ request }) => {
+        const invoiceData = {
+            // Missing tenantId
+            amount: 1500,
+            dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            currency: 'USD'
+        };
+
+        const response = await request.post(`${BASE_URL}/invoices`, {
+            headers: { 'Content-Type': 'application/json' },
+            data: invoiceData
+        });
+
+        expect(response.status()).toBe(400);
+    });
+
+    test('should reject invoice without amount (required field)', async ({ request }) => {
+        const invoiceData = {
+            tenantId,
+            // Missing amount
+            dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            currency: 'USD'
+        };
+
+        const response = await request.post(`${BASE_URL}/invoices`, {
+            headers: { 'Content-Type': 'application/json' },
+            data: invoiceData
+        });
+
+        expect(response.status()).toBe(400);
+    });
+
+    test('should reject invoice without dueDate (required field)', async ({ request }) => {
+        const invoiceData = {
+            tenantId,
+            amount: 1500
+            // Missing dueDate
+        };
+
+        const response = await request.post(`${BASE_URL}/invoices`, {
+            headers: { 'Content-Type': 'application/json' },
+            data: invoiceData
+        });
+
+        expect(response.status()).toBe(400);
+    });
+
     test('should create ledger entries when invoice is created', async ({ request }) => {
         const invoiceData = {
             tenantId,
@@ -105,4 +152,12 @@ test.describe('Billing Service - Invoices @api', () => {
         expect(invoice.id).toBe(createdInvoice.id);
         expect(parseFloat(invoice.amount)).toBe(750);
     });
+
+    test('should return 404 for non-existent invoice', async ({ request }) => {
+        const fakeId = '00000000-0000-0000-0000-000000000000';
+        const response = await request.get(`${BASE_URL}/invoices/${fakeId}`);
+        
+        expect(response.status()).toBe(404);
+    });
 });
+

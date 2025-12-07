@@ -27,13 +27,13 @@ async function bootstrap() {
                 console.log('\n📋 Migration Status:');
                 console.log('\n✅ Executed:');
                 if (status.executed.length > 0) {
-                    status.executed.forEach((name) => console.log(`  - ${name}`));
+                    status.executed.forEach((name: string) => console.log(`  - ${name}`));
                 } else {
                     console.log('  (none)');
                 }
                 console.log('\n⏳ Pending:');
                 if (status.pending.length > 0) {
-                    status.pending.forEach((name) => console.log(`  - ${name}`));
+                    status.pending.forEach((name: string) => console.log(`  - ${name}`));
                 } else {
                     console.log('  (none)');
                 }

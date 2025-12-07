@@ -23,6 +23,7 @@ interface Invoice {
     amount: number;
     status: 'PENDING' | 'PAID' | 'OVERDUE' | 'CANCELLED';
     dueDate: string;
+    description?: string;
     lineItems: { description: string; amount: number }[];
 }
 
@@ -82,6 +83,7 @@ export default function BillingPage() {
                 tenantId: newInvoice.tenantId,
                 leaseId: newInvoice.leaseId || undefined,
                 amount: parseFloat(newInvoice.amount),
+                description: newInvoice.description,
                 dueDate: new Date(newInvoice.dueDate).toISOString(),
                 lineItems: [{ description: newInvoice.description, amount: parseFloat(newInvoice.amount) }]
             })
@@ -101,6 +103,7 @@ export default function BillingPage() {
                 tenantId: mockTenantId,
                 invoiceId,
                 amount,
+                date: new Date().toISOString(),
                 method: 'BANK_TRANSFER'
             })
             fetchInvoices()
@@ -247,7 +250,7 @@ export default function BillingPage() {
                                     <div>
                                         <p className="font-semibold text-lg">${Number(invoice.amount).toFixed(2)}</p>
                                         <p className="text-sm text-muted-foreground">
-                                            {invoice.lineItems?.[0]?.description || 'Invoice'}
+                                            {invoice.description || invoice.lineItems?.[0]?.description || 'Invoice'}
                                         </p>
                                         <p className="text-xs text-muted-foreground">
                                             Due: {new Date(invoice.dueDate).toLocaleDateString()}

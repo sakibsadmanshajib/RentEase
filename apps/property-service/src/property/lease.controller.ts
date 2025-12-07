@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query, Patch, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Patch, Delete, NotFoundException } from '@nestjs/common';
 import { LeaseService } from './lease.service';
 import { CreateLeaseDto } from './dto/create-lease.dto';
 import { Lease } from './models/lease.model';
@@ -18,35 +18,60 @@ export class LeaseController {
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.leaseService.findOne(id);
+    async findOne(@Param('id') id: string) {
+        const lease = await this.leaseService.findOne(id);
+        if (!lease) {
+            throw new NotFoundException(`Lease with ID ${id} not found`);
+        }
+        return lease;
     }
 
     @Post(':id/activate')
-    activate(@Param('id') id: string) {
+    async activate(@Param('id') id: string) {
+        const lease = await this.leaseService.findOne(id);
+        if (!lease) {
+            throw new NotFoundException(`Lease with ID ${id} not found`);
+        }
         return this.leaseService.activate(id);
     }
 
     @Post(':id/terminate')
-    terminate(@Param('id') id: string) {
+    async terminate(@Param('id') id: string) {
+        const lease = await this.leaseService.findOne(id);
+        if (!lease) {
+            throw new NotFoundException(`Lease with ID ${id} not found`);
+        }
         return this.leaseService.terminate(id);
     }
 
     @Post(':id/occupants')
-    addOccupant(
+    async addOccupant(
         @Param('id') id: string,
         @Body('userId') userId: string,
     ) {
+        const lease = await this.leaseService.findOne(id);
+        if (!lease) {
+            throw new NotFoundException(`Lease with ID ${id} not found`);
+        }
         return this.leaseService.addOccupant(id, userId);
     }
 
     @Patch(':id')
-    update(@Param('id') id: string, @Body() updateLeaseDto: any) {
+    async update(@Param('id') id: string, @Body() updateLeaseDto: any) {
+        const lease = await this.leaseService.findOne(id);
+        if (!lease) {
+            throw new NotFoundException(`Lease with ID ${id} not found`);
+        }
         return this.leaseService.update(id, updateLeaseDto);
     }
 
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.leaseService.remove(id);
+    async remove(@Param('id') id: string) {
+        const lease = await this.leaseService.findOne(id);
+        if (!lease) {
+            throw new NotFoundException(`Lease with ID ${id} not found`);
+        }
+        await this.leaseService.remove(id);
+        return { message: 'Lease deleted successfully' };
     }
 }

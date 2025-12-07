@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { ScheduleModule } from '@nestjs/schedule';
+// import { ScheduleModule } from '@nestjs/schedule'; // Temporarily disabled due to crypto issue
 import { BillingService } from './billing.service';
 import { BillingController } from './billing.controller';
 import { Invoice } from './models/invoice.model';
@@ -12,7 +12,7 @@ import { Expense } from './models/expense.model';
 @Module({
     imports: [
         SequelizeModule.forFeature([Invoice, LedgerAccount, LedgerEntry, Payment, Expense]),
-        ScheduleModule.forRoot(),
+        // ScheduleModule.forRoot(), // Temporarily disabled due to crypto issue
     ],
     controllers: [BillingController],
     providers: [BillingService],

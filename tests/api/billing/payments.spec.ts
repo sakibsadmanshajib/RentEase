@@ -28,6 +28,7 @@ test.describe('Billing Service - Payments @api', () => {
             tenantId,
             invoiceId,
             amount: 1000,
+            date: new Date().toISOString(),
             method: 'CASH'
         };
 
@@ -63,6 +64,7 @@ test.describe('Billing Service - Payments @api', () => {
                 tenantId,
                 invoiceId: invoice.id,
                 amount: 500,
+                date: new Date().toISOString(),
                 method: 'CARD'
             }
         });
@@ -100,6 +102,7 @@ test.describe('Billing Service - Payments @api', () => {
                 tenantId,
                 invoiceId: invoice.id,
                 amount: 300,
+                date: new Date().toISOString(),
                 method: 'BANK_TRANSFER'
             }
         });
@@ -141,6 +144,7 @@ test.describe('Billing Service - Payments @api', () => {
                 tenantId,
                 invoiceId: invoice.id,
                 amount: 400,
+                date: new Date().toISOString(),
                 method: 'CASH'
             }
         });
@@ -156,6 +160,7 @@ test.describe('Billing Service - Payments @api', () => {
                 tenantId,
                 invoiceId: invoice.id,
                 amount: 600,
+                date: new Date().toISOString(),
                 method: 'CASH'
             }
         });
