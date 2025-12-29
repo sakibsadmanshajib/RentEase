@@ -16,14 +16,15 @@ export class PropertyService {
     }
 
     /**
-     * Find all properties for a specific tenant
+     * Find all properties for a specific tenant.
+     * SECURITY: tenantId is REQUIRED for data isolation.
      */
-    async findAll(tenantId?: string): Promise<Property[]> {
-        if (tenantId) {
-            return this.propertyModel.findAll({ where: { tenantId } });
+    async findAll(tenantId: string): Promise<Property[]> {
+        if (!tenantId) {
+            // No tenant context = no data access
+            return [];
         }
-        // Backward compatibility: if no tenantId provided, return all (for API tests)
-        return this.propertyModel.findAll();
+        return this.propertyModel.findAll({ where: { tenantId } });
     }
 
     async findOne(id: string): Promise<Property | null> {
@@ -34,6 +35,9 @@ export class PropertyService {
      * Find a property and validate it belongs to the specified tenant
      */
     async findOneForTenant(id: string, tenantId: string): Promise<Property> {
+        if (!tenantId) {
+            throw new ForbiddenException('Tenant context required');
+        }
         const property = await this.propertyModel.findByPk(id);
         if (!property) {
             throw new NotFoundException(`Property with ID ${id} not found`);
@@ -44,25 +48,23 @@ export class PropertyService {
         return property;
     }
 
-    async update(id: string, updatePropertyDto: UpdatePropertyDto, tenantId?: string): Promise<[number, Property[]]> {
-        // If tenantId provided, validate ownership first
-        if (tenantId) {
-            await this.findOneForTenant(id, tenantId);
+    async update(id: string, updatePropertyDto: UpdatePropertyDto, tenantId: string): Promise<[number, Property[]]> {
+        if (!tenantId) {
+            throw new ForbiddenException('Tenant context required');
         }
+        // Validate ownership first
+        await this.findOneForTenant(id, tenantId);
         return this.propertyModel.update(updatePropertyDto, {
             where: { id },
             returning: true,
         });
     }
 
-    async remove(id: string, tenantId?: string): Promise<void> {
-        const property = tenantId 
-            ? await this.findOneForTenant(id, tenantId)
-            : await this.findOne(id);
-        
-        if (property) {
-            await property.destroy();
+    async remove(id: string, tenantId: string): Promise<void> {
+        if (!tenantId) {
+            throw new ForbiddenException('Tenant context required');
         }
+        const property = await this.findOneForTenant(id, tenantId);
+        await property.destroy();
     }
 }
-

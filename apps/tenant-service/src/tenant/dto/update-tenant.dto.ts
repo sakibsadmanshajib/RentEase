@@ -3,19 +3,15 @@ import { IsString, IsOptional, IsEmail } from 'class-validator';
 export class UpdateTenantDto {
     @IsString()
     @IsOptional()
-    firstName?: string;
-
-    @IsString()
-    @IsOptional()
-    lastName?: string;
+    name?: string;
 
     @IsEmail()
     @IsOptional()
-    email?: string;
+    contactEmail?: string;
 
     @IsString()
     @IsOptional()
-    phone?: string;
+    contactPhone?: string;
 
     @IsString()
     @IsOptional()

@@ -2,50 +2,57 @@
 
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
-import { ArrowRight, Building2, Key, ShieldCheck } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import Link from "next/link"
 
 export function Hero() {
     return (
-        <section className="relative overflow-hidden pt-32 pb-20 lg:pt-40 lg:pb-32">
-            {/* Background Gradients */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none">
-                <div className="absolute top-20 left-20 w-72 h-72 bg-primary/20 rounded-full blur-[100px]" />
-                <div className="absolute bottom-20 right-20 w-96 h-96 bg-accent/20 rounded-full blur-[100px]" />
+        <section className="relative overflow-hidden pt-32 pb-24 lg:pt-40 lg:pb-32">
+            {/* Subtle background gradient */}
+            <div className="absolute inset-0 -z-10">
+                <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-muted/30 blur-[128px]" />
+                <div className="absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-muted/20 blur-[128px]" />
             </div>
 
-            <div className="container mx-auto px-4 relative z-10">
+            <div className="container mx-auto px-4 md:px-6">
                 <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
+                    {/* Badge */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-muted-foreground backdrop-blur-sm mb-8"
+                        className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-4 py-1.5 text-sm text-muted-foreground mb-8"
                     >
-                        <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
+                        <span className="relative flex h-2 w-2">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-foreground/40" />
+                            <span className="relative inline-flex h-2 w-2 rounded-full bg-foreground" />
+                        </span>
                         Now available for property managers
                     </motion.div>
 
+                    {/* Headline */}
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.1 }}
-                        className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60"
+                        className="text-display gradient-text mb-6"
                     >
-                        Modern Property Management <br />
-                        <span className="text-primary">Reimagined</span>
+                        Modern Property Management{" "}
+                        <span className="text-foreground">Reimagined</span>
                     </motion.h1>
 
+                    {/* Subheadline */}
                     <motion.p
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.2 }}
-                        className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl"
+                        className="text-body-lg text-muted-foreground mb-10 max-w-2xl"
                     >
                         Streamline your rental operations with our all-in-one platform.
                         Automate billing, manage maintenance, and screen tenants with ease.
                     </motion.p>
 
+                    {/* CTA Buttons */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -53,9 +60,9 @@ export function Hero() {
                         className="flex flex-col sm:flex-row items-center gap-4"
                     >
                         <Link href="/auth/register">
-                            <Button size="lg" className="h-12 px-8 text-base">
+                            <Button size="lg" className="h-12 px-8 text-base gap-2">
                                 Start Free Trial
-                                <ArrowRight className="ml-2 h-4 w-4" />
+                                <ArrowRight className="h-4 w-4" />
                             </Button>
                         </Link>
                         <Link href="#demo">
@@ -65,12 +72,12 @@ export function Hero() {
                         </Link>
                     </motion.div>
 
-                    {/* Stats / Trust Badges */}
+                    {/* Stats */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.4 }}
-                        className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-white/10 pt-8 w-full"
+                        className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-border pt-10 w-full"
                     >
                         {[
                             { label: "Active Units", value: "10k+" },
@@ -78,8 +85,8 @@ export function Hero() {
                             { label: "Uptime", value: "99.9%" },
                             { label: "Support", value: "24/7" },
                         ].map((stat, i) => (
-                            <div key={i} className="flex flex-col items-center">
-                                <span className="text-2xl font-bold text-white">{stat.value}</span>
+                            <div key={i} className="flex flex-col items-center gap-1">
+                                <span className="text-2xl md:text-3xl font-bold tracking-tight">{stat.value}</span>
                                 <span className="text-sm text-muted-foreground">{stat.label}</span>
                             </div>
                         ))}

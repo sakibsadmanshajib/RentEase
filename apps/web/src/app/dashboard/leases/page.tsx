@@ -1,13 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { api } from "@/lib/api"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { FileText, Plus, Calendar, DollarSign } from "lucide-react"
+import { FileText, Plus, Calendar, Building2 } from "lucide-react"
 import {
     Dialog,
     DialogContent,
@@ -17,6 +18,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
+import { useTenant } from "@/contexts/tenant-context"
 
 interface Lease {
     id: string;
@@ -25,20 +27,28 @@ interface Lease {
     rentAmount: number;
     propertyId: string;
     tenantId: string;
-    isActive: boolean;
+    status: string;
 }
 
 export default function LeasesPage() {
+    const { tenantId, hasTenant, isLoading: tenantLoading } = useTenant()
+    const router = useRouter()
     const [leases, setLeases] = useState<Lease[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState("")
     const [isDialogOpen, setIsDialogOpen] = useState(false)
-    const [newLease, setNewLease] = useState({ startDate: "", endDate: "", rentAmount: "", propertyId: "", tenantId: "" })
+    const [newLease, setNewLease] = useState({ startDate: "", endDate: "", rentAmount: "", unitId: "" })
     const [editingLease, setEditingLease] = useState<Lease | null>(null)
 
     useEffect(() => {
-        fetchLeases()
-    }, [])
+        if (!tenantLoading && !hasTenant) {
+            router.push("/dashboard/onboarding")
+            return
+        }
+        if (hasTenant) {
+            fetchLeases()
+        }
+    }, [hasTenant, tenantLoading])
 
     async function fetchLeases() {
         try {
@@ -53,13 +63,18 @@ export default function LeasesPage() {
 
     async function handleCreateLease(e: React.FormEvent) {
         e.preventDefault()
+        if (!tenantId) {
+            setError("No organization selected")
+            return
+        }
         try {
             await api.post('/leases', {
                 ...newLease,
+                tenantId,
                 rentAmount: parseFloat(newLease.rentAmount),
             })
             setIsDialogOpen(false)
-            setNewLease({ startDate: "", endDate: "", rentAmount: "", propertyId: "", tenantId: "" })
+            setNewLease({ startDate: "", endDate: "", rentAmount: "", unitId: "" })
             fetchLeases()
         } catch (err: any) {
             setError(err.message)
@@ -92,10 +107,43 @@ export default function LeasesPage() {
         }
     }
 
+    // Show loading while checking tenant status
+    if (tenantLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[50vh]">
+                <div className="text-muted-foreground">Loading...</div>
+            </div>
+        )
+    }
+
+    // No tenant - show prompt to create one
+    if (!hasTenant) {
+        return (
+            <div className="flex items-center justify-center min-h-[50vh]">
+                <Card className="max-w-md w-full">
+                    <CardContent className="pt-6 text-center space-y-4">
+                        <div className="flex justify-center">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary">
+                                <Building2 className="h-6 w-6 text-foreground" />
+                            </div>
+                        </div>
+                        <h3 className="text-lg font-semibold">No Organization</h3>
+                        <p className name="text-muted-foreground text-sm">
+                            You need to create or join an organization before managing leases.
+                        </p>
+                        <Button onClick={() => router.push("/dashboard/onboarding")}>
+                            Get Started
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+        )
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight">Leases</h2>
+                <h2 className="text-2xl font-semibold tracking-tight">Leases</h2>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                         <Button>
@@ -146,20 +194,11 @@ export default function LeasesPage() {
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="propertyId">Property ID</Label>
+                                    <Label htmlFor="unitId">Unit ID</Label>
                                     <Input
-                                        id="propertyId"
-                                        value={newLease.propertyId}
-                                        onChange={(e) => setNewLease({ ...newLease, propertyId: e.target.value })}
-                                        required
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="tenantId">Tenant ID</Label>
-                                    <Input
-                                        id="tenantId"
-                                        value={newLease.tenantId}
-                                        onChange={(e) => setNewLease({ ...newLease, tenantId: e.target.value })}
+                                        id="unitId"
+                                        value={newLease.unitId}
+                                        onChange={(e) => setNewLease({ ...newLease, unitId: e.target.value })}
                                         required
                                     />
                                 </div>
@@ -226,11 +265,11 @@ export default function LeasesPage() {
             )}
 
             {isLoading ? (
-                <div>Loading leases...</div>
+                <div className="text-muted-foreground">Loading leases...</div>
             ) : leases.length === 0 ? (
                 <Card>
                     <CardContent className="pt-6">
-                        <p className="text-muted-foreground">No leases found.</p>
+                        <p className="text-muted-foreground">No leases found. Create your first one!</p>
                     </CardContent>
                 </Card>
             ) : (
@@ -254,6 +293,9 @@ export default function LeasesPage() {
                                         <span>
                                             {new Date(lease.startDate).toLocaleDateString()} - {new Date(lease.endDate).toLocaleDateString()}
                                         </span>
+                                    </div>
+                                    <div className="text-xs">
+                                        Status: <span className="capitalize">{lease.status || 'Draft'}</span>
                                     </div>
                                 </div>
                                 <div className="flex gap-2 mt-4">

@@ -1,13 +1,17 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
+import { ConfigModule } from '@nestjs/config';
 import { ClsModule } from 'nestjs-cls';
 import { UsersModule } from './users/users.module';
-import { ServiceConfigModule } from '@rentease/common';
 
 @Module({
     imports: [
-        ServiceConfigModule,
+        ConfigModule.forRoot({
+            isGlobal: true,
+            // Load service's own .env file (process.cwd() = service dir)
+            envFilePath: '.env',
+        }),
         ClsModule.forRoot({
             global: true,
             middleware: {

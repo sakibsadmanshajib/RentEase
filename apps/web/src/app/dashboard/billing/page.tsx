@@ -1,13 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { api } from "@/lib/api"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { DollarSign, Plus, CheckCircle, Clock } from "lucide-react"
+import { DollarSign, Plus, Building2 } from "lucide-react"
 import {
     Dialog,
     DialogContent,
@@ -17,28 +18,36 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
+import { useTenant } from "@/contexts/tenant-context"
 
 interface Invoice {
     id: string;
     amount: number;
-    status: 'PENDING' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+    status: 'PENDING' | 'PAID' | 'PARTIAL' | 'OVERDUE' | 'CANCELLED';
     dueDate: string;
     description?: string;
     lineItems: { description: string; amount: number }[];
 }
 
 export default function BillingPage() {
+    const { tenantId, hasTenant, isLoading: tenantLoading } = useTenant()
+    const router = useRouter()
     const [invoices, setInvoices] = useState<Invoice[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState("")
     const [isDialogOpen, setIsDialogOpen] = useState(false)
-    const [newInvoice, setNewInvoice] = useState({ amount: "", description: "", dueDate: "", tenantId: "", leaseId: "" })
-
+    const [newInvoice, setNewInvoice] = useState({ amount: "", description: "", dueDate: "", leaseId: "" })
     const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null)
 
     useEffect(() => {
-        fetchInvoices()
-    }, [])
+        if (!tenantLoading && !hasTenant) {
+            router.push("/dashboard/onboarding")
+            return
+        }
+        if (hasTenant) {
+            fetchInvoices()
+        }
+    }, [hasTenant, tenantLoading])
 
     async function fetchInvoices() {
         try {
@@ -78,9 +87,13 @@ export default function BillingPage() {
 
     async function handleCreateInvoice(e: React.FormEvent) {
         e.preventDefault()
+        if (!tenantId) {
+            setError("No organization selected")
+            return
+        }
         try {
             await api.post('/invoices', {
-                tenantId: newInvoice.tenantId,
+                tenantId,
                 leaseId: newInvoice.leaseId || undefined,
                 amount: parseFloat(newInvoice.amount),
                 description: newInvoice.description,
@@ -88,7 +101,7 @@ export default function BillingPage() {
                 lineItems: [{ description: newInvoice.description, amount: parseFloat(newInvoice.amount) }]
             })
             setIsDialogOpen(false)
-            setNewInvoice({ amount: "", description: "", dueDate: "", tenantId: "", leaseId: "" })
+            setNewInvoice({ amount: "", description: "", dueDate: "", leaseId: "" })
             fetchInvoices()
         } catch (err: any) {
             setError(err.message)
@@ -96,11 +109,13 @@ export default function BillingPage() {
     }
 
     async function handlePay(invoiceId: string, amount: number) {
+        if (!tenantId) {
+            setError("No organization selected")
+            return
+        }
         try {
-             // Mock tenantId
-             const mockTenantId = "org-123";
             await api.post('/invoices/payments', {
-                tenantId: mockTenantId,
+                tenantId,
                 invoiceId,
                 amount,
                 date: new Date().toISOString(),
@@ -112,10 +127,43 @@ export default function BillingPage() {
         }
     }
 
+    // Show loading while checking tenant status
+    if (tenantLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[50vh]">
+                <div className="text-muted-foreground">Loading...</div>
+            </div>
+        )
+    }
+
+    // No tenant - show prompt to create one
+    if (!hasTenant) {
+        return (
+            <div className="flex items-center justify-center min-h-[50vh]">
+                <Card className="max-w-md w-full">
+                    <CardContent className="pt-6 text-center space-y-4">
+                        <div className="flex justify-center">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary">
+                                <Building2 className="h-6 w-6 text-foreground" />
+                            </div>
+                        </div>
+                        <h3 className="text-lg font-semibold">No Organization</h3>
+                        <p className="text-muted-foreground text-sm">
+                            You need to create or join an organization before managing billing.
+                        </p>
+                        <Button onClick={() => router.push("/dashboard/onboarding")}>
+                            Get Started
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+        )
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight">Billing & Invoices</h2>
+                <h2 className="text-2xl font-semibold tracking-tight">Billing & Invoices</h2>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                         <Button>
@@ -164,16 +212,7 @@ export default function BillingPage() {
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="tenantId">Tenant ID</Label>
-                                    <Input
-                                        id="tenantId"
-                                        value={newInvoice.tenantId}
-                                        onChange={(e) => setNewInvoice({ ...newInvoice, tenantId: e.target.value })}
-                                        required
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="leaseId">Lease ID</Label>
+                                    <Label htmlFor="leaseId">Lease ID (Optional)</Label>
                                     <Input
                                         id="leaseId"
                                         value={newInvoice.leaseId}
@@ -231,11 +270,11 @@ export default function BillingPage() {
             )}
 
             {isLoading ? (
-                <div>Loading invoices...</div>
+                <div className="text-muted-foreground">Loading invoices...</div>
             ) : invoices.length === 0 ? (
                 <Card>
                     <CardContent className="pt-6">
-                        <p className="text-muted-foreground">No invoices found.</p>
+                        <p className="text-muted-foreground">No invoices found. Create your first one!</p>
                     </CardContent>
                 </Card>
             ) : (
@@ -244,7 +283,7 @@ export default function BillingPage() {
                         <Card key={invoice.id}>
                             <CardContent className="flex items-center justify-between p-6">
                                 <div className="flex items-center gap-4">
-                                    <div className={`p-2 rounded-full ${invoice.status === 'PAID' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'}`}>
+                                    <div className={`p-2 rounded-full ${invoice.status === 'PAID' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>
                                         <DollarSign className="h-6 w-6" />
                                     </div>
                                     <div>
@@ -260,10 +299,10 @@ export default function BillingPage() {
                                 <div className="flex items-center gap-4">
                                     <div className={`px-2 py-1 rounded text-xs font-semibold ${
                                         invoice.status === 'PAID' 
-                                            ? 'bg-green-100 text-green-800' 
+                                            ? 'bg-green-500/10 text-green-500' 
                                             : invoice.status === 'OVERDUE'
-                                            ? 'bg-red-100 text-red-800'
-                                            : 'bg-yellow-100 text-yellow-800'
+                                            ? 'bg-red-500/10 text-red-500'
+                                            : 'bg-yellow-500/10 text-yellow-500'
                                     }`}>
                                         {invoice.status}
                                     </div>

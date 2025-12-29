@@ -22,15 +22,14 @@ export class TenantService {
 
     async create(createTenantDto: CreateTenantDto, userId?: string): Promise<Tenant> {
         console.log('CreateTenantDto:', createTenantDto);
-        const { firstName, lastName, email, phone, ...rest } = createTenantDto;
-        const name = `${firstName} ${lastName}`;
+        const { name, contactEmail, contactPhone, ...rest } = createTenantDto;
         const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
         const tenantData = {
             ...rest,
             name,
             slug,
-            contactEmail: email,
-            contactPhone: phone,
+            contactEmail,
+            contactPhone,
         };
         console.log('TenantData:', tenantData);
         const tenant = await this.tenantModel.create(tenantData);
@@ -65,28 +64,7 @@ export class TenantService {
     }
 
     async update(id: string, updateTenantDto: UpdateTenantDto): Promise<[number, Tenant[]]> {
-        const { firstName, lastName, email, phone, ...rest } = updateTenantDto;
-        const updateData: any = { ...rest };
-
-        if (email) updateData.contactEmail = email;
-        if (phone) updateData.contactPhone = phone;
-
-        if (firstName || lastName) {
-            const tenant = await this.findOne(id);
-            if (tenant) {
-                // Simple heuristic: assume first word is first name, rest is last name
-                // This is not perfect but works for simple cases
-                const currentNameParts = tenant.name ? tenant.name.split(' ') : ['', ''];
-                const currentFirst = currentNameParts[0];
-                const currentLast = currentNameParts.slice(1).join(' ') || '';
-                
-                const newFirst = firstName || currentFirst;
-                const newLast = lastName || currentLast;
-                updateData.name = `${newFirst} ${newLast}`.trim();
-            }
-        }
-
-        return this.tenantModel.update(updateData, {
+        return this.tenantModel.update(updateTenantDto, {
             where: { id },
             returning: true,
         });

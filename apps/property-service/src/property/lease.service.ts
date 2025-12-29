@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Lease } from './models/lease.model';
 import { LeaseOccupant } from './models/lease-occupant.model';
@@ -23,25 +23,44 @@ export class LeaseService {
         });
     }
 
-    async findAll(unitId?: string): Promise<Lease[]> {
-        const where = unitId ? { unitId } : {};
+    /**
+     * Find all leases for a specific tenant.
+     * SECURITY: tenantId is REQUIRED for data isolation.
+     */
+    async findAll(tenantId: string, unitId?: string): Promise<Lease[]> {
+        if (!tenantId) {
+            return [];
+        }
+        const where: any = { tenantId };
+        if (unitId) {
+            where.unitId = unitId;
+        }
         return this.leaseModel.findAll({ where });
     }
 
-    async findOne(id: string): Promise<Lease | null> {
+    /**
+     * Find a lease and validate it belongs to the specified tenant
+     */
+    async findOneForTenant(id: string, tenantId: string): Promise<Lease> {
+        if (!tenantId) {
+            throw new ForbiddenException('Tenant context required');
+        }
         const lease = await this.leaseModel.findByPk(id);
-        // if (lease) {
-        //     const occupants = await this.occupantModel.findAll({ where: { leaseId: id } });
-        //     lease.setDataValue('occupants', occupants);
-        // }
-        return lease;
-    }
-
-    async activate(id: string): Promise<Lease> {
-        const lease = await this.findOne(id);
         if (!lease) {
             throw new NotFoundException('Lease not found');
         }
+        if (lease.tenantId !== tenantId) {
+            throw new ForbiddenException('Access denied to this lease');
+        }
+        return lease;
+    }
+
+    async findOne(id: string): Promise<Lease | null> {
+        return this.leaseModel.findByPk(id);
+    }
+
+    async activate(id: string, tenantId: string): Promise<Lease> {
+        const lease = await this.findOneForTenant(id, tenantId);
         lease.status = 'ACTIVE';
         await lease.save();
 
@@ -55,11 +74,8 @@ export class LeaseService {
         return lease;
     }
 
-    async terminate(id: string): Promise<Lease> {
-        const lease = await this.findOne(id);
-        if (!lease) {
-            throw new NotFoundException('Lease not found');
-        }
+    async terminate(id: string, tenantId: string): Promise<Lease> {
+        const lease = await this.findOneForTenant(id, tenantId);
         lease.status = 'TERMINATED';
         await lease.save();
 
@@ -73,25 +89,18 @@ export class LeaseService {
         return lease;
     }
 
-    async addOccupant(leaseId: string, userId: string): Promise<LeaseOccupant> {
-        const lease = await this.findOne(leaseId);
-        if (!lease) {
-            throw new NotFoundException('Lease not found');
-        }
+    async addOccupant(leaseId: string, userId: string, tenantId: string): Promise<LeaseOccupant> {
+        await this.findOneForTenant(leaseId, tenantId);
         return this.occupantModel.create({ leaseId, userId });
     }
-    async update(id: string, updateLeaseDto: any): Promise<Lease> {
-        const lease = await this.findOne(id);
-        if (!lease) {
-            throw new NotFoundException('Lease not found');
-        }
+
+    async update(id: string, updateLeaseDto: any, tenantId: string): Promise<Lease> {
+        const lease = await this.findOneForTenant(id, tenantId);
         return lease.update(updateLeaseDto);
     }
 
-    async remove(id: string): Promise<void> {
-        const lease = await this.findOne(id);
-        if (lease) {
-            await lease.destroy();
-        }
+    async remove(id: string, tenantId: string): Promise<void> {
+        const lease = await this.findOneForTenant(id, tenantId);
+        await lease.destroy();
     }
 }

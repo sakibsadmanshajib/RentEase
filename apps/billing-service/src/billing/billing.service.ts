@@ -125,9 +125,16 @@ export class BillingService {
         return this.ledgerEntryModel.findAll({ where: { tenantId } });
     }
 
+    /**
+     * Find all invoices for a specific tenant.
+     * SECURITY: tenantId is REQUIRED for data isolation.
+     */
     async findAll(filters?: { tenantId?: string; leaseId?: string; status?: string }): Promise<Invoice[]> {
-        const where: any = {};
-        if (filters?.tenantId) where.tenantId = filters.tenantId;
+        if (!filters?.tenantId) {
+            // No tenant context = no data access
+            return [];
+        }
+        const where: any = { tenantId: filters.tenantId };
         if (filters?.leaseId) where.leaseId = filters.leaseId;
         if (filters?.status) where.status = filters.status;
 

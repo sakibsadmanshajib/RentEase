@@ -8,6 +8,8 @@ import { AuthModule } from './auth/auth.module';
     imports: [
         ConfigModule.forRoot({
             isGlobal: true,
+            // Load service's own .env file (process.cwd() = service dir)
+            envFilePath: '.env',
         }),
         DatabaseModule,
         AuthModule,
@@ -17,4 +19,3 @@ import { AuthModule } from './auth/auth.module';
     providers: [],
 })
 export class AppModule { }
-

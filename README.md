@@ -10,11 +10,11 @@ RentEase follows **Domain-Driven Design (DDD)** principles and utilizes a **micr
 
 ### Core Capabilities
 
-- **Multi-Tenancy:** robust organization management with staff/agent roles and permissions.
+- **Multi-Tenancy:** Robust organization management with complete data isolation between landlords.
 - **Property Management:** Complete lifecycle management for Properties, Units, and Leases.
-- **Tenant Portal:** Allows tenants to view leases, pay rent, and submit maintenance tickets.
+- **Occupant Management:** Track renters and their contact information.
 - **Financials:** Double-entry ledger for accurate accounting, invoicing, and expense tracking.
-- **Security:** PII minimization and encryption, RBAC, and audit logging.
+- **Security:** JWT-based tenant isolation, PII encryption, RBAC, and audit logging.
 
 ## 🛠 Tech Stack
 
@@ -27,17 +27,20 @@ RentEase follows **Domain-Driven Design (DDD)** principles and utilizes a **micr
 
 ## 📂 Architecture
 
-The application is decomposed into the following domain services:
+The application is decomposed into self-contained domain services:
 
-- **Identity & Access Service:** Users, roles, permissions, authentication. (Implemented)
-- **Tenant & Directory Service:** Landlord organizations, staff directory. (Implemented)
-- **Property & Lease Service:** Properties, units, leases, occupants. (Implemented)
-- **Billing & Ledger Service:** Invoices, payments, accounting ledger. (Implemented)
-- **Ticketing & Work Orders Service:** Maintenance requests. (Planned)
-- **Messaging Service:** Direct messaging. (Planned)
-- **Document Management Service:** File storage and management. (Planned)
-- **Expense & Reporting Service:** Analytics and reports. (Planned)
-- **Audit & Compliance Service:** System-wide audit logs. (Planned)
+| Service                        | Port | Status         |
+| ------------------------------ | ---- | -------------- |
+| **Web Frontend**               | 3000 | ✅ Implemented |
+| **Identity & Access Service**  | 3001 | ✅ Implemented |
+| **Tenant & Directory Service** | 3002 | ✅ Implemented |
+| **Property & Lease Service**   | 3003 | ✅ Implemented |
+| **Billing & Ledger Service**   | 3004 | ✅ Implemented |
+| Ticketing & Work Orders        | -    | 📋 Planned     |
+| Messaging Service              | -    | 📋 Planned     |
+| Document Management            | -    | 📋 Planned     |
+| Expense & Reporting            | -    | 📋 Planned     |
+| Audit & Compliance             | -    | 📋 Planned     |
 
 For detailed architecture specifications, please refer to the [Project Wiki](https://github.com/sakibsadmanshajib/RentEase/wiki).
 
@@ -45,71 +48,96 @@ For detailed architecture specifications, please refer to the [Project Wiki](htt
 
 ### Prerequisites
 
-- Node.js
+- Node.js 24+ (use nvm: `nvm use 24`)
 - pnpm
-- Docker (for local database)
+- Docker (for PostgreSQL, Redis, RabbitMQ)
 
 ### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/sakibsadmanshajib/RentEase.git
+cd RentEase
+
 # Install dependencies
 pnpm install
-```
 
-### Running the App
+# Start infrastructure
+docker compose up -d
 
-```bash
+# Copy environment files
+cp apps/identity-service/.env.sample apps/identity-service/.env
+cp apps/tenant-service/.env.sample apps/tenant-service/.env
+cp apps/property-service/.env.sample apps/property-service/.env
+cp apps/billing-service/.env.sample apps/billing-service/.env
+
 # Start development servers
 pnpm dev
 ```
 
-### Building
+### Access the Application
 
-```bash
-# Build the project
-pnpm build
-```
+- **Web App:** http://localhost:3000
+- **Identity Service:** http://localhost:3001
+- **Tenant Service:** http://localhost:3002
+- **Property Service:** http://localhost:3003
+- **Billing Service:** http://localhost:3004
 
-## ✅ Verification
+## 🔐 Security
 
-The project relies on Playwright for comprehensive API and E2E testing.
+RentEase implements comprehensive multi-tenancy security:
 
-> **Note:** The legacy shell scripts (`./scripts/verify-*.sh`) are deprecated and will be removed in future versions.
+- **JWT-based tenant isolation:** All API calls are scoped to the user's organization
+- **Backend enforcement:** Every service validates tenant context from JWT tokens
+- **Frontend enforcement:** Pages redirect to onboarding if no organization membership
+- **No cross-tenant access:** Data is strictly isolated between organizations
 
-Please refer to the [Test Implementation Design](wiki/Testing%20Implementation%20Design.md) for detailed testing strategies.
-
-## 📝 Documentation
-
-- [Architecture Spec](https://github.com/sakibsadmanshajib/RentEase/wiki/Architecture)
-- [Master Implementation Plan](https://github.com/sakibsadmanshajib/RentEase/wiki/Master-Implementation-Plan)
-- [Design Decisions](https://github.com/sakibsadmanshajib/RentEase/wiki/Design-Decisions)
-- [Testing Strategy](https://github.com/sakibsadmanshajib/RentEase/wiki/Testing-Strategy)
+See the [Multi-Tenancy Security](https://github.com/sakibsadmanshajib/RentEase/wiki/Multi-Tenancy-Security) wiki page for details.
 
 ## 🧪 Testing
 
 The project maintains a comprehensive E2E test suite using Playwright.
 
-### Verified Critical Paths
-
-- **Tenant CRUD**: Landlord organization management.
-- **Property CRUD**: Property and Unit lifecycle.
-- **Lease CRUD**: Lease creation, activation, and termination.
-- **Billing CRUD**: Invoice generation, payments, and ledger entries.
-
-### Running Tests
-
 ```bash
-# Run all tests (unit, API, integration, E2E)
+# Run all tests
 pnpm test:ci
 
 # Run API tests only
 pnpm test:api
 
-# Run E2E tests only (uses --workers=1 for stability)
+# Run E2E tests only
 pnpm test:e2e
 
 # View HTML Report
 pnpm exec playwright show-report
 ```
 
-> **Note:** E2E tests run with `--workers=1` to prevent flaky failures from parallel execution and resource contention.
+### Verified Critical Paths
+
+- ✅ User authentication (Google OAuth, email/password)
+- ✅ Organization management (create, update, delete)
+- ✅ Property CRUD and unit lifecycle
+- ✅ Lease creation, activation, and termination
+- ✅ Invoice generation, payments, and ledger entries
+
+## 📝 Documentation
+
+- [Getting Started](https://github.com/sakibsadmanshajib/RentEase/wiki/Getting-Started)
+- [Architecture](https://github.com/sakibsadmanshajib/RentEase/wiki/Architecture)
+- [Multi-Tenancy Security](https://github.com/sakibsadmanshajib/RentEase/wiki/Multi-Tenancy-Security)
+- [Service Configuration](https://github.com/sakibsadmanshajib/RentEase/wiki/Service-Configuration)
+- [Design Decisions](https://github.com/sakibsadmanshajib/RentEase/wiki/Design-Decisions)
+- [Testing Strategy](https://github.com/sakibsadmanshajib/RentEase/wiki/Testing-Strategy)
+
+## 📋 Recent Changes (December 2024)
+
+- ✅ Implemented JWT-based multi-tenancy security across all services
+- ✅ Created tenant onboarding flow for new users
+- ✅ Made each microservice self-contained with its own `.env` configuration
+- ✅ Fixed Google OAuth callback redirect issues
+- ✅ Added Occupants page for managing renters
+- ✅ Updated dashboard to use real tenant context
+
+## 📄 License
+
+Private - All rights reserved.

@@ -23,9 +23,8 @@ function AuthCallbackContent() {
                     const user = await getProfile(token)
                     if (user.roles?.some((r: any) => r.name === 'Admin')) {
                         await router.push("/admin")
-                    } else if (user.tenantMemberships?.length > 0) {
-                        await router.push("/portal")
                     } else {
+                        // Always redirect to dashboard - tenant onboarding will handle users without org
                         await router.push("/dashboard")
                     }
                 } catch (err) {
