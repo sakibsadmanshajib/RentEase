@@ -128,7 +128,7 @@ export default function LeasesPage() {
                             </div>
                         </div>
                         <h3 className="text-lg font-semibold">No Organization</h3>
-                        <p className name="text-muted-foreground text-sm">
+                        <p className="text-muted-foreground text-sm">
                             You need to create or join an organization before managing leases.
                         </p>
                         <Button onClick={() => router.push("/dashboard/onboarding")}>
