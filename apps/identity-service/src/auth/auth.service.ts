@@ -35,7 +35,7 @@ export class AuthService {
         const memberships = await this.membershipModel.findAll({
             where: { userId },
             include: [{ model: Role, attributes: ['name'] }],
-            order: [['createdAt', 'ASC']], // First created is primary
+            order: [['createdAt', 'ASC']], // Default: use oldest membership as primary (TODO: Add explicit isPrimary flag)
         });
 
         if (memberships.length === 0) {

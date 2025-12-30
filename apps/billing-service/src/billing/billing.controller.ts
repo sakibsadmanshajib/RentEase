@@ -4,7 +4,7 @@ import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '@rentease/auth';
 
 @Controller('invoices')
 @UseGuards(JwtAuthGuard)

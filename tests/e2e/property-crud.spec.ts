@@ -17,6 +17,9 @@ test.describe('Property CRUD E2E', () => {
             phone: '555-0123'
         };
         await authHelper.register(landlordData);
+        // Login and create tenant to bypass onboarding
+        await authHelper.login(landlordData.email, landlordData.password);
+        await authHelper.createTenant('Property Test Org');
     });
 
     test('Landlord can create, edit, and delete a property', async ({ page }) => {
@@ -30,6 +33,13 @@ test.describe('Property CRUD E2E', () => {
         await page.fill('input[name="email"]', landlordData.email);
         await page.fill('input[name="password"]', landlordData.password);
         await page.click('button[type="submit"]');
+        // Handle potential onboarding redirect
+        await page.waitForTimeout(2000); // Wait for potential redirect
+        if (page.url().includes('/onboarding')) {
+             await page.click('text=Create Organization');
+             await page.fill('input[name="name"]', 'Test Organization');
+             await page.click('button[type="submit"]');
+        }
         await expect(page).toHaveURL(`${WEB_URL}/dashboard`);
 
         // Navigate to Properties

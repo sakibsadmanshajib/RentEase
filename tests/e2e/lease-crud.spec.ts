@@ -6,6 +6,7 @@ const WEB_URL = process.env.WEB_URL || 'http://localhost:3000';
 test.describe('Lease CRUD E2E', () => {
     let authHelper: AuthHelper;
     let landlordData: any;
+    let tenantId: string;
 
     test.beforeAll(async ({ request }) => {
         authHelper = new AuthHelper('http://localhost:4000');
@@ -17,6 +18,10 @@ test.describe('Lease CRUD E2E', () => {
             phone: '555-0123'
         };
         await authHelper.register(landlordData);
+        // Login and create tenant to bypass onboarding
+        await authHelper.login(landlordData.email, landlordData.password);
+        const tenant = await authHelper.createTenant('Lease Test Org');
+        tenantId = tenant.id;
     });
 
     test('Landlord can create, edit, and delete a lease', async ({ page }) => {
@@ -25,28 +30,21 @@ test.describe('Lease CRUD E2E', () => {
         await page.fill('input[name="email"]', landlordData.email);
         await page.fill('input[name="password"]', landlordData.password);
         await page.click('button[type="submit"]');
+        // Handle potential onboarding redirect
+        await page.waitForTimeout(2000); // Wait for potential redirect
+        if (page.url().includes('/onboarding')) {
+             await page.click('text=Create Organization');
+             await page.fill('input[name="name"]', 'Test Organization');
+             await page.click('button[type="submit"]');
+        }
         await expect(page).toHaveURL(`${WEB_URL}/dashboard`);
-
-        // Navigate to Leases
-        await page.click('a[href="/dashboard/leases"]');
-        await expect(page).toHaveURL(`${WEB_URL}/dashboard/leases`);
 
         // Create Dependencies (Tenant and Property)
         // Get token from localStorage
         const token = await page.evaluate(() => localStorage.getItem('token'));
 
-        const tenantRes = await page.request.post(`${WEB_URL.replace('3000', '4000')}/tenants`, {
-            headers: { Authorization: `Bearer ${token}` },
-            data: {
-                firstName: 'Lease',
-                lastName: 'Tenant',
-                email: `lease-tenant-${Date.now()}@example.com`,
-                phone: '555-0123'
-            }
-        });
-        const tenant = await tenantRes.json();
-        const tenantId = tenant.id;
-
+        // Create Property using the authenticated context
+        // No need to create a new Tenant Organization
         const propertyRes = await page.request.post(`${WEB_URL.replace('3000', '4000')}/properties`, {
             headers: { Authorization: `Bearer ${token}` },
             data: {
@@ -54,11 +52,20 @@ test.describe('Lease CRUD E2E', () => {
                 address: '123 Lease St',
                 type: 'Residential',
                 units: 1,
+                // tenantId is required by DTO
                 tenantId: tenantId
             }
         });
+        if (!propertyRes.ok()) {
+            console.log(`Property creation failed: ${propertyRes.status()} ${await propertyRes.text()}`);
+        }
+        expect(propertyRes.ok()).toBeTruthy();
         const property = await propertyRes.json();
         const propertyId = property.id;
+        
+        // Navigate to Leases (trigger fetch)
+        await page.click('a[href="/dashboard/leases"]');
+        await expect(page).toHaveURL(`${WEB_URL}/dashboard/leases`);
 
         // Create Lease
         await page.click('button:has-text("Create Lease")');
@@ -71,8 +78,15 @@ test.describe('Lease CRUD E2E', () => {
         await page.fill('input[id="startDate"]', startDate);
         await page.fill('input[id="endDate"]', endDate);
         await page.fill('input[id="rentAmount"]', rentAmount);
-        await page.fill('input[id="propertyId"]', propertyId);
-        await page.fill('input[id="tenantId"]', tenantId);
+        await page.fill('input[id="rentAmount"]', rentAmount);
+        
+        // Select Property from dropdown
+        // Wait for the option to appear (fetch completion)
+        await page.locator(`select[id="propertyId"] option[value="${propertyId}"]`).waitFor({ state: 'attached', timeout: 5000 });
+        await page.selectOption('select[id="propertyId"]', propertyId);
+        
+        // tenantId is handled by context, no input to fill
+
         await page.click('button[type="submit"]');
 
         // Verify creation

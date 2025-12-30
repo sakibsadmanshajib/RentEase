@@ -30,14 +30,27 @@ interface Lease {
     status: string;
 }
 
+interface Property {
+    id: string;
+    name: string;
+}
+
+interface Unit {
+    id: string;
+    unitNumber: string;
+    status: string;
+}
+
 export default function LeasesPage() {
     const { tenantId, hasTenant, isLoading: tenantLoading } = useTenant()
     const router = useRouter()
     const [leases, setLeases] = useState<Lease[]>([])
+    const [properties, setProperties] = useState<Property[]>([])
+    const [units, setUnits] = useState<Unit[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState("")
     const [isDialogOpen, setIsDialogOpen] = useState(false)
-    const [newLease, setNewLease] = useState({ startDate: "", endDate: "", rentAmount: "", unitId: "" })
+    const [newLease, setNewLease] = useState({ startDate: "", endDate: "", rentAmount: "", propertyId: "", unitId: "" })
     const [editingLease, setEditingLease] = useState<Lease | null>(null)
 
     useEffect(() => {
@@ -47,8 +60,17 @@ export default function LeasesPage() {
         }
         if (hasTenant) {
             fetchLeases()
+            fetchProperties()
         }
     }, [hasTenant, tenantLoading])
+
+    useEffect(() => {
+        if (newLease.propertyId) {
+            fetchUnits(newLease.propertyId)
+        } else {
+            setUnits([])
+        }
+    }, [newLease.propertyId])
 
     async function fetchLeases() {
         try {
@@ -61,6 +83,24 @@ export default function LeasesPage() {
         }
     }
 
+    async function fetchProperties() {
+        try {
+            const data = await api.get(`/properties?t=${Date.now()}`)
+            setProperties(data)
+        } catch (err: any) {
+            console.error("Error fetching properties:", err)
+        }
+    }
+
+    async function fetchUnits(propertyId: string) {
+        try {
+            const data = await api.get(`/units/property/${propertyId}?t=${Date.now()}`)
+            setUnits(data)
+        } catch (err: any) {
+            console.error("Error fetching units:", err)
+        }
+    }
+
     async function handleCreateLease(e: React.FormEvent) {
         e.preventDefault()
         if (!tenantId) {
@@ -68,13 +108,17 @@ export default function LeasesPage() {
             return
         }
         try {
-            await api.post('/leases', {
+            const payload: any = {
                 ...newLease,
                 tenantId,
                 rentAmount: parseFloat(newLease.rentAmount),
-            })
+            }
+            if (!payload.unitId) {
+                delete payload.unitId
+            }
+            await api.post('/leases', payload)
             setIsDialogOpen(false)
-            setNewLease({ startDate: "", endDate: "", rentAmount: "", unitId: "" })
+            setNewLease({ startDate: "", endDate: "", rentAmount: "", propertyId: "", unitId: "" })
             fetchLeases()
         } catch (err: any) {
             setError(err.message)
@@ -168,6 +212,7 @@ export default function LeasesPage() {
                                             type="date"
                                             value={newLease.startDate}
                                             onChange={(e) => setNewLease({ ...newLease, startDate: e.target.value })}
+                                            max="9999-12-31"
                                             required
                                         />
                                     </div>
@@ -178,6 +223,7 @@ export default function LeasesPage() {
                                             type="date"
                                             value={newLease.endDate}
                                             onChange={(e) => setNewLease({ ...newLease, endDate: e.target.value })}
+                                            max="9999-12-31"
                                             required
                                         />
                                     </div>
@@ -194,13 +240,40 @@ export default function LeasesPage() {
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="unitId">Unit ID</Label>
-                                    <Input
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="propertyId">Property</Label>
+                                    <select
+                                        id="propertyId"
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                        value={newLease.propertyId}
+                                        onChange={(e) => setNewLease({ ...newLease, propertyId: e.target.value, unitId: "" })}
+                                        required
+                                    >
+                                        <option value="">Select a property</option>
+                                        {properties.map((property) => (
+                                            <option key={property.id} value={property.id}>
+                                                {property.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="unitId">Unit (Optional)</Label>
+                                    <select
                                         id="unitId"
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                         value={newLease.unitId}
                                         onChange={(e) => setNewLease({ ...newLease, unitId: e.target.value })}
-                                        required
-                                    />
+                                        disabled={!newLease.propertyId}
+                                    >
+                                        <option value="">Select a unit</option>
+                                        {units.map((unit) => (
+                                            <option key={unit.id} value={unit.id}>
+                                                {unit.unitNumber} ({unit.status})
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
                             <DialogFooter>
@@ -225,6 +298,7 @@ export default function LeasesPage() {
                                             type="date"
                                             value={editingLease?.startDate ? new Date(editingLease.startDate).toISOString().split('T')[0] : ""}
                                             onChange={(e) => setEditingLease(prev => prev ? { ...prev, startDate: e.target.value } : null)}
+                                            max="9999-12-31"
                                             required
                                         />
                                     </div>
@@ -235,6 +309,7 @@ export default function LeasesPage() {
                                             type="date"
                                             value={editingLease?.endDate ? new Date(editingLease.endDate).toISOString().split('T')[0] : ""}
                                             onChange={(e) => setEditingLease(prev => prev ? { ...prev, endDate: e.target.value } : null)}
+                                            max="9999-12-31"
                                             required
                                         />
                                     </div>

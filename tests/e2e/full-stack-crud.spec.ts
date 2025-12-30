@@ -15,17 +15,23 @@ test.describe('Full Stack CRUD E2E', () => {
         lastName: 'CRUD'
     };
 
+    let tenantId: string;
+
     test.beforeAll(async ({ request }) => {
         authHelper = new AuthHelper('http://localhost:4000');
         await authHelper.register({
             ...landlordData,
             phone: '555-0123'
         });
+        // Login and create tenant to bypass onboarding
+        await authHelper.login(landlordData.email, landlordData.password);
+        const tenant = await authHelper.createTenant('Full Stack Test Org');
+        tenantId = tenant.id;
     });
 
     test('Landlord can perform CRUD on Properties, Tenants, Leases, and Invoices', async ({ page }) => {
         // Increase timeout for this comprehensive multi-entity test
-        test.setTimeout(90000);
+        test.setTimeout(180000);
         
         page.on('console', msg => console.log(`PAGE LOG: ${msg.text()}`));
 
@@ -39,6 +45,14 @@ test.describe('Full Stack CRUD E2E', () => {
         await page.waitForLoadState('networkidle');
 
         // 2. Property CRUD
+        // Handle potential onboarding redirect checking
+        if (page.url().includes('/onboarding')) {
+             await page.click('text=Create Organization');
+             await page.fill('input[name="name"]', 'Test Organization');
+             await page.click('button[type="submit"]');
+             await page.waitForTimeout(1000);
+        }
+
         await page.click('a[href="/dashboard/properties"]');
         await expect(page).toHaveURL(`${WEB_URL}/dashboard/properties`);
         await page.waitForLoadState('networkidle');
@@ -71,122 +85,43 @@ test.describe('Full Stack CRUD E2E', () => {
         await expect(page.locator(`text=${updatedPropertyName}`)).not.toBeVisible({ timeout: 10000 });
 
 
-        // 3. Tenant CRUD
-        await page.click('a[href="/dashboard/tenants"]');
-        await expect(page).toHaveURL(`${WEB_URL}/dashboard/tenants`);
+        // 3. Occupant CRUD (Mocked in UI via localStorage)
+        await page.click('a[href="/dashboard/occupants"]');
+        await expect(page).toHaveURL(`${WEB_URL}/dashboard/occupants`);
         await page.waitForLoadState('networkidle');
 
-        // Create Tenant - use unique name to avoid conflicts
+        // Create Occupant
         const tenantTimestamp = Date.now();
-        await page.click('button:has-text("Add Tenant")');
+        await page.click('button:has-text("Add Occupant")');
         await page.fill('input[id="firstName"]', `John${tenantTimestamp}`);
         await page.fill('input[id="lastName"]', 'Doe');
         await page.fill('input[id="email"]', `john.doe${tenantTimestamp}@example.com`);
         await page.fill('input[id="phone"]', '555-0123');
-        await page.click('button:has-text("Create Tenant")');
+        // Submit button in dialog
+        await page.locator('button[type="submit"]:has-text("Add Occupant")').click();
         await expect(page.locator(`text=John${tenantTimestamp} Doe`).first()).toBeVisible();
 
-        // Edit Tenant - target the specific tenant card
+        // Edit Occupant
         const tenantCard = page.locator('.bg-card, [class*="card"]').filter({ hasText: `John${tenantTimestamp}` });
         await tenantCard.locator('button:has-text("Edit")').click();
         await page.fill('input[id="edit-firstName"]', `Jane${tenantTimestamp}`);
-        await page.click('button:has-text("Update Tenant")');
+        await page.locator('button[type="submit"]:has-text("Update Occupant")').click();
         await expect(page.locator(`text=Jane${tenantTimestamp} Doe`).first()).toBeVisible();
 
-        // Delete Tenant - target the specific tenant card and handle confirm dialog
+        // Remove Occupant
         const updatedTenantCard = page.locator('.bg-card, [class*="card"]').filter({ hasText: `Jane${tenantTimestamp}` });
         page.once('dialog', dialog => dialog.accept());
-        // Use Promise.all to avoid race condition
-        await Promise.all([
-            page.waitForResponse(response => response.url().includes('/tenants') && response.request().method() === 'DELETE'),
-            updatedTenantCard.locator('button:has-text("Delete")').click()
-        ]);
+        await updatedTenantCard.locator('button:has-text("Remove")').click();
         await expect(page.locator(`text=Jane${tenantTimestamp} Doe`)).not.toBeVisible({ timeout: 10000 });
 
 
-        // NOTE: Lease and Invoice CRUD tests are commented out due to complex dialog
-        // interactions that require further investigation. Property and Tenant CRUD above are working.
-        
-        /*
-        // 4. Lease CRUD
-        await page.click('a[href="/dashboard/leases"]');
-        await expect(page).toHaveURL(`${WEB_URL}/dashboard/leases`);
-        // Wait for any overlay/dialog to close
-        await page.waitForSelector('[data-state="open"][aria-hidden="true"]', { state: 'hidden', timeout: 5000 }).catch(() => {});
-
-        // Create Lease - first click to open dialog
-        await page.locator('button:has-text("Create Lease"):visible').first().click({ force: true });
-        const startDate = new Date().toISOString().split('T')[0];
-        const endDate = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
-        await page.fill('input[id="startDate"]', startDate);
-        await page.fill('input[id="endDate"]', endDate);
-        await page.fill('input[id="rentAmount"]', '1000');
-        // Submit button is inside dialog - use type=submit selector
-        await page.locator('[role="dialog"] button[type="submit"], button:has-text("Create"):visible').last().click();
-        await expect(page.locator('text=$1000').first()).toBeVisible();
-
-        // Edit Lease
-        await page.click('button:has-text("Edit")');
-        await page.fill('input[id="edit-rentAmount"]', '1200');
-        await page.click('button:has-text("Update Lease")');
-        await expect(page.locator('text=$1200').first()).toBeVisible();
-
-        // Delete Lease
-        await page.click('button:has-text("Delete")');
-        await expect(page.locator('text=$1200')).not.toBeVisible();
-
-
-        // 5. Billing CRUD
-        await page.click('a[href="/dashboard/billing"]');
-        await expect(page).toHaveURL(`${WEB_URL}/dashboard/billing`);
-
-        // Create Invoice
-        await page.click('button:has-text("Create Invoice")');
-        await page.fill('input[id="amount"]', '500');
-        await page.fill('input[id="description"]', 'Utility Bill');
-        const dueDate = new Date(new Date().setDate(new Date().getDate() + 7)).toISOString().split('T')[0];
-        await page.fill('input[id="dueDate"]', dueDate);
-        await page.click('button:has-text("Create Invoice")');
-        await expect(page.locator('text=Utility Bill').first()).toBeVisible();
-
-        // Edit Invoice
-        await page.click('button:has-text("Edit")');
-        await page.fill('input[id="edit-amount"]', '550');
-        await page.click('button:has-text("Update Invoice")');
-        await expect(page.locator('text=$550.00').first()).toBeVisible();
-
-        // Delete Invoice
-        await page.click('button:has-text("Delete")');
-        await expect(page.locator('text=Utility Bill')).not.toBeVisible();
-        */
-
-        /*
-        // NOTE: Lease and Invoice CRUD are temporarily disabled for CI stability.
-        // The invoice form in the frontend doesn't have the expected field IDs and
-        // the ValidationPipe with forbidNonWhitelisted rejects some fields.
-        // Re-enable after frontend invoice form is fixed.
-
         // 4. Lease CRUD - Now working with proper dependency creation and selectors
-        await page.click('a[href="/dashboard/leases"]');
-        await expect(page).toHaveURL(`${WEB_URL}/dashboard/leases`);
-        await page.waitForLoadState('networkidle');
-
-        // Create dependencies (Tenant and Property) via API
+        // Create dependencies (Property) via API first
         const token = await page.evaluate(() => localStorage.getItem('token'));
         const leaseTimestamp = Date.now();
         
-        const tenantRes = await page.request.post(`${WEB_URL.replace('3000', '4000')}/tenants`, {
-            headers: { Authorization: `Bearer ${token}` },
-            data: {
-                firstName: 'Lease',
-                lastName: `Tenant${leaseTimestamp}`,
-                email: `lease-tenant-${leaseTimestamp}@example.com`,
-                phone: '555-0123'
-            }
-        });
-        const tenant = await tenantRes.json();
-        const tenantId = tenant.id;
-
+        // No need to create Tenant Organization, use context
+        
         const propertyRes = await page.request.post(`${WEB_URL.replace('3000', '4000')}/properties`, {
             headers: { Authorization: `Bearer ${token}` },
             data: {
@@ -197,8 +132,14 @@ test.describe('Full Stack CRUD E2E', () => {
                 tenantId: tenantId
             }
         });
+        expect(propertyRes.ok()).toBeTruthy();
         const property = await propertyRes.json();
         const propertyId = property.id;
+        
+        // Navigate to Leases (trigger fetch)
+        await page.click('a[href="/dashboard/leases"]');
+        await expect(page).toHaveURL(`${WEB_URL}/dashboard/leases`);
+        await page.waitForLoadState('networkidle');
 
         // Create Lease
         await page.click('button:has-text("Create Lease")');
@@ -208,8 +149,14 @@ test.describe('Full Stack CRUD E2E', () => {
         await page.fill('input[id="startDate"]', '2025-01-01');
         await page.fill('input[id="endDate"]', '2025-12-31');
         await page.fill('input[id="rentAmount"]', rentAmount);
-        await page.fill('input[id="propertyId"]', propertyId);
-        await page.fill('input[id="tenantId"]', tenantId);
+        
+        // Select Property from dropdown
+        // Wait for the option to appear (fetch completion)
+        await page.locator(`select[id="propertyId"] option[value="${propertyId}"]`).waitFor({ state: 'attached', timeout: 5000 });
+        await page.selectOption('select[id="propertyId"]', propertyId);
+        
+        // tenantId is handled by context
+        
         await page.click('button[type="submit"]');
 
         // Verify creation
@@ -243,21 +190,19 @@ test.describe('Full Stack CRUD E2E', () => {
         await expect(page).toHaveURL(`${WEB_URL}/dashboard/billing`);
         await page.waitForLoadState('networkidle');
 
-        // Create Invoice - using API-created tenant
+        // Create Invoice - using API-created tenant context
         await page.click('button:has-text("Create Invoice")');
         await expect(page.locator('text=Create New Invoice')).toBeVisible();
         
-        const invoiceAmount = Math.floor(Math.random() * 1000).toString();
+        const invoiceAmount = (Math.floor(Math.random() * 1000) + 5000).toString(); // Unique range
         const invoiceDescription = `Invoice ${invoiceAmount}`;
         const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
         await page.fill('input[id="amount"]', invoiceAmount);
         await page.fill('input[id="description"]', invoiceDescription);
         await page.fill('input[id="dueDate"]', dueDate);
-        // Fill tenantId if visible
-        const tenantIdField = page.locator('input[id="tenantId"]');
-        if (await tenantIdField.isVisible()) {
-            await tenantIdField.fill(tenantId);
-        }
+        
+        // Lease selection skipped (optional) and tenantId handled by context
+        
         await page.click('button[type="submit"]');
 
         // Verify creation - look for description
@@ -273,19 +218,17 @@ test.describe('Full Stack CRUD E2E', () => {
         await page.click('button:has-text("Update Invoice")');
 
         // Verify edit - look for formatted amount
-        await expect(page.locator(`text=$${Number(newInvoiceAmount).toFixed(2)}`).first()).toBeVisible();
+        const newFormattedAmount = `$${Number(newInvoiceAmount).toFixed(2)}`;
+        await expect(page.locator(`text=${newFormattedAmount}`).first()).toBeVisible();
 
         // Delete Invoice - target specific invoice card and handle confirm dialog
-        const updatedInvoiceCard = page.locator('.bg-card').filter({ hasText: `$${Number(newInvoiceAmount).toFixed(2)}` });
+        const updatedInvoiceCard = page.locator('.bg-card').filter({ hasText: newFormattedAmount });
         page.once('dialog', dialog => dialog.accept());
         // Use Promise.all to avoid race condition
         await Promise.all([
             page.waitForResponse(response => response.url().includes('/invoices') && response.request().method() === 'DELETE'),
             updatedInvoiceCard.first().locator('button:has-text("Delete")').click()
         ]);
-        await expect(page.locator(`text=$${Number(newInvoiceAmount).toFixed(2)}`)).not.toBeVisible({ timeout: 10000 });
-        */
+        await expect(page.locator(`text=${newFormattedAmount}`)).not.toBeVisible({ timeout: 10000 });
     });
 });
-
-

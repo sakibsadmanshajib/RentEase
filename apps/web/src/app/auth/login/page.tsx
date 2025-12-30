@@ -133,7 +133,7 @@ export default function LoginPage() {
                             type="button"
                             disabled={isLoading}
                             className="w-full"
-                            onClick={() => window.location.href = 'http://localhost:3001/auth/google'}
+                            onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/google`}
                         >
                             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                                 <path

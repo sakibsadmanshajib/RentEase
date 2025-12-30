@@ -29,6 +29,14 @@ interface Invoice {
     lineItems: { description: string; amount: number }[];
 }
 
+interface Lease {
+    id: string;
+    startDate: string;
+    endDate: string;
+    property?: { name: string };
+    unit?: { unitNumber: string };
+}
+
 export default function BillingPage() {
     const { tenantId, hasTenant, isLoading: tenantLoading } = useTenant()
     const router = useRouter()
@@ -38,6 +46,7 @@ export default function BillingPage() {
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [newInvoice, setNewInvoice] = useState({ amount: "", description: "", dueDate: "", leaseId: "" })
     const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null)
+    const [leases, setLeases] = useState<Lease[]>([])
 
     useEffect(() => {
         if (!tenantLoading && !hasTenant) {
@@ -46,8 +55,18 @@ export default function BillingPage() {
         }
         if (hasTenant) {
             fetchInvoices()
+            fetchLeases()
         }
     }, [hasTenant, tenantLoading])
+
+    async function fetchLeases() {
+        try {
+            const data = await api.get(`/leases?t=${Date.now()}`)
+            setLeases(data)
+        } catch (err: any) {
+            console.error("Failed to fetch leases", err)
+        }
+    }
 
     async function fetchInvoices() {
         try {
@@ -208,16 +227,28 @@ export default function BillingPage() {
                                         type="date"
                                         value={newInvoice.dueDate}
                                         onChange={(e) => setNewInvoice({ ...newInvoice, dueDate: e.target.value })}
+                                        max="9999-12-31"
                                         required
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="leaseId">Lease ID (Optional)</Label>
-                                    <Input
+                                    <Label htmlFor="leaseId">Lease (Optional)</Label>
+                                    <select
                                         id="leaseId"
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                         value={newInvoice.leaseId}
                                         onChange={(e) => setNewInvoice({ ...newInvoice, leaseId: e.target.value })}
-                                    />
+                                    >
+                                        <option value="">Select a lease</option>
+                                        {leases.map((lease) => (
+                                            <option key={lease.id} value={lease.id}>
+                                                {lease.property?.name || 'Unknown Property'} 
+                                                {lease.unit?.unitNumber ? ` - Unit ${lease.unit.unitNumber}` : ''} 
+                                                ({new Date(lease.startDate).toLocaleDateString()} - {new Date(lease.endDate).toLocaleDateString()})
+                                            </option>
+                                        ))}
+                                    </select>
+
                                 </div>
                             </div>
                             <DialogFooter>
@@ -251,6 +282,7 @@ export default function BillingPage() {
                                         type="date"
                                         value={editingInvoice?.dueDate ? new Date(editingInvoice.dueDate).toISOString().split('T')[0] : ""}
                                         onChange={(e) => setEditingInvoice(prev => prev ? { ...prev, dueDate: e.target.value } : null)}
+                                        max="9999-12-31"
                                         required
                                     />
                                 </div>

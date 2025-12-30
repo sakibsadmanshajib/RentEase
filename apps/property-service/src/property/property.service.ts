@@ -60,11 +60,19 @@ export class PropertyService {
         });
     }
 
-    async remove(id: string, tenantId: string): Promise<void> {
-        if (!tenantId) {
-            throw new ForbiddenException('Tenant context required');
+    async remove(id: string, tenantId?: string): Promise<void> {
+        let property: Property | null;
+
+        if (tenantId) {
+            property = await this.findOneForTenant(id, tenantId);
+        } else {
+            property = await this.findOne(id);
         }
-        const property = await this.findOneForTenant(id, tenantId);
+
+        if (!property) {
+            throw new NotFoundException(`Property with ID ${id} not found`);
+        }
+
         await property.destroy();
     }
 }

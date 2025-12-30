@@ -101,4 +101,28 @@ export class AuthHelper {
         this.token = undefined;
         this.refreshToken = undefined;
     }
+    /**
+     * Create a new tenant organization for the authenticated user
+     */
+    async createTenant(name: string): Promise<any> {
+        if (!this.token) {
+            throw new Error('Not authenticated. Call login() first.');
+        }
+
+        const context = await request.newContext();
+        console.log(`Creating tenant '${name}' at ${this.baseUrl}/tenants`);
+        const response = await context.post(`${this.baseUrl}/tenants`, {
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            },
+            data: { name }
+        });
+
+        if (!response.ok()) {
+            throw new Error(`Create Tenant failed: ${response.status()} ${await response.text()}`);
+        }
+
+        return response.json();
+    }
 }

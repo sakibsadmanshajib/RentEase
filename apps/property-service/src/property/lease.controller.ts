@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param, Query, Patch, Delete, NotFoundException, UseGuards, Request } from '@nestjs/common';
 import { LeaseService } from './lease.service';
 import { CreateLeaseDto } from './dto/create-lease.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '@rentease/auth';
 
 @Controller('leases')
 @UseGuards(JwtAuthGuard)

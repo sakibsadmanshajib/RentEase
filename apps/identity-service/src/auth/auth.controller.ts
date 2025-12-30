@@ -28,11 +28,12 @@ export class AuthController {
     @UseGuards(AuthGuard('google'))
     async googleAuthRedirect(@Req() req: any, @Res() res: any) {
         const { accessToken, tenantId } = await this.authService.loginWithGoogle(req.user);
-        const params = new URLSearchParams({ token: accessToken });
-        if (tenantId) {
-            params.set('tenantId', tenantId);
-        }
-        res.redirect(`http://localhost:3000/auth/callback?${params.toString()}`);
+        const params = new URLSearchParams({ 
+            token: accessToken,
+            ...(tenantId && { tenantId }) 
+        });
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        res.redirect(`${frontendUrl}/auth/callback?${params.toString()}`);
     }
 
     @Post('switch-tenant')

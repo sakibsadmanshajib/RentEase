@@ -3,9 +3,10 @@ import { PropertyService } from './property.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { Property } from './models/property.model';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '@rentease/auth';
 
 @Controller('properties')
+@UseGuards(JwtAuthGuard)
 export class PropertyController {
     constructor(private readonly propertyService: PropertyService) { }
 
