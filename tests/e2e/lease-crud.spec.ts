@@ -31,11 +31,12 @@ test.describe('Lease CRUD E2E', () => {
         await page.fill('input[name="password"]', landlordData.password);
         await page.click('button[type="submit"]');
         // Handle potential onboarding redirect
-        await page.waitForTimeout(2000); // Wait for potential redirect
+        await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 5000 });
         if (page.url().includes('/onboarding')) {
              await page.click('text=Create Organization');
              await page.fill('input[name="name"]', 'Test Organization');
              await page.click('button[type="submit"]');
+             await page.waitForURL(`${WEB_URL}/dashboard`);
         }
         await expect(page).toHaveURL(`${WEB_URL}/dashboard`);
 
@@ -77,7 +78,6 @@ test.describe('Lease CRUD E2E', () => {
 
         await page.fill('input[id="startDate"]', startDate);
         await page.fill('input[id="endDate"]', endDate);
-        await page.fill('input[id="rentAmount"]', rentAmount);
         await page.fill('input[id="rentAmount"]', rentAmount);
         
         // Select Property from dropdown

@@ -49,8 +49,42 @@ export function useUser(): UseUserReturn {
     }, [])
 
     useEffect(() => {
-        fetchUser()
-    }, [fetchUser])
+        let isMounted = true
+        
+        const runFetch = async () => {
+            const token = localStorage.getItem('token')
+            if (!token) {
+                if (isMounted) {
+                    setUser(null)
+                    setLoading(false)
+                }
+                return
+            }
+            try {
+                const profile = await getProfile(token)
+                if (isMounted) {
+                    setUser(profile)
+                    setError(null)
+                }
+            } catch (err) {
+                if (isMounted) {
+                    console.error('Failed to fetch user profile:', err)
+                    setError('Failed to load user profile')
+                    setUser(null)
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false)
+                }
+            }
+        }
+        
+        runFetch()
+        
+        return () => {
+            isMounted = false
+        }
+    }, [])
 
     return {
         user,

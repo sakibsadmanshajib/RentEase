@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, UseGuards, Req, Headers } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, ForbiddenException, UseGuards, Req, Headers } from '@nestjs/common';
 import { PropertyService } from './property.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
@@ -54,17 +54,11 @@ export class PropertyController {
 
     @Delete(':id')
     async remove(@Param('id') id: string, @Req() req: any) {
-        const tenantId = req.user?.tenantId;
-        
-        // Validate existence (and ownership if tenantId present)
-        if (tenantId) {
-            await this.propertyService.findOneForTenant(id, tenantId);
-        } else {
-            const property = await this.propertyService.findOne(id);
-            if (!property) {
-                throw new NotFoundException(`Property with ID ${id} not found`);
-            }
+        const tenantId = req.user.tenantId;
+        if (!tenantId) {
+            throw new ForbiddenException('Tenant context required');
         }
+        await this.propertyService.findOneForTenant(id, tenantId);
         
         await this.propertyService.remove(id, tenantId);
         return { message: 'Property deleted successfully' };

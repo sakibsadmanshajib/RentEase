@@ -88,7 +88,7 @@ export default function LeasesPage() {
             const data = await api.get(`/properties?t=${Date.now()}`)
             setProperties(data)
         } catch (err: any) {
-            console.error("Error fetching properties:", err)
+            setError(`Failed to load properties: ${err.message}`)
         }
     }
 
@@ -97,7 +97,7 @@ export default function LeasesPage() {
             const data = await api.get(`/units/property/${propertyId}?t=${Date.now()}`)
             setUnits(data)
         } catch (err: any) {
-            console.error("Error fetching units:", err)
+            setError(`Failed to load units: ${err.message}`)
         }
     }
 
@@ -238,8 +238,6 @@ export default function LeasesPage() {
                                         placeholder="1500.00"
                                         required
                                     />
-                                </div>
-                                <div className="grid gap-2">
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="propertyId">Property</Label>
