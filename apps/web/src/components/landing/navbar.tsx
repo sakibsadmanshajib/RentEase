@@ -21,15 +21,12 @@ export function Navbar() {
                 </Link>
 
                 <nav className="hidden md:flex items-center gap-8">
-                    {["Features", "Pricing", "About"].map((item) => (
-                        <Link
-                            key={item}
-                            href={`#${item.toLowerCase()}`}
-                            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            {item}
-                        </Link>
-                    ))}
+                    <Link
+                        href="#features"
+                        className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                        Features
+                    </Link>
                 </nav>
 
                 <div className="flex items-center gap-3">

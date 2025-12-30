@@ -19,10 +19,10 @@ export class BillingController {
     }
 
     @Get('ledger')
-    getLedger(@Request() req: any, @Query('tenantId') tenantId?: string) {
-        // Use tenantId from JWT if not provided in query
-        const effectiveTenantId = tenantId || req.user?.tenantId;
-        return this.billingService.getLedger(effectiveTenantId);
+    getLedger(@Request() req: any) {
+        // SECURITY: Always use tenantId from JWT - no query param override allowed
+        const tenantId = req.user?.tenantId;
+        return this.billingService.getLedger(tenantId);
     }
 
     // ============ EXPENSE ENDPOINTS ============

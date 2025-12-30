@@ -24,7 +24,7 @@ export function Hero() {
                         className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-4 py-1.5 text-sm text-muted-foreground mb-8"
                     >
                         <span className="relative flex h-2 w-2">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-foreground/40" />
+                            <span className="absolute inline-flex h-full w-full motion-safe:animate-ping rounded-full bg-foreground/40" />
                             <span className="relative inline-flex h-2 w-2 rounded-full bg-foreground" />
                         </span>
                         Now available for property managers

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Building2, LayoutDashboard, Building, Users, FileText, Settings, LogOut, DollarSign } from "lucide-react"
@@ -41,6 +41,13 @@ const sidebarItems = [
 
 export function DashboardSidebar() {
     const pathname = usePathname()
+    const router = useRouter()
+
+    function handleSignOut() {
+        localStorage.removeItem("accessToken")
+        localStorage.removeItem("tenantId")
+        router.push("/auth/login")
+    }
 
     return (
         <div className="flex h-full flex-col bg-sidebar-background">
@@ -83,6 +90,7 @@ export function DashboardSidebar() {
                 <Button
                     variant="ghost"
                     className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-destructive"
+                    onClick={handleSignOut}
                 >
                     <LogOut className="h-4 w-4" />
                     Sign Out

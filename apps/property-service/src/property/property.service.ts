@@ -21,8 +21,7 @@ export class PropertyService {
      */
     async findAll(tenantId: string): Promise<Property[]> {
         if (!tenantId) {
-            // No tenant context = no data access
-            return [];
+            throw new ForbiddenException('Tenant context required');
         }
         return this.propertyModel.findAll({ where: { tenantId } });
     }
@@ -54,8 +53,9 @@ export class PropertyService {
         }
         // Validate ownership first
         await this.findOneForTenant(id, tenantId);
+        // Include tenantId in WHERE clause for defense in depth
         return this.propertyModel.update(updatePropertyDto, {
-            where: { id },
+            where: { id, tenantId },
             returning: true,
         });
     }

@@ -28,8 +28,8 @@ export default function OnboardingPage() {
             const response = await api.post("/tenants", { name })
             localStorage.setItem("tenantId", response.id)
             
-            // Refresh token to include new tenantId
-            // For now, just redirect - the user may need to re-login
+            // Note: The JWT won't include the new tenantId until user re-logs in.
+            // For now this is acceptable as tenantId is also read from localStorage.
             router.push("/dashboard")
             router.refresh()
         } catch (err: any) {
