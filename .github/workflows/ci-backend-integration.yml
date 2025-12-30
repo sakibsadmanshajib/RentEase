@@ -65,6 +65,9 @@ jobs:
       - name: Build common package
         run: pnpm --filter @rentease/common build
 
+      - name: Build auth package
+        run: pnpm --filter @rentease/auth build
+
       - name: Build service
         run: pnpm --filter ${{ matrix.service }}-service build
 
