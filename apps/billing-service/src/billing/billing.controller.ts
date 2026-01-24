@@ -1,13 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, NotFoundException, ForbiddenException, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
 import { BillingService } from './billing.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
-import { JwtAuthGuard } from '@rentease/auth';
+import { JwtAuthGuard, RequireOrgGuard, OrgId } from '@rentease/auth';
 
 @Controller('invoices')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RequireOrgGuard)
 export class BillingController {
     constructor(private readonly billingService: BillingService) { }
 
@@ -19,11 +19,7 @@ export class BillingController {
     }
 
     @Get('ledger')
-    getLedger(@Request() req: any) {
-        const orgId = req.user?.orgId;
-        if (!orgId) {
-            throw new ForbiddenException('Organization context required');
-        }
+    getLedger(@OrgId() orgId: string) {
         return this.billingService.getLedger(orgId);
     }
 
@@ -35,38 +31,22 @@ export class BillingController {
     }
 
     @Get('expenses')
-    getExpenses(@Request() req: any, @Query() filters: any) {
-        const orgId = req.user?.orgId;
-        if (!orgId) {
-            throw new ForbiddenException('Organization context required');
-        }
+    getExpenses(@OrgId() orgId: string, @Query() filters: any) {
         return this.billingService.getExpenses({ ...filters, orgId });
     }
 
     @Get('expenses/:id')
-    async getExpenseById(@Param('id') id: string, @Request() req: any) {
-        const orgId = req.user?.orgId;
-        if (!orgId) {
-            throw new ForbiddenException('Organization context required');
-        }
+    async getExpenseById(@Param('id') id: string, @OrgId() orgId: string) {
         return this.billingService.getExpenseByIdForOrg(id, orgId);
     }
 
     @Patch('expenses/:id')
-    async updateExpense(@Param('id') id: string, @Body() updates: any, @Request() req: any) {
-        const orgId = req.user?.orgId;
-        if (!orgId) {
-            throw new ForbiddenException('Organization context required');
-        }
+    async updateExpense(@Param('id') id: string, @Body() updates: any, @OrgId() orgId: string) {
         return this.billingService.updateExpenseForOrg(id, updates, orgId);
     }
 
     @Delete('expenses/:id')
-    async deleteExpense(@Param('id') id: string, @Request() req: any) {
-        const orgId = req.user?.orgId;
-        if (!orgId) {
-            throw new ForbiddenException('Organization context required');
-        }
+    async deleteExpense(@Param('id') id: string, @OrgId() orgId: string) {
         await this.billingService.deleteExpenseForOrg(id, orgId);
         return { message: 'Expense deleted successfully' };
     }
@@ -79,36 +59,22 @@ export class BillingController {
     }
 
     @Get()
-    findAll(@Request() req: any, @Query() query: any) {
-        // Ensure orgId filter from JWT
-        const orgId = req.user?.orgId;
+    findAll(@OrgId() orgId: string, @Query() query: any) {
         return this.billingService.findAll({ ...query, orgId });
     }
 
     @Get(':id')
-    async findOne(@Param('id') id: string, @Request() req: any) {
-        const orgId = req.user?.orgId;
-        if (!orgId) {
-            throw new ForbiddenException('Organization context required');
-        }
+    async findOne(@Param('id') id: string, @OrgId() orgId: string) {
         return this.billingService.findOneForOrg(id, orgId);
     }
 
     @Patch(':id')
-    async update(@Param('id') id: string, @Body() updateInvoiceDto: UpdateInvoiceDto, @Request() req: any) {
-        const orgId = req.user?.orgId;
-        if (!orgId) {
-            throw new ForbiddenException('Organization context required');
-        }
+    async update(@Param('id') id: string, @Body() updateInvoiceDto: UpdateInvoiceDto, @OrgId() orgId: string) {
         return this.billingService.updateForOrg(id, updateInvoiceDto, orgId);
     }
 
     @Delete(':id')
-    async remove(@Param('id') id: string, @Request() req: any) {
-        const orgId = req.user?.orgId;
-        if (!orgId) {
-            throw new ForbiddenException('Organization context required');
-        }
+    async remove(@Param('id') id: string, @OrgId() orgId: string) {
         await this.billingService.removeForOrg(id, orgId);
         return { message: 'Invoice deleted successfully' };
     }

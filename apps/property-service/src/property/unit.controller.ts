@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, UseGuards } from '@nestjs/common';
 import { UnitService } from './unit.service';
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { Unit } from './models/unit.model';
+import { JwtAuthGuard, RequireOrgGuard, OrgId } from '@rentease/auth';
 
 @Controller('units')
+@UseGuards(JwtAuthGuard, RequireOrgGuard)
 export class UnitController {
     constructor(private readonly unitService: UnitService) { }
 

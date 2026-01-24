@@ -1,12 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, ForbiddenException, UseGuards, Req, Headers } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, UseGuards, Req } from '@nestjs/common';
 import { PropertyService } from './property.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
-import { Property } from './models/property.model';
-import { JwtAuthGuard } from '@rentease/auth';
+import { JwtAuthGuard, RequireOrgGuard, OrgId } from '@rentease/auth';
 
 @Controller('properties')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RequireOrgGuard)
 export class PropertyController {
     constructor(private readonly propertyService: PropertyService) { }
 
@@ -21,13 +20,11 @@ export class PropertyController {
     }
 
     /**
-     * List properties - uses org from JWT if authenticated
+     * List properties - uses org from JWT
      */
     @Get()
-    async findAll(@Req() req: any, @Headers('Authorization') authHeader?: string) {
+    async findAll(@OrgId() orgId: string) {
         try {
-            // If authenticated via JWT, filter by org
-            const orgId = req.user?.orgId || req.user?.tenantId;
             return await this.propertyService.findAll(orgId);
         } catch (error) {
             console.error('Error finding properties:', error);
@@ -36,21 +33,9 @@ export class PropertyController {
     }
 
     @Get(':id')
-    async findOne(@Param('id') id: string, @Req() req: any) {
+    async findOne(@Param('id') id: string, @OrgId() orgId: string) {
         try {
-            const orgId = req.user?.orgId || req.user?.tenantId;
-            
-            // If authenticated and has org, validate access
-            if (orgId) {
-                return await this.propertyService.findOneForOrg(id, orgId);
-            }
-            
-            // Backward compatibility: no auth = no filtering
-            const property = await this.propertyService.findOne(id);
-            if (!property) {
-                throw new NotFoundException(`Property with ID ${id} not found`);
-            }
-            return property;
+            return await this.propertyService.findOneForOrg(id, orgId);
         } catch (error) {
             console.error('Error finding property:', error);
             throw error;
@@ -58,12 +43,8 @@ export class PropertyController {
     }
 
     @Patch(':id')
-    async update(@Param('id') id: string, @Body() updatePropertyDto: UpdatePropertyDto, @Req() req: any) {
+    async update(@Param('id') id: string, @Body() updatePropertyDto: UpdatePropertyDto, @OrgId() orgId: string) {
         try {
-            const orgId = req.user?.orgId || req.user?.tenantId;
-            if (!orgId) {
-                throw new ForbiddenException('Organization context required');
-            }
             const [affectedCount, updatedProperties] = await this.propertyService.update(id, updatePropertyDto, orgId);
             if (affectedCount === 0) {
                 throw new NotFoundException(`Property with ID ${id} not found`);
@@ -76,12 +57,8 @@ export class PropertyController {
     }
 
     @Delete(':id')
-    async remove(@Param('id') id: string, @Req() req: any) {
+    async remove(@Param('id') id: string, @OrgId() orgId: string) {
         try {
-            const orgId = req.user?.orgId || req.user?.tenantId;
-            if (!orgId) {
-                throw new ForbiddenException('Organization context required');
-            }
             await this.propertyService.findOneForOrg(id, orgId);
             
             await this.propertyService.remove(id, orgId);
@@ -92,4 +69,3 @@ export class PropertyController {
         }
     }
 }
-
