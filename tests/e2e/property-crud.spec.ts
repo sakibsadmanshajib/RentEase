@@ -57,8 +57,15 @@ test.describe('Property CRUD E2E', () => {
 
         // Delete Property
         page.on('dialog', dialog => dialog.accept());
-        await page.locator('.bg-card').filter({ hasText: updatedPropertyName }).locator('button:has-text("Delete")').click();
-        await page.waitForTimeout(2000);
+        // Wait for delete API response
+        const [deleteResponse] = await Promise.all([
+            page.waitForResponse(response => 
+                response.url().includes('/properties') && 
+                response.request().method() === 'DELETE' &&
+                response.status() === 200
+            ),
+            page.locator('.bg-card').filter({ hasText: updatedPropertyName }).locator('button:has-text("Delete")').click()
+        ]);
         await expect(page.locator(`text=${updatedPropertyName}`)).not.toBeVisible();
     });
 });

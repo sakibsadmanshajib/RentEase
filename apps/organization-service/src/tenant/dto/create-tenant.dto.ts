@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsOptional } from 'class-validator';
+import { IsString, IsEmail, IsOptional, ValidateIf, IsDefined } from 'class-validator';
 
 export class CreateTenantDto {
     @IsString()
@@ -11,6 +11,14 @@ export class CreateTenantDto {
     @IsOptional()
     @IsString()
     contactPhone?: string;
+
+    /**
+     * Virtual property for contact validation.
+     * Requires at least one contact method (email or phone) to be provided.
+     */
+    @ValidateIf((o) => !o.contactEmail && !o.contactPhone)
+    @IsDefined({ message: 'At least one of contactEmail or contactPhone must be provided' })
+    private readonly _requireAtLeastOneContact?: never;
 
     @IsOptional()
     @IsString()

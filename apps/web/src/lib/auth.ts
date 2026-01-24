@@ -47,3 +47,21 @@ export async function getProfile(token: string) {
 
     return response.json();
 }
+
+/**
+ * Logout - calls backend to acknowledge logout before client-side cleanup.
+ * Note: Current implementation is stateless; token remains valid until expiry.
+ */
+export async function logout(token: string): Promise<void> {
+    try {
+        await fetch(`${API_URL}/auth/logout`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+    } catch (error) {
+        console.error('Logout API call failed:', error);
+        // Continue with client-side cleanup even if API call fails
+    }
+}

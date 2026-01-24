@@ -85,8 +85,12 @@ test.describe('Billing CRUD E2E', () => {
         ]);
         expect(createResponse.status()).toBe(201);
         
-        // Wait for page to refresh/update with new invoice
-        await page.waitForTimeout(1000);
+        // Wait for the invoice list to refresh after creation
+        await page.waitForResponse(response => 
+            response.url().includes('/invoices') && 
+            response.request().method() === 'GET' &&
+            response.status() === 200
+        );
         
         // Verify creation by checking for the formatted amount
         const formattedAmount = `$${Number(amount).toFixed(2)}`;

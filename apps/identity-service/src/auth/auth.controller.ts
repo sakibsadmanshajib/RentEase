@@ -42,5 +42,26 @@ export class AuthController {
     async switchTenant(@Req() req: any, @Body('tenantId') tenantId: string) {
         return this.authService.switchTenant(req.user.id, tenantId);
     }
+
+    /**
+     * Logout endpoint - clears client-side session context.
+     * 
+     * TODO: TECH DEBT - Implement server-side token blocklist for immediate JWT invalidation.
+     * Current implementation is stateless (JWT remains valid until expiry).
+     * For enhanced security, consider:
+     * - Redis-based token blocklist with TTL matching token expiry
+     * - Refresh token rotation with revocation on logout
+     * - Session tracking for "logout all devices" functionality
+     * 
+     * See: https://jwt.io/introduction/ and Known Limitations wiki page
+     */
+    @Post('logout')
+    @UseGuards(JwtAuthGuard)
+    @HttpCode(200)
+    async logout(@Req() req: any) {
+        // Currently stateless - just acknowledge logout
+        // The client is responsible for clearing stored tokens
+        return { message: 'Logged out successfully' };
+    }
 }
 

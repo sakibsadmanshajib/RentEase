@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Building2, LayoutDashboard, Building, Users, FileText, Settings, LogOut, DollarSign } from "lucide-react"
 
+import { logout } from "@/lib/auth"
+
 const sidebarItems = [
     {
         title: "Dashboard",
@@ -43,7 +45,16 @@ export function DashboardSidebar() {
     const pathname = usePathname()
     const router = useRouter()
 
-    function handleSignOut() {
+    async function handleSignOut() {
+        try {
+            const token = localStorage.getItem("accessToken")
+            if (token) {
+                await logout(token)
+            }
+        } catch (error) {
+            console.error("Logout API call failed:", error)
+            // Continue with client-side cleanup even if API call fails
+        }
         localStorage.removeItem("accessToken")
         localStorage.removeItem("tenantId")
         router.push("/auth/login")

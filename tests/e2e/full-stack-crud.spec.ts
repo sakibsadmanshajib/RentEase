@@ -50,7 +50,7 @@ test.describe('Full Stack CRUD E2E', () => {
              await page.click('text=Create Organization');
              await page.fill('input[name="name"]', 'Test Organization');
              await page.click('button[type="submit"]');
-             await page.waitForTimeout(1000);
+             await page.waitForURL(`${WEB_URL}/dashboard`, { timeout: 10000 });
         }
 
         await page.click('a[href="/dashboard/properties"]');
