@@ -31,8 +31,8 @@ export class AuthController {
     }
 
     private clearAuthCookies(res: Response) {
-        res.clearCookie('accessToken', { path: '/' });
-        res.clearCookie('refreshToken', { path: '/' });
+        res.clearCookie('accessToken', { ...this.COOKIE_OPTIONS });
+        res.clearCookie('refreshToken', { ...this.COOKIE_OPTIONS });
     }
 
     @Post('login')

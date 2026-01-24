@@ -117,7 +117,6 @@ test.describe('Full Stack CRUD E2E', () => {
 
         // 4. Lease CRUD - Now working with proper dependency creation and selectors
         // Create dependencies (Property) via API first
-        // Create dependencies (Property) via API first
         const leaseTimestamp = Date.now();
         
         // No need to create Tenant Organization, use context

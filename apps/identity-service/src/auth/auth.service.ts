@@ -190,8 +190,18 @@ export class AuthService {
     }
 
     /**
-     * Refresh tokens with rotation (new refresh token each time)
-     * This prevents token reuse attacks
+     * Refresh tokens with rotation (new refresh token each time).
+     * 
+     * Note: The old refresh token is not immediately invalidated, meaning both
+     * old and new tokens remain valid until expiry. This is a known limitation
+     * of stateless JWT-based auth.
+     * 
+     * TODO: TECH DEBT - For enhanced security, consider implementing:
+     * - Redis-based token blocklist with TTL matching token expiry
+     * - Storing refresh tokens in DB with revocation on use
+     * - Token family tracking to detect token reuse attacks
+     * 
+     * See: Known Limitations wiki page for full security discussion.
      */
     async refreshTokens(refreshToken: string) {
         try {

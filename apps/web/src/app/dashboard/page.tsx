@@ -9,7 +9,7 @@ import { useOrg } from "@/contexts/org-context"
 import { api } from "@/lib/api"
 
 export default function DashboardPage() {
-    const { orgId, hasOrg, isLoading: orgLoading } = useOrg()
+    const { hasOrg, isLoading: orgLoading } = useOrg()
     const router = useRouter()
     const [stats, setStats] = useState({
         properties: 0,
