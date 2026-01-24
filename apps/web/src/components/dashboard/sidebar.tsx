@@ -47,16 +47,12 @@ export function DashboardSidebar() {
 
     async function handleSignOut() {
         try {
-            const token = localStorage.getItem("accessToken")
-            if (token) {
-                await logout(token)
-            }
+            await logout()
         } catch (error) {
             console.error("Logout API call failed:", error)
             // Continue with client-side cleanup even if API call fails
         }
-        localStorage.removeItem("accessToken")
-        localStorage.removeItem("tenantId")
+        localStorage.removeItem("orgId")
         router.push("/auth/login")
     }
 

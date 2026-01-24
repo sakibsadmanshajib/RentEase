@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
-import { login, getProfile } from "@/lib/auth"
+import { login, checkAuthStatus } from "@/lib/auth"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useState } from "react"
 import { motion } from "framer-motion"
@@ -28,17 +28,18 @@ export default function LoginPage() {
 
         try {
             const response = await login({ email, password })
-            localStorage.setItem('token', response.accessToken)
-            if (response.tenantId) {
-                localStorage.setItem('tenantId', response.tenantId)
+            if (response.orgId) {
+                localStorage.setItem('orgId', response.orgId)
+            } else {
+                localStorage.removeItem('orgId')
             }
 
             try {
-                const user = await getProfile(response.accessToken)
-                if (user.roles?.some((r: any) => r.name === 'Admin')) {
+                const user = await checkAuthStatus()
+                if (user?.roles?.some((r: any) => r.name === 'Admin')) {
                     await router.push("/admin")
                 } else {
-                    // Always redirect to dashboard - tenant onboarding will handle users without org
+                     // Always redirect to dashboard - tenant onboarding will handle users without org
                     await router.push("/dashboard")
                 }
             } catch (profileErr) {

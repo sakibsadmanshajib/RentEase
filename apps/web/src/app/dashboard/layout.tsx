@@ -1,6 +1,6 @@
 import { DashboardNavbar } from "@/components/dashboard/navbar"
 import { DashboardSidebar } from "@/components/dashboard/sidebar"
-import { TenantProvider } from "@/contexts/tenant-context"
+import { OrgProvider } from "@/contexts/org-context"
 
 export default function DashboardLayout({
     children,
@@ -8,7 +8,7 @@ export default function DashboardLayout({
     children: React.ReactNode
 }) {
     return (
-        <TenantProvider>
+        <OrgProvider>
             <div className="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
                 <div className="hidden border-r bg-muted/40 lg:block">
                     <DashboardSidebar />
@@ -20,6 +20,6 @@ export default function DashboardLayout({
                     </main>
                 </div>
             </div>
-        </TenantProvider>
+        </OrgProvider>
     )
 }

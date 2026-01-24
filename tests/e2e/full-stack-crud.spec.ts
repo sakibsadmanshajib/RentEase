@@ -117,19 +117,18 @@ test.describe('Full Stack CRUD E2E', () => {
 
         // 4. Lease CRUD - Now working with proper dependency creation and selectors
         // Create dependencies (Property) via API first
-        const token = await page.evaluate(() => localStorage.getItem('token'));
+        // Create dependencies (Property) via API first
         const leaseTimestamp = Date.now();
         
         // No need to create Tenant Organization, use context
+        // Cookies are shared with page.request
         
         const propertyRes = await page.request.post(`${WEB_URL.replace('3000', '4000')}/properties`, {
-            headers: { Authorization: `Bearer ${token}` },
             data: {
                 name: `Lease Property ${leaseTimestamp}`,
                 address: '123 Lease St',
                 type: 'Residential',
-                units: 1,
-                tenantId: tenantId
+                units: 1
             }
         });
         expect(propertyRes.ok()).toBeTruthy();

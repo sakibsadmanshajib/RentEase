@@ -73,13 +73,13 @@ export class AuthService {
         }
 
         const payload = await this.buildJwtPayload(user);
-        const accessToken = this.jwtService.sign(payload);
+        const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
         const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
 
         return {
             accessToken,
             refreshToken,
-            orgId: payload.orgId, // Return orgId for frontend storage
+            orgId: payload.orgId,
         };
     }
 
@@ -96,16 +96,15 @@ export class AuthService {
                 password: hashedPassword,
             });
 
-            // TODO: Create default UserOrganizationMembership if needed
-
-            // Return user object without password, plus access token for convenience
+            // Return user object without password, plus tokens
             const { password, ...userWithoutPassword } = user.toJSON();
             const payload = await this.buildJwtPayload(user);
 
             return {
                 ...userWithoutPassword,
-                access_token: this.jwtService.sign(payload),
-                orgId: payload.orgId, // Return orgId for frontend storage
+                accessToken: this.jwtService.sign(payload, { expiresIn: '15m' }),
+                refreshToken: this.jwtService.sign(payload, { expiresIn: '7d' }),
+                orgId: payload.orgId,
             };
         } catch (error: any) {
             console.error('REGISTER_ERROR:', error);
@@ -119,13 +118,13 @@ export class AuthService {
 
     async loginWithGoogle(user: User) {
         const payload = await this.buildJwtPayload(user);
-        const accessToken = this.jwtService.sign(payload);
+        const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
         const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
 
         return {
             accessToken,
             refreshToken,
-            orgId: payload.orgId, // Return orgId for frontend storage
+            orgId: payload.orgId,
         };
     }
 
@@ -147,23 +146,32 @@ export class AuthService {
         return user;
     }
 
+    async getUserProfile(userId: string) {
+        const user = await this.userModel.findByPk(userId);
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+        const { password, ...userWithoutPassword } = user.toJSON();
+        return userWithoutPassword;
+    }
+
     /**
-     * Switch to a different tenant (for multi-org users)
+     * Switch to a different organization (for multi-org users)
      */
-    async switchTenant(userId: string, targetOrgId: string) {
+    async switchOrg(userId: string, targetOrgId: string) {
         const user = await this.userModel.findByPk(userId);
         if (!user) {
             throw new UnauthorizedException('User not found');
         }
 
-        // Verify user has membership in target tenant
+        // Verify user has membership in target org
         const membership = await this.membershipModel.findOne({
             where: { userId, orgId: targetOrgId },
             include: [{ model: Role, attributes: ['name'] }],
         });
 
         if (!membership) {
-            throw new UnauthorizedException('No access to this tenant');
+            throw new UnauthorizedException('No access to this organization');
         }
 
         const roles = membership.role?.name ? [membership.role.name] : [];
@@ -175,10 +183,36 @@ export class AuthService {
         };
 
         return {
-            accessToken: this.jwtService.sign(payload),
+            accessToken: this.jwtService.sign(payload, { expiresIn: '15m' }),
             refreshToken: this.jwtService.sign(payload, { expiresIn: '7d' }),
             orgId: targetOrgId,
         };
     }
-}
 
+    /**
+     * Refresh tokens with rotation (new refresh token each time)
+     * This prevents token reuse attacks
+     */
+    async refreshTokens(refreshToken: string) {
+        try {
+            const payload = this.jwtService.verify(refreshToken);
+            const user = await this.userModel.findByPk(payload.sub);
+            if (!user) {
+                throw new UnauthorizedException('User not found');
+            }
+
+            // Build fresh payload (may have updated orgId/roles)
+            const newPayload = await this.buildJwtPayload(user);
+            const accessToken = this.jwtService.sign(newPayload, { expiresIn: '15m' });
+            const newRefreshToken = this.jwtService.sign(newPayload, { expiresIn: '7d' });
+
+            return {
+                accessToken,
+                refreshToken: newRefreshToken,
+                orgId: newPayload.orgId,
+            };
+        } catch (error) {
+            throw new UnauthorizedException('Invalid or expired refresh token');
+        }
+    }
+}

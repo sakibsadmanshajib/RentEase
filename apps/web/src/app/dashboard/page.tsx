@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Building, Users, DollarSign, Activity, Building2 } from "lucide-react"
-import { useTenant } from "@/contexts/tenant-context"
+import { useOrg } from "@/contexts/org-context"
 import { api } from "@/lib/api"
 
 export default function DashboardPage() {
-    const { tenantId, hasTenant, isLoading: tenantLoading } = useTenant()
+    const { orgId, hasOrg, isLoading: orgLoading } = useOrg()
     const router = useRouter()
     const [stats, setStats] = useState({
         properties: 0,
@@ -19,14 +19,14 @@ export default function DashboardPage() {
     const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        if (!tenantLoading && !hasTenant) {
+        if (!orgLoading && !hasOrg) {
             router.push("/dashboard/onboarding")
             return
         }
-        if (hasTenant) {
+        if (hasOrg) {
             fetchStats()
         }
-    }, [hasTenant, tenantLoading])
+    }, [hasOrg, orgLoading])
 
     async function fetchStats() {
         try {
@@ -53,7 +53,7 @@ export default function DashboardPage() {
     }
 
     // Show loading while checking tenant status
-    if (tenantLoading) {
+    if (orgLoading) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
                 <div className="text-muted-foreground">Loading...</div>
@@ -62,7 +62,7 @@ export default function DashboardPage() {
     }
 
     // No tenant - show prompt to create one
-    if (!hasTenant) {
+    if (!hasOrg) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
                 <Card className="max-w-md w-full">

@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Bell, Loader2, DollarSign, FileText, Wrench } from "lucide-react"
 import { useUser } from "@/hooks/useUser"
+import { logout } from "@/lib/auth"
 
 const notifications = [
     {
@@ -42,9 +43,9 @@ export function DashboardNavbar() {
     const router = useRouter()
     const { user, loading } = useUser()
 
-    function handleLogout() {
-        localStorage.removeItem('token')
-        localStorage.removeItem('tenantId')
+    async function handleLogout() {
+        await logout()
+        localStorage.removeItem('orgId')
         router.push('/auth/login')
     }
 
