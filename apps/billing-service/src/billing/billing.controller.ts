@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, NotFoundException, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, NotFoundException, ForbiddenException, UseGuards, Request } from '@nestjs/common';
 import { BillingService } from './billing.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
@@ -20,9 +20,9 @@ export class BillingController {
 
     @Get('ledger')
     getLedger(@Request() req: any) {
-        // SECURITY: Always use tenantId from JWT - no query param override allowed
-        const tenantId = req.user?.tenantId;
-        return this.billingService.getLedger(tenantId);
+        // SECURITY: Always use orgId from JWT - no query param override allowed
+        const orgId = req.user?.orgId;
+        return this.billingService.getLedger(orgId);
     }
 
     // ============ EXPENSE ENDPOINTS ============
@@ -34,36 +34,36 @@ export class BillingController {
 
     @Get('expenses')
     getExpenses(@Request() req: any, @Query() filters: any) {
-        // Ensure tenantId filter from JWT
-        const tenantId = req.user?.tenantId;
-        return this.billingService.getExpenses({ ...filters, tenantId });
+        // Ensure orgId filter from JWT
+        const orgId = req.user?.orgId;
+        return this.billingService.getExpenses({ ...filters, orgId });
     }
 
     @Get('expenses/:id')
-    async getExpenseById(@Param('id') id: string) {
-        const expense = await this.billingService.getExpenseById(id);
-        if (!expense) {
-            throw new NotFoundException(`Expense with ID ${id} not found`);
+    async getExpenseById(@Param('id') id: string, @Request() req: any) {
+        const orgId = req.user?.orgId;
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required');
         }
-        return expense;
+        return this.billingService.getExpenseByIdForOrg(id, orgId);
     }
 
     @Patch('expenses/:id')
-    async updateExpense(@Param('id') id: string, @Body() updates: any) {
-        const expense = await this.billingService.getExpenseById(id);
-        if (!expense) {
-            throw new NotFoundException(`Expense with ID ${id} not found`);
+    async updateExpense(@Param('id') id: string, @Body() updates: any, @Request() req: any) {
+        const orgId = req.user?.orgId;
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required');
         }
-        return this.billingService.updateExpense(id, updates);
+        return this.billingService.updateExpenseForOrg(id, updates, orgId);
     }
 
     @Delete('expenses/:id')
-    async deleteExpense(@Param('id') id: string) {
-        const expense = await this.billingService.getExpenseById(id);
-        if (!expense) {
-            throw new NotFoundException(`Expense with ID ${id} not found`);
+    async deleteExpense(@Param('id') id: string, @Request() req: any) {
+        const orgId = req.user?.orgId;
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required');
         }
-        await this.billingService.deleteExpense(id);
+        await this.billingService.deleteExpenseForOrg(id, orgId);
         return { message: 'Expense deleted successfully' };
     }
 
@@ -76,36 +76,36 @@ export class BillingController {
 
     @Get()
     findAll(@Request() req: any, @Query() query: any) {
-        // Ensure tenantId filter from JWT
-        const tenantId = req.user?.tenantId;
-        return this.billingService.findAll({ ...query, tenantId });
+        // Ensure orgId filter from JWT
+        const orgId = req.user?.orgId;
+        return this.billingService.findAll({ ...query, orgId });
     }
 
     @Get(':id')
-    async findOne(@Param('id') id: string) {
-        const invoice = await this.billingService.findOne(id);
-        if (!invoice) {
-            throw new NotFoundException(`Invoice with ID ${id} not found`);
+    async findOne(@Param('id') id: string, @Request() req: any) {
+        const orgId = req.user?.orgId;
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required');
         }
-        return invoice;
+        return this.billingService.findOneForOrg(id, orgId);
     }
 
     @Patch(':id')
-    async update(@Param('id') id: string, @Body() updateInvoiceDto: UpdateInvoiceDto) {
-        const invoice = await this.billingService.findOne(id);
-        if (!invoice) {
-            throw new NotFoundException(`Invoice with ID ${id} not found`);
+    async update(@Param('id') id: string, @Body() updateInvoiceDto: UpdateInvoiceDto, @Request() req: any) {
+        const orgId = req.user?.orgId;
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required');
         }
-        return this.billingService.update(id, updateInvoiceDto);
+        return this.billingService.updateForOrg(id, updateInvoiceDto, orgId);
     }
 
     @Delete(':id')
-    async remove(@Param('id') id: string) {
-        const invoice = await this.billingService.findOne(id);
-        if (!invoice) {
-            throw new NotFoundException(`Invoice with ID ${id} not found`);
+    async remove(@Param('id') id: string, @Request() req: any) {
+        const orgId = req.user?.orgId;
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required');
         }
-        await this.billingService.remove(id);
+        await this.billingService.removeForOrg(id, orgId);
         return { message: 'Invoice deleted successfully' };
     }
 }

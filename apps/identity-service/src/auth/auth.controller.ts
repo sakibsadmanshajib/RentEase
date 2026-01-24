@@ -27,10 +27,10 @@ export class AuthController {
     @Get('google/callback')
     @UseGuards(AuthGuard('google'))
     async googleAuthRedirect(@Req() req: any, @Res() res: any) {
-        const { accessToken, tenantId } = await this.authService.loginWithGoogle(req.user);
+        const { accessToken, orgId } = await this.authService.loginWithGoogle(req.user);
         const params = new URLSearchParams({ 
             token: accessToken,
-            ...(tenantId && { tenantId }) 
+            ...(orgId && { orgId }) 
         });
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
         res.redirect(`${frontendUrl}/auth/callback?${params.toString()}`);

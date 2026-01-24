@@ -6,7 +6,7 @@ import { Request } from 'express';
 
 @Controller('properties')
 export class PropertyController {
-    private readonly PROPERTY_SERVICE_URL = 'http://localhost:3003/properties';
+    private readonly PROPERTY_SERVICE_URL = 'http://127.0.0.1:3003/properties';
 
     constructor(private readonly httpService: HttpService) { }
 

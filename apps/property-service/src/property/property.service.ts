@@ -1,4 +1,5 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { OrganizationContext } from '@rentease/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Property } from './models/property.model';
 import { CreatePropertyDto } from './dto/create-property.dto';
@@ -16,14 +17,14 @@ export class PropertyService {
     }
 
     /**
-     * Find all properties for a specific tenant.
-     * SECURITY: tenantId is REQUIRED for data isolation.
+     * Find all properties for a specific organization.
+     * SECURITY: orgId is REQUIRED for data isolation.
      */
-    async findAll(tenantId: string): Promise<Property[]> {
-        if (!tenantId) {
-            throw new ForbiddenException('Tenant context required');
+    async findAll(orgId: string): Promise<Property[]> {
+        if (!orgId) {
+            return [];
         }
-        return this.propertyModel.findAll({ where: { tenantId } });
+        return this.propertyModel.findAll({ where: { orgId } });
     }
 
     async findOne(id: string): Promise<Property | null> {
@@ -31,48 +32,37 @@ export class PropertyService {
     }
 
     /**
-     * Find a property and validate it belongs to the specified tenant
+     * Find a property and validate it belongs to the specified organization
      */
-    async findOneForTenant(id: string, tenantId: string): Promise<Property> {
-        if (!tenantId) {
-            throw new ForbiddenException('Tenant context required');
+    async findOneForOrg(id: string, orgId: string): Promise<Property> {
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required');
         }
         const property = await this.propertyModel.findByPk(id);
         if (!property) {
             throw new NotFoundException(`Property with ID ${id} not found`);
         }
-        if (property.tenantId !== tenantId) {
-            throw new ForbiddenException('Access denied to this property');
+        if (property.orgId !== orgId) {
+             throw new NotFoundException('Property not found');
         }
         return property;
     }
 
-    async update(id: string, updatePropertyDto: UpdatePropertyDto, tenantId: string): Promise<[number, Property[]]> {
-        if (!tenantId) {
-            throw new ForbiddenException('Tenant context required');
+    async update(id: string, updatePropertyDto: UpdatePropertyDto, orgId: string): Promise<[number, Property[]]> {
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required');
         }
         // Validate ownership first
-        await this.findOneForTenant(id, tenantId);
-        // Include tenantId in WHERE clause for defense in depth
+        await this.findOneForOrg(id, orgId);
+        // Include orgId in WHERE clause for defense in depth
         return this.propertyModel.update(updatePropertyDto, {
-            where: { id, tenantId },
+            where: { id, orgId },
             returning: true,
         });
     }
 
-    async remove(id: string, tenantId?: string): Promise<void> {
-        let property: Property | null;
-
-        if (tenantId) {
-            property = await this.findOneForTenant(id, tenantId);
-        } else {
-            property = await this.findOne(id);
-        }
-
-        if (!property) {
-            throw new NotFoundException(`Property with ID ${id} not found`);
-        }
-
+    async remove(id: string, orgId: string): Promise<void> {
+        const property = await this.findOneForOrg(id, orgId);
         await property.destroy();
     }
 }

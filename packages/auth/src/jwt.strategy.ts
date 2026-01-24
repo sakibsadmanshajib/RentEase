@@ -6,7 +6,8 @@ import { ConfigService } from '@nestjs/config';
 export interface JwtPayload {
     email: string;
     sub: string;
-    tenantId?: string;
+    orgId?: string; // New Standard
+    tenantId?: string; // Legacy support during migration
     roles?: string[];
 }
 
@@ -30,12 +31,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
             throw new UnauthorizedException('Invalid token');
         }
 
-        // Return user context with tenant info from JWT
-        return {
+        // Standardize on orgId
+        const user = {
             id: payload.sub,
             email: payload.email,
-            tenantId: payload.tenantId,
+            orgId: payload.orgId || payload.tenantId,
+            tenantId: payload.tenantId || payload.orgId, // Backward compatibility
             roles: payload.roles || [],
         };
+        console.log(`DEBUG: JwtStrategy validated user: ${user.email}, orgId: ${user.orgId}`);
+        return user;
     }
 }

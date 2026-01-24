@@ -49,7 +49,7 @@ export default function PropertiesPage() {
 
     async function fetchProperties() {
         try {
-            const data = await api.get(`/properties?t=${Date.now()}`)
+            const data = await api.get(`/properties`)
             setProperties(data)
         } catch (err: any) {
             console.error("Error fetching properties:", err)

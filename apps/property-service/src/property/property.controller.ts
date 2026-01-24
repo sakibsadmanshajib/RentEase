@@ -11,57 +11,85 @@ export class PropertyController {
     constructor(private readonly propertyService: PropertyService) { }
 
     @Post()
-    create(@Body() createPropertyDto: CreatePropertyDto) {
-        return this.propertyService.create(createPropertyDto);
+    async create(@Body() createPropertyDto: CreatePropertyDto) {
+        try {
+            return await this.propertyService.create(createPropertyDto);
+        } catch (error) {
+            console.error('Error creating property:', error);
+            throw error;
+        }
     }
 
     /**
-     * List properties - uses tenant from JWT if authenticated, otherwise returns all (for backward compat)
+     * List properties - uses org from JWT if authenticated
      */
     @Get()
-    findAll(@Req() req: any, @Headers('Authorization') authHeader?: string) {
-        // If authenticated via JWT, filter by tenant
-        const tenantId = req.user?.tenantId;
-        return this.propertyService.findAll(tenantId);
+    async findAll(@Req() req: any, @Headers('Authorization') authHeader?: string) {
+        try {
+            // If authenticated via JWT, filter by org
+            const orgId = req.user?.orgId || req.user?.tenantId;
+            return await this.propertyService.findAll(orgId);
+        } catch (error) {
+            console.error('Error finding properties:', error);
+            throw error;
+        }
     }
 
     @Get(':id')
     async findOne(@Param('id') id: string, @Req() req: any) {
-        const tenantId = req.user?.tenantId;
-        
-        // If authenticated and has tenant, validate access
-        if (tenantId) {
-            return this.propertyService.findOneForTenant(id, tenantId);
+        try {
+            const orgId = req.user?.orgId || req.user?.tenantId;
+            
+            // If authenticated and has org, validate access
+            if (orgId) {
+                return await this.propertyService.findOneForOrg(id, orgId);
+            }
+            
+            // Backward compatibility: no auth = no filtering
+            const property = await this.propertyService.findOne(id);
+            if (!property) {
+                throw new NotFoundException(`Property with ID ${id} not found`);
+            }
+            return property;
+        } catch (error) {
+            console.error('Error finding property:', error);
+            throw error;
         }
-        
-        // Backward compatibility: no auth = no filtering
-        const property = await this.propertyService.findOne(id);
-        if (!property) {
-            throw new NotFoundException(`Property with ID ${id} not found`);
-        }
-        return property;
     }
 
     @Patch(':id')
     async update(@Param('id') id: string, @Body() updatePropertyDto: UpdatePropertyDto, @Req() req: any) {
-        const tenantId = req.user?.tenantId;
-        const [affectedCount, updatedProperties] = await this.propertyService.update(id, updatePropertyDto, tenantId);
-        if (affectedCount === 0) {
-            throw new NotFoundException(`Property with ID ${id} not found`);
+        try {
+            const orgId = req.user?.orgId || req.user?.tenantId;
+            if (!orgId) {
+                throw new ForbiddenException('Organization context required');
+            }
+            const [affectedCount, updatedProperties] = await this.propertyService.update(id, updatePropertyDto, orgId);
+            if (affectedCount === 0) {
+                throw new NotFoundException(`Property with ID ${id} not found`);
+            }
+            return updatedProperties[0];
+        } catch (error) {
+            console.error('Error updating property:', error);
+            throw error;
         }
-        return updatedProperties[0];
     }
 
     @Delete(':id')
     async remove(@Param('id') id: string, @Req() req: any) {
-        const tenantId = req.user.tenantId;
-        if (!tenantId) {
-            throw new ForbiddenException('Tenant context required');
+        try {
+            const orgId = req.user?.orgId || req.user?.tenantId;
+            if (!orgId) {
+                throw new ForbiddenException('Organization context required');
+            }
+            await this.propertyService.findOneForOrg(id, orgId);
+            
+            await this.propertyService.remove(id, orgId);
+            return { message: 'Property deleted successfully' };
+        } catch (error) {
+            console.error('Error deleting property:', error);
+            throw error;
         }
-        await this.propertyService.findOneForTenant(id, tenantId);
-        
-        await this.propertyService.remove(id, tenantId);
-        return { message: 'Property deleted successfully' };
     }
 }
 

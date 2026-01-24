@@ -12,8 +12,9 @@ async function bootstrap() {
         transform: true,
     }));
     
-    const port = process.env.PORT || 3002;
-    await app.listen(port);
-    Logger.log(`Service is running on: ${await app.getUrl()}`, 'Bootstrap');
+    const port = process.env.PORT || 3005;
+    await app.listen(port, '0.0.0.0');
+    console.log(`Organization Service is running on: ${await app.getUrl()}`);
 }
+// Force reload
 bootstrap();

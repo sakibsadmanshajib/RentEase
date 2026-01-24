@@ -1,18 +1,24 @@
-import { IsString, IsNumber, IsDateString, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsUUID, IsDateString, IsOptional } from 'class-validator';
 
 export class RecordPaymentDto {
-    @IsString()
-    tenantId!: string;
+    @IsUUID()
+    @IsNotEmpty()
+    invoiceId!: string;
 
     @IsUUID()
-    invoiceId!: string;
+    @IsNotEmpty()
+    orgId!: string;
 
     @IsNumber()
     amount!: number;
+
+    @IsString()
+    method!: string;
 
     @IsDateString()
     date!: Date;
 
     @IsString()
-    method!: string;
+    @IsOptional()
+    reference?: string;
 }

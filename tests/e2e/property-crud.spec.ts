@@ -33,14 +33,8 @@ test.describe('Property CRUD E2E', () => {
         await page.fill('input[name="email"]', landlordData.email);
         await page.fill('input[name="password"]', landlordData.password);
         await page.click('button[type="submit"]');
-        // Handle potential onboarding redirect
-        await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 5000 });
-        if (page.url().includes('/onboarding')) {
-             await page.click('text=Create Organization');
-             await page.fill('input[name="name"]', 'Test Organization');
-             await page.click('button[type="submit"]');
-             await page.waitForURL(`${WEB_URL}/dashboard`);
-        }
+        // Tenant already created in beforeAll - wait for dashboard
+        await page.waitForURL(`${WEB_URL}/dashboard`, { timeout: 10000 });
         await expect(page).toHaveURL(`${WEB_URL}/dashboard`);
 
         // Navigate to Properties

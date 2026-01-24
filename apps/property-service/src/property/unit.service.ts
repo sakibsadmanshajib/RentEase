@@ -21,7 +21,7 @@ export class UnitService {
 
         return this.unitModel.create({
             ...createUnitDto,
-            tenantId: property.tenantId,
+            orgId: property.orgId,
         } as any);
     }
 

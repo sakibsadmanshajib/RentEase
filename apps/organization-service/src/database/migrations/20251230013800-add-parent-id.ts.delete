@@ -1,0 +1,15 @@
+import { Migration } from '../types/migration.types';
+import { DataTypes } from 'sequelize';
+
+export const up: Migration = async ({ context: sequelize }) => {
+  const queryInterface = sequelize.getQueryInterface();
+  await queryInterface.addColumn('Tenants', 'parentId', {
+      type: DataTypes.UUID,
+      allowNull: true,
+  });
+};
+
+export const down: Migration = async ({ context: sequelize }) => {
+  const queryInterface = sequelize.getQueryInterface();
+  await queryInterface.removeColumn('Tenants', 'parentId');
+};

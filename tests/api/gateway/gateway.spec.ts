@@ -24,10 +24,9 @@ test.describe('API Gateway - Authentication Forwarding @api', () => {
 
     test('should forward auth header and create tenant via gateway', async ({ request }) => {
         const tenantData = {
-            firstName: 'Gateway',
-            lastName: 'Tenant',
-            email: `gateway-tenant-${Date.now()}@example.com`,
-            phone: '555-1111'
+            name: `Gateway Tenant ${Date.now()}`,
+            contactEmail: `gateway-tenant-${Date.now()}@example.com`,
+            contactPhone: '555-1111'
         };
 
         const response = await request.post(`${GATEWAY_URL}/tenants`, {
@@ -159,9 +158,9 @@ test.describe('API Gateway - Authentication Forwarding @api', () => {
         expect(invoice).toHaveProperty('id');
     });
 
-    test('should access public routes without auth', async ({ request }) => {
-        // Properties list should be accessible
+    test('should return 401 for protected routes without auth', async ({ request }) => {
+        // Properties list is now protected
         const response = await request.get(`${GATEWAY_URL}/properties`);
-        expect(response.status()).toBe(200);
+        expect(response.status()).toBe(401);
     });
 });

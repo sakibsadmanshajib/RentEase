@@ -18,8 +18,8 @@ const sidebarItems = [
         icon: Building,
     },
     {
-        title: "Occupants",
-        href: "/dashboard/occupants",
+        title: "Tenants",
+        href: "/dashboard/all-tenants",
         icon: Users,
     },
     {

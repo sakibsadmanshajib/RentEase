@@ -1,5 +1,10 @@
-import { IsDateString, IsNumber, IsString, IsUUID, IsOptional } from 'class-validator';
+import { IsDateString, IsNumber, IsUUID, IsOptional } from 'class-validator';
 
+/**
+ * DTO for creating a lease.
+ * Note: orgId is NOT accepted in requests - it is automatically injected
+ * from the JWT token via Sequelize @BeforeValidate hook.
+ */
 export class CreateLeaseDto {
     @IsDateString()
     startDate!: Date;
@@ -13,10 +18,8 @@ export class CreateLeaseDto {
     @IsUUID()
     propertyId!: string;
 
-    @IsString()
-    tenantId!: string;
-
     @IsOptional()
     @IsUUID()
     unitId?: string;
 }
+

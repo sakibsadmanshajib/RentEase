@@ -10,7 +10,7 @@ export class AuthController {
     @Post('login')
     async login(@Body() body: any) {
         const response = await firstValueFrom(
-            this.httpService.post('http://localhost:3001/auth/login', body).pipe(
+            this.httpService.post('http://127.0.0.1:3001/auth/login', body).pipe(
                 catchError((error) => {
                     throw new HttpException(
                         error.response?.data || 'Failed to login',
@@ -25,7 +25,7 @@ export class AuthController {
     @Post('register')
     async register(@Body() body: any) {
         const response = await firstValueFrom(
-            this.httpService.post('http://localhost:3001/auth/register', body).pipe(
+            this.httpService.post('http://127.0.0.1:3001/auth/register', body).pipe(
                 catchError((error) => {
                     throw new HttpException(
                         error.response?.data || 'Failed to register',

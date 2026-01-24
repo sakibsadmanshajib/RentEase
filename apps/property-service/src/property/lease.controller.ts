@@ -15,15 +15,15 @@ export class LeaseController {
 
     @Get()
     findAll(@Request() req: any, @Query('unitId') unitId?: string) {
-        const tenantId = req.user?.tenantId;
-        return this.leaseService.findAll(tenantId, unitId);
+        const orgId = req.user?.orgId || req.user?.tenantId;
+        return this.leaseService.findAll(orgId, unitId);
     }
 
     @Get(':id')
     async findOne(@Request() req: any, @Param('id') id: string) {
-        const tenantId = req.user?.tenantId;
-        if (tenantId) {
-            return this.leaseService.findOneForTenant(id, tenantId);
+        const orgId = req.user?.orgId || req.user?.tenantId;
+        if (orgId) {
+            return this.leaseService.findOneForOrg(id, orgId);
         }
         const lease = await this.leaseService.findOne(id);
         if (!lease) {
@@ -34,14 +34,14 @@ export class LeaseController {
 
     @Post(':id/activate')
     async activate(@Request() req: any, @Param('id') id: string) {
-        const tenantId = req.user?.tenantId;
-        return this.leaseService.activate(id, tenantId);
+        const orgId = req.user?.orgId || req.user?.tenantId;
+        return this.leaseService.activate(id, orgId);
     }
 
     @Post(':id/terminate')
     async terminate(@Request() req: any, @Param('id') id: string) {
-        const tenantId = req.user?.tenantId;
-        return this.leaseService.terminate(id, tenantId);
+        const orgId = req.user?.orgId || req.user?.tenantId;
+        return this.leaseService.terminate(id, orgId);
     }
 
     @Post(':id/occupants')
@@ -50,20 +50,20 @@ export class LeaseController {
         @Param('id') id: string,
         @Body('userId') userId: string,
     ) {
-        const tenantId = req.user?.tenantId;
-        return this.leaseService.addOccupant(id, userId, tenantId);
+        const orgId = req.user?.orgId || req.user?.tenantId;
+        return this.leaseService.addOccupant(id, userId, orgId);
     }
 
     @Patch(':id')
     async update(@Request() req: any, @Param('id') id: string, @Body() updateLeaseDto: any) {
-        const tenantId = req.user?.tenantId;
-        return this.leaseService.update(id, updateLeaseDto, tenantId);
+        const orgId = req.user?.orgId || req.user?.tenantId;
+        return this.leaseService.update(id, updateLeaseDto, orgId);
     }
 
     @Delete(':id')
     async remove(@Request() req: any, @Param('id') id: string) {
-        const tenantId = req.user?.tenantId;
-        await this.leaseService.remove(id, tenantId);
+        const orgId = req.user?.orgId || req.user?.tenantId;
+        await this.leaseService.remove(id, orgId);
         return { message: 'Lease deleted successfully' };
     }
 }

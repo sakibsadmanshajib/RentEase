@@ -63,7 +63,7 @@ jobs:
         run: |
           # Start backend services
           pnpm --filter identity-service dev > identity.log 2>&1 &
-          pnpm --filter tenant-service dev > tenant.log 2>&1 &
+          pnpm --filter organization-service dev > organization.log 2>&1 &
           pnpm --filter property-service dev > property.log 2>&1 &
           pnpm --filter billing-service dev > billing.log 2>&1 &
 
@@ -104,8 +104,8 @@ jobs:
         run: |
           echo "=== Identity Service ===" 
           cat identity.log || echo "No identity logs"
-          echo "=== Tenant Service ==="
-          cat tenant.log || echo "No tenant logs"
+          echo "=== Organization Service ==="
+          cat organization.log || echo "No organization logs"
           echo "=== Property Service ==="
           cat property.log || echo "No property logs"
           echo "=== Billing Service ==="

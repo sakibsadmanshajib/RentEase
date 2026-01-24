@@ -37,6 +37,8 @@ export class AuthHelper {
      * Login with email and password
      */
     async login(email: string, password: string): Promise<string> {
+        this.lastEmail = email;
+        this.lastPassword = password;
         const context = await request.newContext();
         const response = await context.post(`${this.baseUrl}/auth/login`, {
             data: { email, password }
@@ -49,7 +51,7 @@ export class AuthHelper {
         const body = await response.json();
         this.token = body.accessToken;
         this.refreshToken = body.refreshToken;
-        return this.token;
+        return this.token!;
     }
 
     /**
@@ -91,7 +93,7 @@ export class AuthHelper {
 
         const body = await response.json();
         this.token = body.accessToken;
-        return this.token;
+        return this.token!;
     }
 
     /**
@@ -103,6 +105,7 @@ export class AuthHelper {
     }
     /**
      * Create a new tenant organization for the authenticated user
+     * Note: After creating a tenant, you should call relogin() to get a new token with tenantId
      */
     async createTenant(name: string): Promise<any> {
         if (!this.token) {
@@ -123,6 +126,17 @@ export class AuthHelper {
             throw new Error(`Create Tenant failed: ${response.status()} ${await response.text()}`);
         }
 
-        return response.json();
+        const tenant = await response.json();
+        
+        // Re-login to get updated JWT with tenantId (membership was just created)
+        if (this.lastEmail && this.lastPassword) {
+            console.log(`Re-logging in as ${this.lastEmail} to get updated JWT with tenantId`);
+            await this.login(this.lastEmail, this.lastPassword);
+        }
+        
+        return tenant;
     }
+    
+    private lastEmail?: string;
+    private lastPassword?: string;
 }

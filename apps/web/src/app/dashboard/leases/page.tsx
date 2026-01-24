@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -53,6 +53,35 @@ export default function LeasesPage() {
     const [newLease, setNewLease] = useState({ startDate: "", endDate: "", rentAmount: "", propertyId: "", unitId: "" })
     const [editingLease, setEditingLease] = useState<Lease | null>(null)
 
+    const fetchLeases = useCallback(async () => {
+        try {
+            const data = await api.get(`/leases`)
+            setLeases(data)
+        } catch (err: any) {
+            setError(err.message)
+        } finally {
+            setIsLoading(false)
+        }
+    }, [])
+
+    const fetchProperties = useCallback(async () => {
+        try {
+            const data = await api.get(`/properties`)
+            setProperties(data)
+        } catch (err: any) {
+            setError(`Failed to load properties: ${err.message}`)
+        }
+    }, [])
+
+    const fetchUnits = useCallback(async (propertyId: string) => {
+        try {
+            const data = await api.get(`/units/property/${propertyId}`)
+            setUnits(data)
+        } catch (err: any) {
+            setError(`Failed to load units: ${err.message}`)
+        }
+    }, [])
+
     useEffect(() => {
         if (!tenantLoading && !hasTenant) {
             router.push("/dashboard/onboarding")
@@ -62,7 +91,7 @@ export default function LeasesPage() {
             fetchLeases()
             fetchProperties()
         }
-    }, [hasTenant, tenantLoading])
+    }, [hasTenant, tenantLoading, router, fetchLeases, fetchProperties])
 
     useEffect(() => {
         if (newLease.propertyId) {
@@ -70,36 +99,7 @@ export default function LeasesPage() {
         } else {
             setUnits([])
         }
-    }, [newLease.propertyId])
-
-    async function fetchLeases() {
-        try {
-            const data = await api.get(`/leases?t=${Date.now()}`)
-            setLeases(data)
-        } catch (err: any) {
-            setError(err.message)
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
-    async function fetchProperties() {
-        try {
-            const data = await api.get(`/properties?t=${Date.now()}`)
-            setProperties(data)
-        } catch (err: any) {
-            setError(`Failed to load properties: ${err.message}`)
-        }
-    }
-
-    async function fetchUnits(propertyId: string) {
-        try {
-            const data = await api.get(`/units/property/${propertyId}?t=${Date.now()}`)
-            setUnits(data)
-        } catch (err: any) {
-            setError(`Failed to load units: ${err.message}`)
-        }
-    }
+    }, [newLease.propertyId, fetchUnits])
 
     async function handleCreateLease(e: React.FormEvent) {
         e.preventDefault()

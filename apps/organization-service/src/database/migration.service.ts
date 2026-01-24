@@ -15,7 +15,7 @@ export class MigrationService implements OnModuleInit {
         @InjectConnection() private sequelize: Sequelize,
         private configService: ConfigService,
     ) {
-        const migrationsPath = path.join(__dirname, 'migrations/*.{js,ts}');
+        const migrationsPath = path.join(__dirname, 'migrations/*.js');
 
         this.umzug = new Umzug({
             migrations: {
@@ -146,3 +146,5 @@ export const down: Migration = async ({ context: sequelize }) => {
         this.logger.log('✅ Reset completed');
     }
 }
+// Trigger HMR again
+

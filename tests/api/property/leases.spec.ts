@@ -1,35 +1,66 @@
 import { test, expect } from '@playwright/test';
 import { ApiHelper } from '../../helpers/api.helper';
+import { AuthHelper } from '../../helpers/auth.helper';
 import { randomUUID } from 'crypto';
 
-const BASE_URL = process.env.PROPERTY_SERVICE_URL || 'http://localhost:3003';
+const BASE_URL = process.env.API_GATEWAY_URL || 'http://localhost:4000';
+const AUTH_URL = process.env.IDENTITY_SERVICE_URL || 'http://localhost:4000';
 
 test.describe('Property Service - Leases @api', () => {
-    const testPropertyId = randomUUID();
-    const testTenantId = `tenant-${ApiHelper.generateTestId()}`;
+    let authHelper: AuthHelper;
+    let authToken: string;
+    let testTenantId: string;
+    let testPropertyId: string;
     let createdLeaseId: string;
 
-    // Create a property first for lease tests
     test.beforeAll(async ({ request }) => {
+        // Register and login user
+        authHelper = new AuthHelper(AUTH_URL);
+        const userData = {
+            email: `lease-api-test-${Date.now()}@example.com`,
+            password: 'Password123!',
+            firstName: 'Lease',
+            lastName: 'Tester',
+            phone: '555-0666'
+        };
+        await authHelper.register(userData);
+        authToken = await authHelper.login(userData.email, userData.password) || '';
+        
+        // Create a tenant (this re-logins to get updated JWT with tenantId)
+        const tenant = await authHelper.createTenant('Lease API Test Org');
+        testTenantId = tenant.id;
+        // Get the refreshed token with tenantId
+        authToken = authHelper.getToken();
+
         // Create a property to use with leases
-        await request.post(`${BASE_URL}/properties`, {
-            headers: { 'Content-Type': 'application/json' },
+        const propResponse = await request.post(`${BASE_URL}/properties`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
             data: {
                 name: `Lease Test Property ${Date.now()}`,
                 address: '123 Lease Test St',
-                tenantId: testTenantId
             }
         });
+        const property = await propResponse.json();
+        testPropertyId = property.id;
     });
+
+    function getHeaders() {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+        };
+    }
 
     test('should create a lease with valid data', async ({ request }) => {
         // First create a property
         const propResponse = await request.post(`${BASE_URL}/properties`, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders(),
             data: {
                 name: `Lease Property ${Date.now()}`,
                 address: '456 Lease St',
-                tenantId: testTenantId
             }
         });
         const property = await propResponse.json();
@@ -39,11 +70,10 @@ test.describe('Property Service - Leases @api', () => {
             endDate: '2025-12-31',
             rentAmount: 1500,
             propertyId: property.id,
-            tenantId: testTenantId
         };
 
         const response = await request.post(`${BASE_URL}/leases`, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders(),
             data: leaseData
         });
 
@@ -52,7 +82,7 @@ test.describe('Property Service - Leases @api', () => {
         expect(lease).toHaveProperty('id');
         expect(parseFloat(lease.rentAmount)).toBe(leaseData.rentAmount);
         expect(lease.propertyId).toBe(property.id);
-        expect(lease.tenantId).toBe(testTenantId);
+        expect(lease.orgId).toBe(testTenantId);
         
         createdLeaseId = lease.id;
     });
@@ -62,12 +92,11 @@ test.describe('Property Service - Leases @api', () => {
             // Missing startDate
             endDate: '2025-12-31',
             rentAmount: 1500,
-            propertyId: randomUUID(),
-            tenantId: testTenantId
+            propertyId: testPropertyId,
         };
 
         const response = await request.post(`${BASE_URL}/leases`, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders(),
             data: leaseData
         });
 
@@ -79,12 +108,12 @@ test.describe('Property Service - Leases @api', () => {
             startDate: '2025-01-01',
             // Missing endDate
             rentAmount: 1500,
-            propertyId: randomUUID(),
+            propertyId: testPropertyId,
             tenantId: testTenantId
         };
 
         const response = await request.post(`${BASE_URL}/leases`, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders(),
             data: leaseData
         });
 
@@ -96,12 +125,11 @@ test.describe('Property Service - Leases @api', () => {
             startDate: '2025-01-01',
             endDate: '2025-12-31',
             // Missing rentAmount
-            propertyId: randomUUID(),
-            tenantId: testTenantId
+            propertyId: testPropertyId,
         };
 
         const response = await request.post(`${BASE_URL}/leases`, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders(),
             data: leaseData
         });
 
@@ -114,36 +142,21 @@ test.describe('Property Service - Leases @api', () => {
             endDate: '2025-12-31',
             rentAmount: 1500,
             // Missing propertyId
-            tenantId: testTenantId
         };
 
         const response = await request.post(`${BASE_URL}/leases`, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders(),
             data: leaseData
         });
 
         expect(response.status()).toBe(400);
     });
 
-    test('should reject lease without tenantId (required field)', async ({ request }) => {
-        const leaseData = {
-            startDate: '2025-01-01',
-            endDate: '2025-12-31',
-            rentAmount: 1500,
-            propertyId: randomUUID()
-            // Missing tenantId
-        };
-
-        const response = await request.post(`${BASE_URL}/leases`, {
-            headers: { 'Content-Type': 'application/json' },
-            data: leaseData
-        });
-
-        expect(response.status()).toBe(400);
-    });
 
     test('should list all leases', async ({ request }) => {
-        const response = await request.get(`${BASE_URL}/leases`);
+        const response = await request.get(`${BASE_URL}/leases`, {
+            headers: getHeaders()
+        });
         
         expect(response.status()).toBe(200);
         const leases = await response.json();
@@ -153,29 +166,29 @@ test.describe('Property Service - Leases @api', () => {
     test('should get lease by ID', async ({ request }) => {
         // First create a property and lease
         const propResponse = await request.post(`${BASE_URL}/properties`, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders(),
             data: {
                 name: `GetById Lease Property ${Date.now()}`,
                 address: '789 GetById St',
-                tenantId: testTenantId
             }
         });
         const property = await propResponse.json();
 
         const createResponse = await request.post(`${BASE_URL}/leases`, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders(),
             data: {
                 startDate: '2025-01-01',
                 endDate: '2025-12-31',
                 rentAmount: 2000,
                 propertyId: property.id,
-                tenantId: testTenantId
             }
         });
         const createdLease = await createResponse.json();
 
         // Get by ID
-        const response = await request.get(`${BASE_URL}/leases/${createdLease.id}`);
+        const response = await request.get(`${BASE_URL}/leases/${createdLease.id}`, {
+            headers: getHeaders()
+        });
         
         expect(response.status()).toBe(200);
         const lease = await response.json();
@@ -186,23 +199,21 @@ test.describe('Property Service - Leases @api', () => {
     test('should update lease', async ({ request }) => {
         // First create a property and lease
         const propResponse = await request.post(`${BASE_URL}/properties`, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders(),
             data: {
                 name: `Update Lease Property ${Date.now()}`,
                 address: '111 Update St',
-                tenantId: testTenantId
             }
         });
         const property = await propResponse.json();
 
         const createResponse = await request.post(`${BASE_URL}/leases`, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders(),
             data: {
                 startDate: '2025-01-01',
                 endDate: '2025-12-31',
                 rentAmount: 2500,
                 propertyId: property.id,
-                tenantId: testTenantId
             }
         });
         const createdLease = await createResponse.json();
@@ -212,7 +223,7 @@ test.describe('Property Service - Leases @api', () => {
             rentAmount: 3000
         };
         const response = await request.patch(`${BASE_URL}/leases/${createdLease.id}`, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders(),
             data: updateData
         });
         
@@ -224,39 +235,43 @@ test.describe('Property Service - Leases @api', () => {
     test('should delete lease', async ({ request }) => {
         // First create a property and lease
         const propResponse = await request.post(`${BASE_URL}/properties`, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders(),
             data: {
                 name: `Delete Lease Property ${Date.now()}`,
                 address: '222 Delete St',
-                tenantId: testTenantId
             }
         });
         const property = await propResponse.json();
 
         const createResponse = await request.post(`${BASE_URL}/leases`, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders(),
             data: {
                 startDate: '2025-01-01',
                 endDate: '2025-12-31',
                 rentAmount: 1800,
                 propertyId: property.id,
-                tenantId: testTenantId
             }
         });
         const createdLease = await createResponse.json();
 
         // Delete it
-        const deleteResponse = await request.delete(`${BASE_URL}/leases/${createdLease.id}`);
+        const deleteResponse = await request.delete(`${BASE_URL}/leases/${createdLease.id}`, {
+            headers: getHeaders()
+        });
         expect(deleteResponse.status()).toBe(200);
 
         // Verify it's gone
-        const getResponse = await request.get(`${BASE_URL}/leases/${createdLease.id}`);
+        const getResponse = await request.get(`${BASE_URL}/leases/${createdLease.id}`, {
+            headers: getHeaders()
+        });
         expect(getResponse.status()).toBe(404);
     });
 
     test('should return 404 for non-existent lease', async ({ request }) => {
         const fakeId = '00000000-0000-0000-0000-000000000000';
-        const response = await request.get(`${BASE_URL}/leases/${fakeId}`);
+        const response = await request.get(`${BASE_URL}/leases/${fakeId}`, {
+            headers: getHeaders()
+        });
         
         expect(response.status()).toBe(404);
     });

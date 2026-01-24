@@ -22,7 +22,13 @@ export default function OnboardingPage() {
         setError("")
 
         const formData = new FormData(event.currentTarget)
-        const name = formData.get("name") as string
+        const name = formData.get("name")
+
+        if (!name || typeof name !== 'string') {
+            setError("Organization name is required")
+            setIsLoading(false)
+            return
+        }
 
         try {
             const response = await api.post("/tenants", { name })

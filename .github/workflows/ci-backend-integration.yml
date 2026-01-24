@@ -30,7 +30,7 @@ jobs:
       matrix:
         service:
           - identity
-          - tenant
+          - organization
           - property
           - billing
 

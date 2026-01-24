@@ -1,5 +1,10 @@
-import { IsString, IsOptional, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsNotEmpty, IsNumber } from 'class-validator';
 
+/**
+ * DTO for creating a property.
+ * Note: orgId is NOT accepted in requests - it is automatically injected
+ * from the JWT token via Sequelize @BeforeValidate hook.
+ */
 export class CreatePropertyDto {
     @IsString()
     @IsNotEmpty()
@@ -9,14 +14,12 @@ export class CreatePropertyDto {
     @IsString()
     address?: string;
 
-    @IsString()
-    @IsNotEmpty()
-    tenantId!: string;
-
     @IsOptional()
     @IsString()
     type?: string;
 
     @IsOptional()
+    @IsNumber()
     units?: number;
 }
+

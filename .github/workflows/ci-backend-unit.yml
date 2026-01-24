@@ -15,7 +15,7 @@ jobs:
       matrix:
         service:
           - identity-service
-          - tenant-service
+          - organization-service
           - property-service
           - billing-service
 

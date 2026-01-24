@@ -85,30 +85,30 @@ test.describe('Full Stack CRUD E2E', () => {
         await expect(page.locator(`text=${updatedPropertyName}`)).not.toBeVisible({ timeout: 10000 });
 
 
-        // 3. Occupant CRUD (Mocked in UI via localStorage)
-        await page.click('a[href="/dashboard/occupants"]');
-        await expect(page).toHaveURL(`${WEB_URL}/dashboard/occupants`);
+        // 3. Tenant CRUD (Real API)
+        await page.click('a[href="/dashboard/all-tenants"]');
+        await expect(page).toHaveURL(`${WEB_URL}/dashboard/all-tenants`);
         await page.waitForLoadState('networkidle');
 
-        // Create Occupant
+        // Create Tenant
         const tenantTimestamp = Date.now();
-        await page.click('button:has-text("Add Occupant")');
+        await page.click('button:has-text("Add Tenant")');
         await page.fill('input[id="firstName"]', `John${tenantTimestamp}`);
         await page.fill('input[id="lastName"]', 'Doe');
         await page.fill('input[id="email"]', `john.doe${tenantTimestamp}@example.com`);
         await page.fill('input[id="phone"]', '555-0123');
         // Submit button in dialog
-        await page.locator('button[type="submit"]:has-text("Add Occupant")').click();
+        await page.locator('button[type="submit"]:has-text("Add Tenant")').click();
         await expect(page.locator(`text=John${tenantTimestamp} Doe`).first()).toBeVisible();
 
-        // Edit Occupant
+        // Edit Tenant
         const tenantCard = page.locator('.bg-card, [class*="card"]').filter({ hasText: `John${tenantTimestamp}` });
         await tenantCard.locator('button:has-text("Edit")').click();
         await page.fill('input[id="edit-firstName"]', `Jane${tenantTimestamp}`);
-        await page.locator('button[type="submit"]:has-text("Update Occupant")').click();
+        await page.locator('button[type="submit"]:has-text("Update Tenant")').click();
         await expect(page.locator(`text=Jane${tenantTimestamp} Doe`).first()).toBeVisible();
 
-        // Remove Occupant
+        // Remove Tenant
         const updatedTenantCard = page.locator('.bg-card, [class*="card"]').filter({ hasText: `Jane${tenantTimestamp}` });
         page.once('dialog', dialog => dialog.accept());
         await updatedTenantCard.locator('button:has-text("Remove")').click();

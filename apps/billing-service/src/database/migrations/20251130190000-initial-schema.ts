@@ -12,7 +12,7 @@ export const up = async ({ context: sequelize }) => {
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
         },
-        tenantId: {
+        orgId: {
             type: DataTypes.STRING,
             allowNull: false,
         },
@@ -45,7 +45,7 @@ export const up = async ({ context: sequelize }) => {
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
         },
-        tenantId: {
+        orgId: {
             type: DataTypes.STRING,
             allowNull: false,
         },
@@ -95,7 +95,7 @@ export const up = async ({ context: sequelize }) => {
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
         },
-        tenantId: {
+        orgId: {
             type: DataTypes.STRING,
             allowNull: false,
         },
@@ -156,7 +156,7 @@ export const up = async ({ context: sequelize }) => {
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
         },
-        tenantId: {
+        orgId: {
             type: DataTypes.STRING,
             allowNull: false,
         },
@@ -202,7 +202,7 @@ export const up = async ({ context: sequelize }) => {
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
         },
-        tenantId: {
+        orgId: {
             type: DataTypes.STRING,
             allowNull: false,
         },
@@ -281,16 +281,16 @@ export const up = async ({ context: sequelize }) => {
     });
 
     // Add indexes
-    await queryInterface.addIndex('LedgerAccounts', ['tenantId', 'code'], { unique: true });
-    await queryInterface.addIndex('LedgerEntries', ['tenantId']);
+    await queryInterface.addIndex('LedgerAccounts', ['orgId', 'code'], { unique: true });
+    await queryInterface.addIndex('LedgerEntries', ['orgId']);
     await queryInterface.addIndex('LedgerEntries', ['accountId']);
     await queryInterface.addIndex('LedgerEntries', ['journalId']);
-    await queryInterface.addIndex('Invoices', ['tenantId']);
+    await queryInterface.addIndex('Invoices', ['orgId']);
     await queryInterface.addIndex('Invoices', ['leaseId']);
     await queryInterface.addIndex('Invoices', ['status']);
-    await queryInterface.addIndex('Payments', ['tenantId']);
+    await queryInterface.addIndex('Payments', ['orgId']);
     await queryInterface.addIndex('Payments', ['invoiceId']);
-    await queryInterface.addIndex('Expenses', ['tenantId']);
+    await queryInterface.addIndex('Expenses', ['orgId']);
     await queryInterface.addIndex('Expenses', ['propertyId']);
     await queryInterface.addIndex('Expenses', ['isRecurring']);
 };

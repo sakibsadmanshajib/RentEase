@@ -17,6 +17,10 @@ test.describe('Tenant CRUD E2E', () => {
             phone: '555-0123'
         };
         await authHelper.register(landlordData);
+        await authHelper.login(landlordData.email, landlordData.password);
+        // Create tenant to bypass onboarding (this re-logins to get JWT with tenantId)
+        await authHelper.createTenant('Tenant CRUD Test Org');
+        // Token is now refreshed in authHelper
     });
 
     test('Landlord can create, edit, and delete a tenant', async ({ page }) => {
@@ -34,8 +38,8 @@ test.describe('Tenant CRUD E2E', () => {
         await expect(page).toHaveURL(`${WEB_URL}/dashboard`);
 
         // Navigate to Tenants
-        await page.click('a[href="/dashboard/tenants"]');
-        await expect(page).toHaveURL(`${WEB_URL}/dashboard/tenants`);
+        await page.click('a[href="/dashboard/all-tenants"]');
+        await expect(page).toHaveURL(`${WEB_URL}/dashboard/all-tenants`);
 
         // Create Tenant
         await page.click('button:has-text("Add Tenant")');

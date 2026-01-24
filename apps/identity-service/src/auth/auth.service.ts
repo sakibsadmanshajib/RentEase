@@ -4,7 +4,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from '../users/models/user.model';
-import { UserTenantMembership } from '../users/models/user-tenant-membership.model';
+import { UserOrganizationMembership } from '../users/models/user-tenant-membership.model';
 import { Role } from '../users/models/role.model';
 import * as bcrypt from 'bcrypt';
 
@@ -13,8 +13,8 @@ export class AuthService {
     constructor(
         @InjectModel(User)
         private userModel: typeof User,
-        @InjectModel(UserTenantMembership)
-        private membershipModel: typeof UserTenantMembership,
+        @InjectModel(UserOrganizationMembership)
+        private membershipModel: typeof UserOrganizationMembership,
         private jwtService: JwtService
     ) { }
 
@@ -31,7 +31,7 @@ export class AuthService {
     /**
      * Get user's primary tenant membership for JWT payload
      */
-    private async getPrimaryMembership(userId: string): Promise<{tenantId?: string, roles: string[]}> {
+    private async getPrimaryMembership(userId: string): Promise<{orgId?: string, roles: string[]}> {
         const memberships = await this.membershipModel.findAll({
             where: { userId },
             include: [{ model: Role, attributes: ['name'] }],
@@ -39,14 +39,16 @@ export class AuthService {
         });
 
         if (memberships.length === 0) {
-            return { tenantId: undefined, roles: [] };
+            console.log(`DEBUG: No memberships found for user ${userId}`);
+            return { orgId: undefined, roles: [] };
         }
+        console.log(`DEBUG: Found ${memberships.length} memberships for user ${userId}. Primary: ${memberships[0].orgId}`);
 
         const primary = memberships[0];
         const roles = primary.role?.name ? [primary.role.name] : [];
         
         return {
-            tenantId: primary.tenantId,
+            orgId: primary.orgId,
             roles,
         };
     }
@@ -55,11 +57,11 @@ export class AuthService {
      * Build JWT payload with tenant context
      */
     private async buildJwtPayload(user: User) {
-        const { tenantId, roles } = await this.getPrimaryMembership(user.id);
+        const { orgId, roles } = await this.getPrimaryMembership(user.id);
         return {
             email: user.email,
             sub: user.id,
-            tenantId,
+            orgId,
             roles,
         };
     }
@@ -77,33 +79,42 @@ export class AuthService {
         return {
             accessToken,
             refreshToken,
-            tenantId: payload.tenantId, // Return tenantId for frontend storage
+            orgId: payload.orgId, // Return orgId for frontend storage
         };
     }
 
     async register(registerDto: RegisterDto) {
-        const existingUser = await this.userModel.findOne({ where: { email: registerDto.email } });
-        if (existingUser) {
-            throw new ConflictException('User already exists');
+        try {
+            const existingUser = await this.userModel.findOne({ where: { email: registerDto.email } });
+            if (existingUser) {
+                throw new ConflictException('User already exists');
+            }
+
+            const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+            const user = await this.userModel.create({
+                ...registerDto,
+                password: hashedPassword,
+            });
+
+            // TODO: Create default UserOrganizationMembership if needed
+
+            // Return user object without password, plus access token for convenience
+            const { password, ...userWithoutPassword } = user.toJSON();
+            const payload = await this.buildJwtPayload(user);
+
+            return {
+                ...userWithoutPassword,
+                access_token: this.jwtService.sign(payload),
+                orgId: payload.orgId, // Return orgId for frontend storage
+            };
+        } catch (error: any) {
+            console.error('REGISTER_ERROR:', error);
+            // Handle unique constraint violation (race condition)
+            if (error.name === 'SequelizeUniqueConstraintError' || error.code === '23505') {
+                 throw new ConflictException('User already exists');
+            }
+            throw error;
         }
-
-        const hashedPassword = await bcrypt.hash(registerDto.password, 10);
-        const user = await this.userModel.create({
-            ...registerDto,
-            password: hashedPassword,
-        });
-
-        // TODO: Create default UserTenantMembership if needed
-
-        // Return user object without password, plus access token for convenience
-        const { password, ...userWithoutPassword } = user.toJSON();
-        const payload = await this.buildJwtPayload(user);
-
-        return {
-            ...userWithoutPassword,
-            access_token: this.jwtService.sign(payload),
-            tenantId: payload.tenantId, // Return tenantId for frontend storage
-        };
     }
 
     async loginWithGoogle(user: User) {
@@ -114,7 +125,7 @@ export class AuthService {
         return {
             accessToken,
             refreshToken,
-            tenantId: payload.tenantId, // Return tenantId for frontend storage
+            orgId: payload.orgId, // Return orgId for frontend storage
         };
     }
 
@@ -139,7 +150,7 @@ export class AuthService {
     /**
      * Switch to a different tenant (for multi-org users)
      */
-    async switchTenant(userId: string, targetTenantId: string) {
+    async switchTenant(userId: string, targetOrgId: string) {
         const user = await this.userModel.findByPk(userId);
         if (!user) {
             throw new UnauthorizedException('User not found');
@@ -147,7 +158,7 @@ export class AuthService {
 
         // Verify user has membership in target tenant
         const membership = await this.membershipModel.findOne({
-            where: { userId, tenantId: targetTenantId },
+            where: { userId, orgId: targetOrgId },
             include: [{ model: Role, attributes: ['name'] }],
         });
 
@@ -159,14 +170,14 @@ export class AuthService {
         const payload = {
             email: user.email,
             sub: user.id,
-            tenantId: targetTenantId,
+            orgId: targetOrgId,
             roles,
         };
 
         return {
             accessToken: this.jwtService.sign(payload),
             refreshToken: this.jwtService.sign(payload, { expiresIn: '7d' }),
-            tenantId: targetTenantId,
+            orgId: targetOrgId,
         };
     }
 }

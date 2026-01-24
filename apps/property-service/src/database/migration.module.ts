@@ -1,7 +1,8 @@
+import * as path from 'path';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { MigrationService } from './migration.service';
+import { MigrationService, MIGRATIONS_PATH } from './migration.service';
 
 @Module({
     imports: [
@@ -25,7 +26,13 @@ import { MigrationService } from './migration.service';
             }),
         }),
     ],
-    providers: [MigrationService],
+    providers: [
+        MigrationService,
+        {
+            provide: MIGRATIONS_PATH,
+            useValue: path.join(__dirname, 'migrations', '*.ts'),
+        },
+    ],
     exports: [MigrationService],
 })
 export class MigrationModule { }

@@ -4,6 +4,7 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
+    console.log('DEBUG: CWD is ' + process.cwd());
 
     // Enable CORS for frontend
     const corsOrigins = process.env.CORS_ORIGINS
@@ -22,7 +23,7 @@ async function bootstrap() {
     //     transform: true,
     // }));
 
-    await app.listen(3001);
+    await app.listen(3001, '0.0.0.0');
     Logger.log(`Identity Service is running on: ${await app.getUrl()}`, 'Bootstrap');
 }
 bootstrap();

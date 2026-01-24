@@ -11,10 +11,12 @@ export class TenantController {
     @Post()
     @UseGuards(JwtAuthGuard)
     create(@Request() req: any, @Body() createTenantDto: CreateTenantDto) {
+        // userId used for membership invitation logic
         return this.tenantService.create(createTenantDto, req.user.id);
     }
 
     @Get()
+    @UseGuards(JwtAuthGuard)
     findAll() {
         return this.tenantService.findAll();
     }

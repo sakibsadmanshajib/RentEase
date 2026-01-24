@@ -13,7 +13,7 @@ export class LedgerAccount extends Model {
         type: DataType.STRING,
         allowNull: false,
     })
-    tenantId!: string;
+    orgId!: string;
 
     @Column({
         type: DataType.STRING,

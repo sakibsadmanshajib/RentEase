@@ -1,5 +1,5 @@
 {
-    "name": "tenant-service",
+    "name": "@rentease/organization-service",
     "version": "0.0.1",
     "private": true,
     "engines": {

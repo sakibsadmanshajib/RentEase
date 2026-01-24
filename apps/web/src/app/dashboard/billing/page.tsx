@@ -61,7 +61,7 @@ export default function BillingPage() {
 
     async function fetchLeases() {
         try {
-            const data = await api.get(`/leases?t=${Date.now()}`)
+            const data = await api.get(`/leases`)
             setLeases(data)
         } catch (err: any) {
             console.error("Failed to fetch leases", err)
@@ -70,7 +70,7 @@ export default function BillingPage() {
 
     async function fetchInvoices() {
         try {
-            const data = await api.get(`/invoices?t=${Date.now()}`)
+            const data = await api.get(`/invoices`)
             setInvoices(data)
         } catch (err: any) {
             setError(err.message)

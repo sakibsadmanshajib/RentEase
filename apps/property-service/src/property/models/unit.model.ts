@@ -1,8 +1,17 @@
-import { Column, Model, Table, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
+import { BeforeValidate, Column, Model, Table, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
+import { OrganizationContext } from '@rentease/common';
 import { Property } from './property.model';
 
 @Table({ tableName: 'Units' })
 export class Unit extends Model {
+    @BeforeValidate
+    static setOrgId(instance: Unit) {
+        const orgId = OrganizationContext.getOrgId();
+        if (orgId) {
+            instance.orgId = orgId;
+        }
+    }
+
     @Column({
         type: DataType.UUID,
         defaultValue: DataType.UUIDV4,
@@ -14,7 +23,7 @@ export class Unit extends Model {
         type: DataType.STRING,
         allowNull: false,
     })
-    tenantId!: string;
+    orgId!: string;
 
     @ForeignKey(() => Property)
     @Column({

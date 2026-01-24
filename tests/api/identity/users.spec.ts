@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { v4 as uuidv4 } from 'uuid';
 
 // ... (imports)
 
@@ -107,7 +106,7 @@ test.describe('Identity Service - Users @api', () => {
         const user = await userResponse.json();
 
         const membershipData = {
-            tenantId: uuidv4()
+            orgId: crypto.randomUUID()
             // roleId: uuidv4() // Role ID is optional and requires existing role
         };
 
@@ -120,7 +119,7 @@ test.describe('Identity Service - Users @api', () => {
         expect([200, 201]).toContain(response.status());
         const body = await response.json();
         expect(body).toHaveProperty('userId');
-        expect(body).toHaveProperty('tenantId');
-        expect(body.tenantId).toBe(membershipData.tenantId);
+        expect(body).toHaveProperty('orgId');
+        expect(body.orgId).toBe(membershipData.orgId);
     });
 });

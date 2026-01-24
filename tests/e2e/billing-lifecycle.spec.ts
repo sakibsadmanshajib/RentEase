@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { ApiHelper } from '../helpers/api.helper';
 import { AuthHelper } from '../helpers/auth.helper';
 
-const IDENTITY_URL = process.env.IDENTITY_SERVICE_URL || 'http://localhost:3001';
+const API_GATEWAY_URL = process.env.API_GATEWAY_URL || 'http://localhost:4000';
 const PROPERTY_URL = process.env.PROPERTY_SERVICE_URL || 'http://localhost:3003';
 const BILLING_URL = process.env.BILLING_SERVICE_URL || 'http://localhost:3004';
 
@@ -24,7 +24,7 @@ test.describe('Billing Lifecycle E2E @e2e', () => {
 
     test.beforeAll(async () => {
         // 1. Register Landlord
-        landlordAuth = new AuthHelper(IDENTITY_URL);
+        landlordAuth = new AuthHelper(API_GATEWAY_URL);
         const landlordData = {
             email: `landlord-${ApiHelper.generateTestId()}@example.com`,
             password: 'Password123!',
@@ -34,12 +34,17 @@ test.describe('Billing Lifecycle E2E @e2e', () => {
         };
         await landlordAuth.register(landlordData);
         landlordToken = await landlordAuth.login(landlordData.email, landlordData.password);
-        const landlordProfile = await ApiHelper.get(`${IDENTITY_URL}/users/me`, landlordToken);
+        
+        // Create tenant org for landlord (this re-logins to get JWT with tenantId)
+        await landlordAuth.createTenant('Billing Lifecycle Test Org');
+        landlordToken = landlordAuth.getToken();
+        
+        const landlordProfile = await ApiHelper.get(`${API_GATEWAY_URL}/users/me`, landlordToken);
         const landlordJson = await landlordProfile.json();
         landlordId = landlordJson.id;
 
         // 2. Register Tenant
-        tenantAuth = new AuthHelper(IDENTITY_URL);
+        tenantAuth = new AuthHelper(API_GATEWAY_URL);
         const tenantData = {
             email: `tenant-${ApiHelper.generateTestId()}@example.com`,
             password: 'Password123!',
@@ -49,7 +54,7 @@ test.describe('Billing Lifecycle E2E @e2e', () => {
         };
         await tenantAuth.register(tenantData);
         tenantToken = await tenantAuth.login(tenantData.email, tenantData.password);
-        const tenantProfile = await ApiHelper.get(`${IDENTITY_URL}/users/me`, tenantToken);
+        const tenantProfile = await ApiHelper.get(`${API_GATEWAY_URL}/users/me`, tenantToken);
         const tenantJson = await tenantProfile.json();
         tenantId = tenantJson.id;
     });
@@ -59,10 +64,9 @@ test.describe('Billing Lifecycle E2E @e2e', () => {
         test.setTimeout(60000);
 
         // 3. Create Property (Landlord)
-        const propertyRes = await ApiHelper.post(`${PROPERTY_URL}/properties`, landlordToken, {
+        const propertyRes = await ApiHelper.post(`${API_GATEWAY_URL}/properties`, landlordToken, {
             name: 'Sunset Apartments',
             address: '123 Sunset Blvd',
-            tenantId: organizationId
         });
         if (propertyRes.status() !== 201) {
             const text = await propertyRes.text();
@@ -73,8 +77,7 @@ test.describe('Billing Lifecycle E2E @e2e', () => {
         propertyId = property.id;
 
         // 4. Create Unit (Landlord)
-        const unitRes = await ApiHelper.post(`${PROPERTY_URL}/units`, landlordToken, {
-            propertyId,
+        const unitRes = await ApiHelper.post(`${API_GATEWAY_URL}/properties/${propertyId}/units`, landlordToken, {
             unitNumber: '101'
         });
         if (unitRes.status() !== 201) {
@@ -86,7 +89,7 @@ test.describe('Billing Lifecycle E2E @e2e', () => {
         unitId = unit.id;
 
         // 5. Create Lease (Landlord)
-        const leaseRes = await ApiHelper.post(`${PROPERTY_URL}/leases`, landlordToken, {
+        const leaseRes = await ApiHelper.post(`${API_GATEWAY_URL}/leases`, landlordToken, {
             propertyId,
             unitId,
             tenantId, // Assuming Property Service can link by ID, or we might need to invite tenant first. 
@@ -108,7 +111,7 @@ test.describe('Billing Lifecycle E2E @e2e', () => {
         leaseId = (leaseRes.status() === 201) ? (await leaseRes.json()).id : `lease-${ApiHelper.generateTestId()}`;
 
         // 6. Create Invoice (Landlord)
-        const invoiceRes = await ApiHelper.post(`${BILLING_URL}/invoices`, landlordToken, {
+        const invoiceRes = await ApiHelper.post(`${API_GATEWAY_URL}/invoices`, landlordToken, {
             tenantId: organizationId,
             leaseId,
             amount: 1500,
@@ -122,7 +125,7 @@ test.describe('Billing Lifecycle E2E @e2e', () => {
         expect(invoice.status).toBe('PENDING');
 
         // 7. Verify Ledger (AR created)
-        const ledgerRes1 = await ApiHelper.get(`${BILLING_URL}/invoices/ledger?tenantId=${organizationId}`, landlordToken);
+        const ledgerRes1 = await ApiHelper.get(`${API_GATEWAY_URL}/invoices/ledger?tenantId=${organizationId}`, landlordToken);
         const ledger1 = await ledgerRes1.json();
         const arEntry = ledger1.find((e: any) => e.correlationId === invoice.id && parseFloat(e.debit) > 0);
         expect(arEntry).toBeDefined();
@@ -131,7 +134,7 @@ test.describe('Billing Lifecycle E2E @e2e', () => {
         // Note: In real world, Tenant initiates, but maybe Landlord records it? 
         // Or Tenant uses a payment gateway. The endpoint is `POST /invoices/payments`.
         // Let's assume Landlord records it for now, or Tenant if allowed.
-        const paymentRes = await ApiHelper.post(`${BILLING_URL}/invoices/payments`, landlordToken, {
+        const paymentRes = await ApiHelper.post(`${API_GATEWAY_URL}/invoices/payments`, landlordToken, {
             tenantId: organizationId,
             invoiceId: invoice.id,
             amount: 1500,
@@ -141,12 +144,12 @@ test.describe('Billing Lifecycle E2E @e2e', () => {
         expect(paymentRes.status()).toBe(201);
 
         // 9. Verify Invoice Status
-        const updatedInvoiceRes = await ApiHelper.get(`${BILLING_URL}/invoices/${invoice.id}`, landlordToken);
+        const updatedInvoiceRes = await ApiHelper.get(`${API_GATEWAY_URL}/invoices/${invoice.id}`, landlordToken);
         const updatedInvoice = await updatedInvoiceRes.json();
         expect(updatedInvoice.status).toBe('PAID');
 
         // 10. Verify Ledger (Cash created)
-        const ledgerRes2 = await ApiHelper.get(`${BILLING_URL}/invoices/ledger?tenantId=${organizationId}`, landlordToken);
+        const ledgerRes2 = await ApiHelper.get(`${API_GATEWAY_URL}/invoices/ledger?tenantId=${organizationId}`, landlordToken);
         const ledger2 = await ledgerRes2.json();
         const cashEntry = ledger2.find((e: any) => parseFloat(e.credit) === 0 && parseFloat(e.debit) === 1500); // Debit Cash
         expect(cashEntry).toBeDefined();

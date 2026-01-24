@@ -1,13 +1,19 @@
-import { Column, Model, Table, DataType } from 'sequelize-typescript';
+import { BeforeCreate, BeforeFind, Column, DataType, Model, Table } from 'sequelize-typescript';
+import { OrganizationContext } from '@rentease/common';
 
-@Table
+@Table({ tableName: 'Organizations' })
 export class Tenant extends Model {
+    // Organizations are flat, no parentId logic needed for now.
+    // If we want isolation (e.g. System Admin vs Org Admin), we might check Context.
+    // But usually 'Organizations' list is public or protected by SuperAdmin role.
+    
     @Column({
         type: DataType.UUID,
         defaultValue: DataType.UUIDV4,
         primaryKey: true,
     })
     id!: string;
+    
 
     @Column({
         type: DataType.STRING,

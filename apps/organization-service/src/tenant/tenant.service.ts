@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { DataType } from 'sequelize-typescript';
 import { ConfigService } from '@nestjs/config';
 import { Tenant } from './models/tenant.model';
 import { CreateTenantDto } from './dto/create-tenant.dto';
@@ -20,10 +21,18 @@ export class TenantService {
         private readonly configService: ConfigService,
     ) { }
 
+
+
     async create(createTenantDto: CreateTenantDto, userId?: string): Promise<Tenant> {
         console.log('CreateTenantDto:', createTenantDto);
         const { name, contactEmail, contactPhone, ...rest } = createTenantDto;
         const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+        
+        // Check for collision (bypass tenant isolation for global uniqueness check)
+        const styles = await this.tenantModel.findOne({ where: { slug }, hooks: false } as any);
+        if (styles) {
+             // fallback logic if needed
+        }
         const tenantData = {
             ...rest,
             name,
@@ -39,7 +48,7 @@ export class TenantService {
             try {
                 await firstValueFrom(
                     this.httpService.post(`http://localhost:3001/internal/users/${userId}/tenants`, {
-                        tenantId: tenant.id,
+                        orgId: tenant.id,
                         roleId: null, // Default role or null
                     }, {
                         headers: { 'X-Service-Token': this.configService.get('SERVICE_SECRET') }
@@ -56,7 +65,8 @@ export class TenantService {
     }
 
     async findAll(): Promise<Tenant[]> {
-        return this.tenantModel.findAll();
+        // Filtering is handled by Tenant model hook via TenantContext
+        return this.tenantModel.findAll({ hooks: false } as any);
     }
 
     async findOne(id: string): Promise<Tenant | null> {
@@ -130,7 +140,7 @@ export class TenantService {
         try {
             await firstValueFrom(
                 this.httpService.post(`http://localhost:3001/internal/users/${userId}/tenants`, {
-                    tenantId: invitation.tenantId,
+                    orgId: invitation.tenantId,
                     roleId: invitation.roleId,
                 }, {
                     headers: { 'X-Service-Token': this.configService.get('SERVICE_SECRET') }

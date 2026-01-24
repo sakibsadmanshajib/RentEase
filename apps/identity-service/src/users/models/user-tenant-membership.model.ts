@@ -2,8 +2,8 @@ import { Column, Model, Table, DataType, ForeignKey, BelongsTo } from 'sequelize
 import { User } from './user.model';
 import { Role } from './role.model';
 
-@Table
-export class UserTenantMembership extends Model {
+@Table({ tableName: 'UserOrganizationMemberships' })
+export class UserOrganizationMembership extends Model {
     @Column({
         type: DataType.UUID,
         defaultValue: DataType.UUIDV4,
@@ -25,7 +25,7 @@ export class UserTenantMembership extends Model {
         type: DataType.UUID,
         allowNull: false,
     })
-    tenantId!: string; // References Tenant in Tenant Service (soft link)
+    orgId!: string; // References Organization (formerly Tenant)
 
     @ForeignKey(() => Role)
     @Column({
