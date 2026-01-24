@@ -6,7 +6,7 @@ import { Request } from 'express';
 
 @Controller('tenants')
 export class TenantController {
-    private readonly TENANT_SERVICE_URL = 'http://localhost:3002/tenants';
+    private readonly TENANT_SERVICE_URL = 'http://127.0.0.1:3005/tenants';
 
     constructor(private readonly httpService: HttpService) { }
 

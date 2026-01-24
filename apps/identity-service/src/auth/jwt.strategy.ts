@@ -6,7 +6,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { User } from '../users/models/user.model';
 import { Role } from '../users/models/role.model';
 import { Permission } from '../users/models/permission.model';
-import { UserTenantMembership } from '../users/models/user-tenant-membership.model';
+import { UserOrganizationMembership } from '../users/models/user-tenant-membership.model';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -34,7 +34,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
                     include: [Permission],
                 },
                 {
-                    model: UserTenantMembership,
+                    model: UserOrganizationMembership,
                     include: [
                         {
                             model: Role,

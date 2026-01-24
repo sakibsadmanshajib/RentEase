@@ -12,16 +12,19 @@ function AuthCallbackContent() {
     useEffect(() => {
         const handleAuth = async () => {
             const token = searchParams.get("token")
+            const tenantId = searchParams.get("tenantId")
             if (token) {
                 localStorage.setItem("token", token)
+                if (tenantId) {
+                    localStorage.setItem("tenantId", tenantId)
+                }
                 
                 try {
                     const user = await getProfile(token)
                     if (user.roles?.some((r: any) => r.name === 'Admin')) {
                         await router.push("/admin")
-                    } else if (user.tenantMemberships?.length > 0) {
-                        await router.push("/portal")
                     } else {
+                        // Always redirect to dashboard - tenant onboarding will handle users without org
                         await router.push("/dashboard")
                     }
                 } catch (err) {

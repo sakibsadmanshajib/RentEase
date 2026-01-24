@@ -11,8 +11,8 @@ test.describe('Full Stack Billing E2E', () => {
     let landlordData: any;
 
     test.beforeAll(async () => {
-        // 1. Register Landlord via API to save time
-        landlordAuth = new AuthHelper(IDENTITY_URL);
+        // 1. Register Landlord via API (use API Gateway for tenant creation)
+        landlordAuth = new AuthHelper(API_GATEWAY_URL);
         landlordData = {
             email: `landlord-${ApiHelper.generateTestId()}@example.com`,
             password: 'Password123!',
@@ -21,6 +21,9 @@ test.describe('Full Stack Billing E2E', () => {
             phone: '+15550001111'
         };
         await landlordAuth.register(landlordData);
+        await landlordAuth.login(landlordData.email, landlordData.password);
+        // Create tenant to bypass onboarding
+        await landlordAuth.createTenant('Billing E2E Org');
     });
 
     test('Landlord can login, create invoice, and see it in the list', async ({ page }) => {

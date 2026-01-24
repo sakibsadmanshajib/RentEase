@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Cron } from '@nestjs/schedule';
 import { Op } from 'sequelize';
+import { OrganizationContext } from '@rentease/common';
 import { Invoice } from './models/invoice.model';
 import { LedgerAccount } from './models/ledger-account.model';
 import { LedgerEntry } from './models/ledger-entry.model';
@@ -29,19 +30,24 @@ export class BillingService {
     ) { }
 
     async create(createInvoiceDto: CreateInvoiceDto): Promise<Invoice> {
-        // 1. Create Invoice
+        // Get orgId from context (set by OrganizationContextInterceptor from JWT)
+        const orgId = OrganizationContext.getOrgId();
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required to create invoice');
+        }
+
+        // 1. Create Invoice (orgId is auto-set by @BeforeCreate hook)
         const invoice = await this.invoiceModel.create(createInvoiceDto as any);
 
         // 2. Ledger Entries (Double-Entry)
         // Debit: Accounts Receivable (Asset)
         // Credit: Rental Income (Revenue)
-        const arAccount = await this.getOrCreateAccount(createInvoiceDto.tenantId, '1100', 'Accounts Receivable', 'ASSET');
-        const incomeAccount = await this.getOrCreateAccount(createInvoiceDto.tenantId, '4000', 'Rental Income', 'REVENUE');
+        const arAccount = await this.getOrCreateAccount(orgId, '1100', 'Accounts Receivable', 'ASSET');
+        const incomeAccount = await this.getOrCreateAccount(orgId, '4000', 'Rental Income', 'REVENUE');
         const journalId = uuidv4();
 
-        // Debit AR
+        // Debit AR (orgId set by hook)
         await this.ledgerEntryModel.create({
-            tenantId: createInvoiceDto.tenantId,
             journalId,
             accountId: arAccount.id,
             debit: createInvoiceDto.amount,
@@ -50,9 +56,8 @@ export class BillingService {
             correlationId: invoice.id,
         });
 
-        // Credit Income
+        // Credit Income (orgId set by hook)
         await this.ledgerEntryModel.create({
-            tenantId: createInvoiceDto.tenantId,
             journalId,
             accountId: incomeAccount.id,
             debit: 0,
@@ -92,13 +97,13 @@ export class BillingService {
         // 3. Ledger Entries
         // Debit: Cash (Asset)
         // Credit: Accounts Receivable (Asset)
-        const cashAccount = await this.getOrCreateAccount(recordPaymentDto.tenantId, '1000', 'Cash', 'ASSET');
-        const arAccount = await this.getOrCreateAccount(recordPaymentDto.tenantId, '1100', 'Accounts Receivable', 'ASSET');
+        const cashAccount = await this.getOrCreateAccount(recordPaymentDto.orgId, '1000', 'Cash', 'ASSET');
+        const arAccount = await this.getOrCreateAccount(recordPaymentDto.orgId, '1100', 'Accounts Receivable', 'ASSET');
         const journalId = uuidv4();
 
         // Debit Cash
         await this.ledgerEntryModel.create({
-            tenantId: recordPaymentDto.tenantId,
+            orgId: recordPaymentDto.orgId,
             journalId,
             accountId: cashAccount.id,
             debit: recordPaymentDto.amount,
@@ -109,7 +114,7 @@ export class BillingService {
 
         // Credit AR
         await this.ledgerEntryModel.create({
-            tenantId: recordPaymentDto.tenantId,
+            orgId: recordPaymentDto.orgId,
             journalId,
             accountId: arAccount.id,
             debit: 0,
@@ -121,13 +126,20 @@ export class BillingService {
         return payment;
     }
 
-    async getLedger(tenantId: string): Promise<LedgerEntry[]> {
-        return this.ledgerEntryModel.findAll({ where: { tenantId } });
+    async getLedger(orgId: string): Promise<LedgerEntry[]> {
+        return this.ledgerEntryModel.findAll({ where: { orgId } });
     }
 
-    async findAll(filters?: { tenantId?: string; leaseId?: string; status?: string }): Promise<Invoice[]> {
-        const where: any = {};
-        if (filters?.tenantId) where.tenantId = filters.tenantId;
+    /**
+     * Find all invoices for a specific organization.
+     * SECURITY: orgId is REQUIRED for data isolation.
+     */
+    async findAll(filters?: { orgId?: string; leaseId?: string; status?: string }): Promise<Invoice[]> {
+        if (!filters?.orgId) {
+            // No organization context = no data access
+            return [];
+        }
+        const where: any = { orgId: filters.orgId };
         if (filters?.leaseId) where.leaseId = filters.leaseId;
         if (filters?.status) where.status = filters.status;
 
@@ -152,9 +164,50 @@ export class BillingService {
         }
     }
 
-    private async getOrCreateAccount(tenantId: string, code: string, name: string, type: string): Promise<LedgerAccount> {
+    /**
+     * Find a single invoice and validate it belongs to the specified organization
+     */
+    async findOneForOrg(id: string, orgId: string): Promise<Invoice> {
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required');
+        }
+        const invoice = await this.invoiceModel.findByPk(id);
+        if (!invoice) {
+            throw new NotFoundException(`Invoice with ID ${id} not found`);
+        }
+        if (invoice.orgId !== orgId) {
+            throw new ForbiddenException('Access denied to this invoice');
+        }
+        return invoice;
+    }
+
+    /**
+     * Update an invoice with organization validation
+     */
+    async updateForOrg(id: string, updateInvoiceDto: UpdateInvoiceDto, orgId: string): Promise<[number, Invoice[]]> {
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required');
+        }
+        // Validate ownership first
+        await this.findOneForOrg(id, orgId);
+        // Include orgId in WHERE clause for defense in depth
+        return this.invoiceModel.update(updateInvoiceDto, {
+            where: { id, orgId },
+            returning: true,
+        });
+    }
+
+    /**
+     * Remove an invoice with organization validation
+     */
+    async removeForOrg(id: string, orgId: string): Promise<void> {
+        const invoice = await this.findOneForOrg(id, orgId);
+        await invoice.destroy();
+    }
+
+    private async getOrCreateAccount(orgId: string, code: string, name: string, type: string): Promise<LedgerAccount> {
         const [account] = await this.ledgerAccountModel.findOrCreate({
-            where: { tenantId, code },
+            where: { orgId, code },
             defaults: { name, type } as any,
         });
         return account;
@@ -179,13 +232,13 @@ export class BillingService {
         // Debit: Expense Account
         // Credit: Cash (if paid) or Accounts Payable (if not)
         const expenseAccount = await this.getOrCreateAccount(
-            expense.tenantId,
+            expense.orgId,
             `5${expense.category.substring(0, 3)}`,
             `Expense:${expense.category}`,
             'EXPENSE'
         );
         const creditAccount = await this.getOrCreateAccount(
-            expense.tenantId,
+            expense.orgId,
             '1000',
             'Cash',
             'ASSET'
@@ -194,7 +247,7 @@ export class BillingService {
 
         // Debit Expense
         await this.ledgerEntryModel.create({
-            tenantId: expense.tenantId,
+            orgId: expense.orgId,
             journalId,
             accountId: expenseAccount.id,
             debit: expense.amount,
@@ -205,7 +258,7 @@ export class BillingService {
 
         // Credit Cash
         await this.ledgerEntryModel.create({
-            tenantId: expense.tenantId,
+            orgId: expense.orgId,
             journalId,
             accountId: creditAccount.id,
             debit: 0,
@@ -219,7 +272,7 @@ export class BillingService {
 
     async getExpenses(filters: any): Promise<Expense[]> {
         const where: any = {};
-        if (filters.tenantId) where.tenantId = filters.tenantId;
+        if (filters.orgId) where.orgId = filters.orgId;
         if (filters.propertyId) where.propertyId = filters.propertyId;
         if (filters.category) where.category = filters.category;
 
@@ -250,6 +303,47 @@ export class BillingService {
         if (expense) {
             await expense.destroy();
         }
+    }
+
+    /**
+     * Get expense by ID and validate it belongs to the specified organization
+     */
+    async getExpenseByIdForOrg(id: string, orgId: string): Promise<Expense> {
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required');
+        }
+        const expense = await this.expenseModel.findByPk(id);
+        if (!expense) {
+            throw new NotFoundException(`Expense with ID ${id} not found`);
+        }
+        if (expense.orgId !== orgId) {
+            throw new ForbiddenException('Access denied to this expense');
+        }
+        return expense;
+    }
+
+    /**
+     * Update an expense with organization validation
+     */
+    async updateExpenseForOrg(id: string, updates: Partial<CreateExpenseDto>, orgId: string): Promise<Expense> {
+        const expense = await this.getExpenseByIdForOrg(id, orgId);
+        await expense.update(updates);
+
+        // Recalculate next occurrence if recurrence settings changed
+        if (expense.isRecurring && (updates.recurrenceType || updates.recurrenceInterval)) {
+            expense.nextOccurrence = this.calculateNextOccurrence(expense) || undefined;
+            await expense.save();
+        }
+
+        return expense;
+    }
+
+    /**
+     * Delete an expense with organization validation
+     */
+    async deleteExpenseForOrg(id: string, orgId: string): Promise<void> {
+        const expense = await this.getExpenseByIdForOrg(id, orgId);
+        await expense.destroy();
     }
 
     // Calculate next occurrence based on recurrence pattern
@@ -330,9 +424,10 @@ export class BillingService {
         });
 
         for (const template of recurringExpenses) {
-            // Create new expense occurrence
-            const newExpense = await this.createExpense({
-                tenantId: template.tenantId,
+            // Create new expense occurrence directly (no HTTP context in cron jobs)
+            // We explicitly set orgId since there's no OrganizationContext in cron
+            const newExpense = await this.expenseModel.create({
+                orgId: template.orgId, // Copy from template - cron has no context
                 propertyId: template.propertyId,
                 unitId: template.unitId,
                 category: template.category,
@@ -341,7 +436,37 @@ export class BillingService {
                 currency: template.currency,
                 date: template.nextOccurrence!,
                 isRecurring: false, // Individual occurrences are not recurring
-            });
+            } as any);
+
+            // Create corresponding ledger entries
+            const expenseAccount = await this.getOrCreateAccount(
+                template.orgId,
+                `5${template.category.substring(0, 3)}`,
+                `Expense:${template.category}`,
+                'EXPENSE'
+            );
+            const cashAccount = await this.getOrCreateAccount(template.orgId, '1000', 'Cash', 'ASSET');
+            const journalId = uuidv4();
+
+            await this.ledgerEntryModel.create({
+                orgId: template.orgId,
+                journalId,
+                accountId: expenseAccount.id,
+                debit: template.amount,
+                credit: 0,
+                currency: template.currency,
+                correlationId: newExpense.id,
+            } as any);
+
+            await this.ledgerEntryModel.create({
+                orgId: template.orgId,
+                journalId,
+                accountId: cashAccount.id,
+                debit: 0,
+                credit: template.amount,
+                currency: template.currency,
+                correlationId: newExpense.id,
+            } as any);
 
             // Update template's next occurrence and count
             template.occurrenceCount += 1;

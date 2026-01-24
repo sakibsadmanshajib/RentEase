@@ -1,5 +1,10 @@
-import { IsNotEmpty, IsString, IsUUID, IsEnum, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsUUID, IsOptional } from 'class-validator';
 
+/**
+ * DTO for creating a unit.
+ * Note: orgId is NOT accepted in requests - it is automatically injected
+ * from the JWT token via Sequelize @BeforeValidate hook.
+ */
 export class CreateUnitDto {
     @IsUUID()
     @IsNotEmpty()
@@ -12,8 +17,5 @@ export class CreateUnitDto {
     @IsString()
     @IsOptional()
     status?: string;
-
-    @IsUUID()
-    @IsOptional()
-    tenantId?: string;
 }
+

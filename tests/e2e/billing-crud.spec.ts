@@ -22,6 +22,9 @@ test.describe('Billing CRUD E2E', () => {
             phone: '555-0123'
         };
         await authHelper.register(landlordData);
+        // Login and create tenant to bypass onboarding
+        await authHelper.login(landlordData.email, landlordData.password);
+        await authHelper.createTenant('Billing Test Org');
     });
 
     test('Landlord can create, edit, and delete an invoice', async ({ page }) => {
@@ -34,7 +37,15 @@ test.describe('Billing CRUD E2E', () => {
         await page.fill('input[name="email"]', landlordData.email);
         await page.fill('input[name="password"]', landlordData.password);
         await page.click('button[type="submit"]');
-        await page.waitForURL(/\/(dashboard|portal|admin)/, { timeout: 15000 });
+        await page.waitForURL(/\/(dashboard|dashboard\/onboarding)/, { timeout: 15000 });
+
+        // Handle potential onboarding redirect
+        if (page.url().includes('/onboarding')) {
+             await page.click('text=Create Organization');
+             await page.fill('input[name="name"]', 'Test Organization');
+             await page.click('button[type="submit"]');
+             await page.waitForURL(`${WEB_URL}/dashboard`);
+        }
 
         // Navigate to Billing
         await page.click('a[href="/dashboard/billing"]');
@@ -61,13 +72,12 @@ test.describe('Billing CRUD E2E', () => {
         await page.fill('input[id="amount"]', amount);
         await page.fill('input[id="description"]', `Invoice ${amount}`);
         await page.fill('input[id="dueDate"]', dueDate);
-        // tenantId is required - always fill it
-        await page.fill('input[id="tenantId"]', tenantId);
-        // leaseId is optional
-        const leaseIdField = page.locator('input[id="leaseId"]');
-        if (await leaseIdField.isVisible()) {
-            await leaseIdField.fill(leaseId);
-        }
+        // tenantId is handled by context, no input to fill
+        
+        // leaseId is a select now, and optional. Since we haven't created a lease, we can skip selecting it.
+        // Or check if the select exists.
+        await expect(page.locator('select[id="leaseId"]')).toBeVisible();
+
         // Wait for invoice creation API response before clicking submit
         const [createResponse] = await Promise.all([
             page.waitForResponse(response => response.url().includes('/invoices') && response.request().method() === 'POST', { timeout: 10000 }),
@@ -75,8 +85,12 @@ test.describe('Billing CRUD E2E', () => {
         ]);
         expect(createResponse.status()).toBe(201);
         
-        // Wait for page to refresh/update with new invoice
-        await page.waitForTimeout(1000);
+        // Wait for the invoice list to refresh after creation
+        await page.waitForResponse(response => 
+            response.url().includes('/invoices') && 
+            response.request().method() === 'GET' &&
+            response.status() === 200
+        );
         
         // Verify creation by checking for the formatted amount
         const formattedAmount = `$${Number(amount).toFixed(2)}`;

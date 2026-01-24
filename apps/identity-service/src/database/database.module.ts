@@ -6,7 +6,7 @@ import { Role } from '../users/models/role.model';
 import { UserRole } from '../users/models/user-role.model';
 import { Permission } from '../users/models/permission.model';
 import { RolePermission } from '../users/models/role-permission.model';
-import { UserTenantMembership } from '../users/models/user-tenant-membership.model';
+import { UserOrganizationMembership } from '../users/models/user-tenant-membership.model';
 
 @Module({
     imports: [
@@ -23,7 +23,7 @@ import { UserTenantMembership } from '../users/models/user-tenant-membership.mod
                 database: configService.get('DB_DATABASE', 'rentease'),
                 autoLoadModels: true,
                 synchronize: false,
-                models: [User, Role, UserRole, Permission, RolePermission, UserTenantMembership],
+                models: [User, Role, Permission, UserRole, RolePermission, UserOrganizationMembership],
                 logging: false,
             }),
         }),

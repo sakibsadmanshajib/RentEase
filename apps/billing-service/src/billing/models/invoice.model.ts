@@ -1,7 +1,27 @@
-import { Column, Model, Table, DataType } from 'sequelize-typescript';
+import { BeforeCreate, BeforeFind, Column, DataType, HasMany, Model, Table } from 'sequelize-typescript';
+import { OrganizationContext } from '@rentease/common';
+import { Payment } from './payment.model';
 
-@Table
+@Table({ tableName: 'Invoices' })
 export class Invoice extends Model {
+    @BeforeFind
+    static enforceOrganizationIsolation(options: any) {
+        const orgId = OrganizationContext.getOrgId();
+        if (!orgId) {
+            throw new Error('Organization context missing for isolation');
+        }
+        options.where = { ...(options.where ?? {}), orgId };
+    }
+
+    @BeforeCreate
+    static setOrgId(instance: Invoice) {
+        const orgId = OrganizationContext.getOrgId();
+        if (!orgId) {
+            throw new Error('Organization context required to create invoice');
+        }
+        instance.orgId = orgId;
+    }
+
     @Column({
         type: DataType.UUID,
         defaultValue: DataType.UUIDV4,
@@ -13,7 +33,7 @@ export class Invoice extends Model {
         type: DataType.STRING,
         allowNull: false,
     })
-    tenantId!: string;
+    orgId!: string;
 
     @Column({
         type: DataType.STRING,

@@ -1,7 +1,7 @@
 import { Column, Model, Table, DataType, BelongsToMany, HasMany } from 'sequelize-typescript';
 import { Role } from './role.model';
 import { UserRole } from './user-role.model';
-import { UserTenantMembership } from './user-tenant-membership.model';
+import { UserOrganizationMembership } from './user-tenant-membership.model';
 import { EncryptionService } from '../../common/encryption.service';
 
 @Table
@@ -72,6 +72,6 @@ export class User extends Model {
     @BelongsToMany(() => Role, () => UserRole)
     roles!: Role[];
 
-    @HasMany(() => UserTenantMembership)
-    tenantMemberships!: UserTenantMembership[];
+    @HasMany(() => UserOrganizationMembership)
+    organizationMemberships!: UserOrganizationMembership[];
 }

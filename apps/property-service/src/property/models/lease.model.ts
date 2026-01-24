@@ -1,7 +1,16 @@
-import { Column, Model, Table, DataType } from 'sequelize-typescript';
+import { BeforeValidate, Column, Model, Table, DataType } from 'sequelize-typescript';
+import { OrganizationContext } from '@rentease/common';
 
 @Table({ tableName: 'Leases' })
 export class Lease extends Model {
+    @BeforeValidate
+    static setOrgId(instance: Lease) {
+        const orgId = OrganizationContext.getOrgId();
+        if (orgId) {
+            instance.orgId = orgId;
+        }
+    }
+
     @Column({
         type: DataType.UUID,
         defaultValue: DataType.UUIDV4,
@@ -13,7 +22,7 @@ export class Lease extends Model {
         type: DataType.STRING,
         allowNull: false,
     })
-    tenantId!: string;
+    orgId!: string;
 
     @Column({
         type: DataType.UUID,

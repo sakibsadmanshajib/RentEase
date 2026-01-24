@@ -2,15 +2,15 @@ name: E2E Tests
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:16
@@ -25,53 +25,64 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
-      
+          node-version: "24"
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v4
         with:
-          version: 10
-      
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      
+
       - name: Build applications
         run: pnpm turbo build
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rentease_test
-      
+
       - name: Start all services
         run: |
           # Start backend services
           pnpm --filter identity-service dev > identity.log 2>&1 &
-          pnpm --filter tenant-service dev > tenant.log 2>&1 &
+          pnpm --filter organization-service dev > organization.log 2>&1 &
           pnpm --filter property-service dev > property.log 2>&1 &
           pnpm --filter billing-service dev > billing.log 2>&1 &
-          
+
           # Start frontend
           pnpm --filter web dev > web.log 2>&1 &
-          
+
           echo "Waiting for services to start..."
           sleep 30
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rentease_test
           NEXT_PUBLIC_API_URL: http://localhost:3001
-      
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium firefox
-      
+
       - name: Run E2E tests
         run: pnpm playwright test --project=chromium-e2e --project=firefox-e2e
         continue-on-error: true
-      
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -79,7 +90,7 @@ jobs:
           name: playwright-report-e2e
           path: playwright-report/
           retention-days: 7
-      
+
       - name: Upload test videos
         if: failure()
         uses: actions/upload-artifact@v4
@@ -87,14 +98,14 @@ jobs:
           name: test-videos
           path: test-results/
           retention-days: 3
-      
+
       - name: Print service logs on failure
         if: failure()
         run: |
           echo "=== Identity Service ===" 
           cat identity.log || echo "No identity logs"
-          echo "=== Tenant Service ==="
-          cat tenant.log || echo "No tenant logs"
+          echo "=== Organization Service ==="
+          cat organization.log || echo "No organization logs"
           echo "=== Property Service ==="
           cat property.log || echo "No property logs"
           echo "=== Billing Service ==="

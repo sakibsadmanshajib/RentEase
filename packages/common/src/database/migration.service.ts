@@ -20,7 +20,7 @@ export class BaseMigrationService implements OnModuleInit {
     ) {
         // Default to process.cwd() + src/database/migrations
         // This assumes the app is running from its root or the monorepo root with correct cwd
-        const defaultPath = path.join(process.cwd(), 'src/database/migrations/*.{js,ts}');
+        const defaultPath = path.join(process.cwd(), 'src/database/migrations/*.js');
         const finalPath = this.migrationsPath || defaultPath;
 
         this.umzug = new Umzug({

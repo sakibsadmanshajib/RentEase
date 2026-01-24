@@ -1,115 +1,59 @@
 # RentEase
 
-**Production-Grade, Multi-Service Rental Property Management SaaS**
+RentEase is a comprehensive property management solution designed for landlords and property managers. It features a microservices architecture to ensure scalability, maintainability, and security.
 
-RentEase is a B2B, multi-tenant SaaS platform designed for small-to-mid landlords in the US and Canada. It provides a comprehensive solution for managing properties, units, leases, tenants, and financials with a focus on security, data privacy, and double-entry accounting.
+## 🚀 Current State
 
-## 🚀 Project Overview
-
-RentEase follows **Domain-Driven Design (DDD)** principles and utilizes a **microservices architecture** (logically separated within a monorepo).
-
-### Core Capabilities
-
-- **Multi-Tenancy:** robust organization management with staff/agent roles and permissions.
-- **Property Management:** Complete lifecycle management for Properties, Units, and Leases.
-- **Tenant Portal:** Allows tenants to view leases, pay rent, and submit maintenance tickets.
-- **Financials:** Double-entry ledger for accurate accounting, invoicing, and expense tracking.
-- **Security:** PII minimization and encryption, RBAC, and audit logging.
+- **Microservices**: 5 active services (Identity, Tenant, Property, Billing, Gateway).
+- **Frontend**: Functional Next.js Dashboard for Property, Tenant, Lease, and Billing management.
+- **Testing**:
+  - Unit Tests: High coverage for Billing service.
+  - API Integration Tests: **68 passed** (Covering all critical flows).
+  - E2E Tests: **36 passed** (Covering Auth, Google Login, Dashboard navigation).
+- **Security**: JWT-based Authentication with strict Multi-tenancy enforcement.
 
 ## 🛠 Tech Stack
 
-- **Monorepo:** [Turborepo](https://turbo.build/)
-- **Package Manager:** [pnpm](https://pnpm.io/)
-- **Backend:** [NestJS](https://nestjs.com/) (TypeScript)
-- **Frontend:** [Next.js](https://nextjs.org/) (React, Tailwind CSS)
-- **Database:** PostgreSQL
-- **Infrastructure:** Docker
+- **Backend**: NestJS, Prisma, PostgreSQL
+- **Frontend**: Next.js, TailwindCSS
+- **Tooling**: Turborepo, pnpm, Playwright, Jest
 
-## 📂 Architecture
+## 🏗 Architecture
 
-The application is decomposed into the following domain services:
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed design documentation.
 
-- **Identity & Access Service:** Users, roles, permissions, authentication. (Implemented)
-- **Tenant & Directory Service:** Landlord organizations, staff directory. (Implemented)
-- **Property & Lease Service:** Properties, units, leases, occupants. (Implemented)
-- **Billing & Ledger Service:** Invoices, payments, accounting ledger. (Implemented)
-- **Ticketing & Work Orders Service:** Maintenance requests. (Planned)
-- **Messaging Service:** Direct messaging. (Planned)
-- **Document Management Service:** File storage and management. (Planned)
-- **Expense & Reporting Service:** Analytics and reports. (Planned)
-- **Audit & Compliance Service:** System-wide audit logs. (Planned)
-
-For detailed architecture specifications, please refer to the [Project Wiki](https://github.com/sakibsadmanshajib/RentEase/wiki).
-
-## 🚦 Getting Started
+## 🧪 Running Tests
 
 ### Prerequisites
 
-- Node.js
+- Node.js v24 (Use `nvm use 24`)
 - pnpm
-- Docker (for local database)
+- PostgreSQL running locally
 
-### Installation
+### Commands
 
 ```bash
 # Install dependencies
 pnpm install
+
+# Build all packages
+pnpm turbo build
+
+# Run Unit Tests
+pnpm turbo test:unit
+
+# Run E2E Tests
+npx playwright test
 ```
 
-### Running the App
+## 🔮 Future Plans
 
-```bash
-# Start development servers
-pnpm dev
-```
+- **Deploy to AWS/GCP**: Containerize services with Docker/Kubernetes.
+- **Real Payment Integration**: Replace mock payments with Stripe/PayPal.
+- **Notifications**: Add email/SMS notifications for due invoices.
+- **Advanced Reporting**: Analytics dashboard for revenue and occupancy rates.
 
-### Building
+## Known Issues
 
-```bash
-# Build the project
-pnpm build
-```
-
-## ✅ Verification
-
-The project relies on Playwright for comprehensive API and E2E testing.
-
-> **Note:** The legacy shell scripts (`./scripts/verify-*.sh`) are deprecated and will be removed in future versions.
-
-Please refer to the [Test Implementation Design](wiki/Testing%20Implementation%20Design.md) for detailed testing strategies.
-
-## 📝 Documentation
-
-- [Architecture Spec](https://github.com/sakibsadmanshajib/RentEase/wiki/Architecture)
-- [Master Implementation Plan](https://github.com/sakibsadmanshajib/RentEase/wiki/Master-Implementation-Plan)
-- [Design Decisions](https://github.com/sakibsadmanshajib/RentEase/wiki/Design-Decisions)
-- [Testing Strategy](https://github.com/sakibsadmanshajib/RentEase/wiki/Testing-Strategy)
-
-## 🧪 Testing
-
-The project maintains a comprehensive E2E test suite using Playwright.
-
-### Verified Critical Paths
-
-- **Tenant CRUD**: Landlord organization management.
-- **Property CRUD**: Property and Unit lifecycle.
-- **Lease CRUD**: Lease creation, activation, and termination.
-- **Billing CRUD**: Invoice generation, payments, and ledger entries.
-
-### Running Tests
-
-```bash
-# Run all tests (unit, API, integration, E2E)
-pnpm test:ci
-
-# Run API tests only
-pnpm test:api
-
-# Run E2E tests only (uses --workers=1 for stability)
-pnpm test:e2e
-
-# View HTML Report
-pnpm exec playwright show-report
-```
-
-> **Note:** E2E tests run with `--workers=1` to prevent flaky failures from parallel execution and resource contention.
+- `tenant-crud` E2E test may timeout due to frontend form latency in test environment.
+- `billing-lifecycle` test requires strictly serialized execution.

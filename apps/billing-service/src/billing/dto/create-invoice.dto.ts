@@ -1,48 +1,36 @@
-import { IsString, IsNumber, IsOptional, IsDateString, IsObject, IsArray } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, IsUUID, IsDateString, IsEnum } from 'class-validator';
 
+/**
+ * DTO for creating an invoice.
+ * Note: orgId is NOT accepted in requests - it is automatically injected
+ * from the JWT token via Sequelize @BeforeCreate hook.
+ */
 export class CreateInvoiceDto {
-    @IsString()
-    tenantId!: string;
-
+    @IsUUID()
     @IsOptional()
-    @IsString()
     leaseId?: string;
 
-    @IsOptional()
-    @IsString()
-    invoiceNumber?: string;
-
-    @IsOptional()
-    @IsDateString()
-    issueDate?: Date;
-
-    @IsDateString()
-    dueDate!: Date;
-
-    @IsOptional()
-    @IsDateString()
-    periodStart?: Date;
-
-    @IsOptional()
-    @IsDateString()
-    periodEnd?: Date;
-
     @IsNumber()
+    @IsNotEmpty()
     amount!: number;
 
-    @IsOptional()
     @IsString()
-    currency?: string;
+    @IsNotEmpty()
+    currency!: string;
 
-    @IsOptional()
+    @IsDateString()
+    @IsNotEmpty()
+    dueDate!: Date;
+
     @IsString()
-    description?: string;
+    @IsNotEmpty()
+    description!: string;
+
+    @IsEnum(['RENT', 'UTILITY', 'FEE', 'OTHER'])
+    @IsNotEmpty()
+    type!: string;
 
     @IsOptional()
-    @IsArray()
-    lineItems?: any[];
-
-    @IsOptional()
-    @IsObject()
-    items?: any;
+    metadata?: Record<string, any>;
 }
+

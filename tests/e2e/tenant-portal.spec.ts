@@ -45,16 +45,17 @@ test.describe('Tenant Portal E2E', () => {
         // 3. Link Tenant to Landlord (Create Tenant record)
         // Login as Landlord
         await authHelper.login(landlordData.email, landlordData.password);
+        // Create landlord's organization first
+        await authHelper.createTenant('Landlord Tenant Portal Org');
         const token = authHelper.getToken();
 
         // Create Tenant via API
         const createTenantResponse = await request.post('http://localhost:4000/tenants', {
             headers: { 'Authorization': `Bearer ${token}` },
             data: {
-                firstName: tenantData.firstName,
-                lastName: tenantData.lastName,
-                email: tenantData.email,
-                phone: tenantData.phone
+                name: `${tenantData.firstName} ${tenantData.lastName}`,
+                contactEmail: tenantData.email,
+                contactPhone: tenantData.phone
             }
         });
         if (createTenantResponse.status() !== 201) {

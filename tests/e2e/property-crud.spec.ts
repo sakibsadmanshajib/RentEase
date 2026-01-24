@@ -17,6 +17,9 @@ test.describe('Property CRUD E2E', () => {
             phone: '555-0123'
         };
         await authHelper.register(landlordData);
+        // Login and create tenant to bypass onboarding
+        await authHelper.login(landlordData.email, landlordData.password);
+        await authHelper.createTenant('Property Test Org');
     });
 
     test('Landlord can create, edit, and delete a property', async ({ page }) => {
@@ -30,6 +33,8 @@ test.describe('Property CRUD E2E', () => {
         await page.fill('input[name="email"]', landlordData.email);
         await page.fill('input[name="password"]', landlordData.password);
         await page.click('button[type="submit"]');
+        // Tenant already created in beforeAll - wait for dashboard
+        await page.waitForURL(`${WEB_URL}/dashboard`, { timeout: 10000 });
         await expect(page).toHaveURL(`${WEB_URL}/dashboard`);
 
         // Navigate to Properties
@@ -52,8 +57,15 @@ test.describe('Property CRUD E2E', () => {
 
         // Delete Property
         page.on('dialog', dialog => dialog.accept());
-        await page.locator('.bg-card').filter({ hasText: updatedPropertyName }).locator('button:has-text("Delete")').click();
-        await page.waitForTimeout(2000);
+        // Wait for delete API response
+        const [deleteResponse] = await Promise.all([
+            page.waitForResponse(response => 
+                response.url().includes('/properties') && 
+                response.request().method() === 'DELETE' &&
+                response.status() === 200
+            ),
+            page.locator('.bg-card').filter({ hasText: updatedPropertyName }).locator('button:has-text("Delete")').click()
+        ]);
         await expect(page.locator(`text=${updatedPropertyName}`)).not.toBeVisible();
     });
 });

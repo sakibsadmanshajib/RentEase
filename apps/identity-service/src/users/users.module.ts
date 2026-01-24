@@ -1,11 +1,12 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 import { UsersController } from './users.controller';
 import { InternalUsersController } from './internal-users.controller';
 import { UsersService } from './users.service';
 import { User } from './models/user.model';
-import { UserTenantMembership } from './models/user-tenant-membership.model';
+import { UserOrganizationMembership } from './models/user-tenant-membership.model';
 import { Role } from './models/role.model';
 import { UserRole } from './models/user-role.model';
 import { Permission } from './models/permission.model';
@@ -16,14 +17,15 @@ import { AuthModule } from '../auth/auth.module';
 
 @Module({
     imports: [
-        SequelizeModule.forFeature([
-            User,
-            UserTenantMembership,
-            Role,
-            UserRole,
-            Permission,
-            RolePermission
-        ]),
+        SequelizeModule.forFeature([User, Role, Permission, UserOrganizationMembership]),
+        JwtModule.registerAsync({
+            imports: [ConfigModule],
+            useFactory: async (configService: ConfigService) => ({
+                secret: configService.get<string>('JWT_SECRET'),
+                signOptions: { expiresIn: '60m' },
+            }),
+            inject: [ConfigService],
+        }),
         forwardRef(() => AuthModule),
         ConfigModule,
     ],

@@ -2,14 +2,14 @@ name: Backend Integration Tests
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [master, develop]
 
 jobs:
   integration-tests:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:16
@@ -24,36 +24,53 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-    
+
     strategy:
       fail-fast: false
       matrix:
         service:
           - identity
-          - tenant
+          - organization
           - property
           - billing
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
-      
+          node-version: "24"
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v4
         with:
-          version: 10
-      
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      
+
+      - name: Build common package
+        run: pnpm --filter @rentease/common build
+
+      - name: Build auth package
+        run: pnpm --filter @rentease/auth build
+
       - name: Build service
         run: pnpm --filter ${{ matrix.service }}-service build
-      
+
       - name: Start service
         run: |
           pnpm --filter ${{ matrix.service }}-service dev > service.log 2>&1 &
@@ -61,14 +78,14 @@ jobs:
           sleep 15
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rentease_test
-      
+
       - name: Install Playwright
         run: pnpm exec playwright install --with-deps chromium
-      
+
       - name: Run Playwright API tests
         run: pnpm playwright test --project=api-${{ matrix.service }}
         continue-on-error: true
-      
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -76,7 +93,7 @@ jobs:
           name: playwright-report-${{ matrix.service }}
           path: playwright-report/
           retention-days: 7
-      
+
       - name: Print service logs on failure
         if: failure()
         run: |

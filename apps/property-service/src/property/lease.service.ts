@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { OrganizationContext } from '@rentease/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Lease } from './models/lease.model';
 import { LeaseOccupant } from './models/lease-occupant.model';
@@ -23,25 +24,59 @@ export class LeaseService {
         });
     }
 
-    async findAll(unitId?: string): Promise<Lease[]> {
-        const where = unitId ? { unitId } : {};
+    /**
+     * Find all leases for a specific organization.
+     * SECURITY: orgId is REQUIRED for data isolation.
+     */
+    async findAll(orgId: string, unitId?: string): Promise<Lease[]> {
+        if (!orgId) {
+            return [];
+        }
+        const where: any = { orgId };
+        if (unitId) {
+            where.unitId = unitId;
+        }
         return this.leaseModel.findAll({ where });
     }
 
-    async findOne(id: string): Promise<Lease | null> {
+    /**
+     * Find a lease and validate it belongs to the specified organization
+     */
+    async findOneForOrg(id: string, orgId: string): Promise<Lease> {
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required');
+        }
         const lease = await this.leaseModel.findByPk(id);
-        // if (lease) {
-        //     const occupants = await this.occupantModel.findAll({ where: { leaseId: id } });
-        //     lease.setDataValue('occupants', occupants);
-        // }
-        return lease;
-    }
-
-    async activate(id: string): Promise<Lease> {
-        const lease = await this.findOne(id);
         if (!lease) {
             throw new NotFoundException('Lease not found');
         }
+        if (lease.orgId !== orgId) {
+            throw new ForbiddenException('Access denied to this lease');
+        }
+        return lease;
+    }
+
+    async findOne(id: string): Promise<Lease | null> {
+        return this.leaseModel.findByPk(id);
+    }
+
+    async updateLease(id: string, updateData: any) {
+        const lease = await this.leaseModel.findByPk(id);
+        if (!lease) {
+             throw new NotFoundException('Lease not found');
+        }
+
+        const orgId = OrganizationContext.getOrgId();
+        if (orgId && lease.orgId !== orgId) {
+            // This should be caught by the BeforeFind hook implicitly if we strictly use findOne, 
+            // but for findByPk, explicit check is good.
+             throw new NotFoundException('Lease not found');
+        }
+        return this.leaseModel.findByPk(id);
+    }
+
+    async activate(id: string, orgId: string): Promise<Lease> {
+        const lease = await this.findOneForOrg(id, orgId);
         lease.status = 'ACTIVE';
         await lease.save();
 
@@ -55,11 +90,8 @@ export class LeaseService {
         return lease;
     }
 
-    async terminate(id: string): Promise<Lease> {
-        const lease = await this.findOne(id);
-        if (!lease) {
-            throw new NotFoundException('Lease not found');
-        }
+    async terminate(id: string, orgId: string): Promise<Lease> {
+        const lease = await this.findOneForOrg(id, orgId);
         lease.status = 'TERMINATED';
         await lease.save();
 
@@ -73,25 +105,18 @@ export class LeaseService {
         return lease;
     }
 
-    async addOccupant(leaseId: string, userId: string): Promise<LeaseOccupant> {
-        const lease = await this.findOne(leaseId);
-        if (!lease) {
-            throw new NotFoundException('Lease not found');
-        }
+    async addOccupant(leaseId: string, userId: string, orgId: string): Promise<LeaseOccupant> {
+        await this.findOneForOrg(leaseId, orgId);
         return this.occupantModel.create({ leaseId, userId });
     }
-    async update(id: string, updateLeaseDto: any): Promise<Lease> {
-        const lease = await this.findOne(id);
-        if (!lease) {
-            throw new NotFoundException('Lease not found');
-        }
+
+    async update(id: string, updateLeaseDto: any, orgId: string): Promise<Lease> {
+        const lease = await this.findOneForOrg(id, orgId);
         return lease.update(updateLeaseDto);
     }
 
-    async remove(id: string): Promise<void> {
-        const lease = await this.findOne(id);
-        if (lease) {
-            await lease.destroy();
-        }
+    async remove(id: string, orgId: string): Promise<void> {
+        const lease = await this.findOneForOrg(id, orgId);
+        await lease.destroy();
     }
 }

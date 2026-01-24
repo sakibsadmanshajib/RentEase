@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from './models/user.model';
-import { UserTenantMembership } from './models/user-tenant-membership.model';
+import { UserOrganizationMembership } from './models/user-tenant-membership.model';
 import { CreateMembershipDto } from './dto/create-membership.dto';
 // However, since we are in Identity Service, we shouldn't import from Tenant Service directly if they are separate.
 // But wait, the architecture said "No direct cross-DB joins".
@@ -13,8 +13,8 @@ export class UsersService {
     constructor(
         @InjectModel(User)
         private userModel: typeof User,
-        @InjectModel(UserTenantMembership)
-        private membershipModel: typeof UserTenantMembership,
+        @InjectModel(UserOrganizationMembership)
+        private membershipModel: typeof UserOrganizationMembership,
     ) { }
 
     async updateUser(userId: string, updateData: any) {
@@ -38,7 +38,7 @@ export class UsersService {
         const existing = await this.membershipModel.findOne({
             where: {
                 userId,
-                tenantId: createMembershipDto.tenantId,
+                orgId: createMembershipDto.orgId,
             },
         });
 
@@ -48,7 +48,8 @@ export class UsersService {
 
         return this.membershipModel.create({
             userId,
-            ...createMembershipDto,
+            orgId: createMembershipDto.orgId,
+            roleId: createMembershipDto.roleId,
         });
     }
 

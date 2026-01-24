@@ -30,8 +30,8 @@ test.describe('Google Auth Integration', () => {
 
     await page.goto(`${WEB_URL}/auth/callback?token=${mockToken}`);
 
-    // Should redirect to portal
-    await page.waitForURL(/.*\/portal/, { timeout: 15000 });
+    // Should redirect to dashboard or onboarding
+    await page.waitForURL(/.*\/(dashboard|onboarding)/, { timeout: 15000 });
   });
 
   test('Auth Callback handles token and redirects Admin', async ({ page }) => {

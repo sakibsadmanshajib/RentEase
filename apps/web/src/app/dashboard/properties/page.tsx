@@ -1,13 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { api } from "@/lib/api"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Building, MapPin, Plus } from "lucide-react"
+import { Building, MapPin, Plus, Building2 } from "lucide-react"
 import {
     Dialog,
     DialogContent,
@@ -17,6 +18,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
+import { useTenant } from "@/contexts/tenant-context"
 
 interface Property {
     id: string;
@@ -26,24 +28,28 @@ interface Property {
 }
 
 export default function PropertiesPage() {
+    const { tenantId, hasTenant, isLoading: tenantLoading } = useTenant()
+    const router = useRouter()
     const [properties, setProperties] = useState<Property[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState("")
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [newProperty, setNewProperty] = useState({ name: "", address: "" })
-
     const [editingProperty, setEditingProperty] = useState<Property | null>(null)
 
     useEffect(() => {
-        fetchProperties()
-    }, [])
+        if (!tenantLoading && !hasTenant) {
+            router.push("/dashboard/onboarding")
+            return
+        }
+        if (hasTenant) {
+            fetchProperties()
+        }
+    }, [hasTenant, tenantLoading])
 
     async function fetchProperties() {
         try {
-            console.log("Fetching properties...")
-            const data = await api.get(`/properties?t=${Date.now()}`)
-            console.log("Fetched properties:", data)
-            console.log('Fetched properties IDs:', data.map((p: any) => p.id))
+            const data = await api.get(`/properties`)
             setProperties(data)
         } catch (err: any) {
             console.error("Error fetching properties:", err)
@@ -55,13 +61,15 @@ export default function PropertiesPage() {
 
     async function handleCreateProperty(e: React.FormEvent) {
         e.preventDefault()
-        console.log("Creating property:", newProperty)
+        if (!tenantId) {
+            setError("No organization selected")
+            return
+        }
         try {
-            const res = await api.post('/properties', {
+            await api.post('/properties', {
                 ...newProperty,
-                tenantId: "none", // Mock tenant ID for now
+                tenantId,
             })
-            console.log("Property created:", res)
             setIsDialogOpen(false)
             setNewProperty({ name: "", address: "" })
             fetchProperties()
@@ -96,10 +104,43 @@ export default function PropertiesPage() {
         }
     }
 
+    // Show loading while checking tenant status
+    if (tenantLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[50vh]">
+                <div className="text-muted-foreground">Loading...</div>
+            </div>
+        )
+    }
+
+    // No tenant - show prompt to create one
+    if (!hasTenant) {
+        return (
+            <div className="flex items-center justify-center min-h-[50vh]">
+                <Card className="max-w-md w-full">
+                    <CardContent className="pt-6 text-center space-y-4">
+                        <div className="flex justify-center">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary">
+                                <Building2 className="h-6 w-6 text-foreground" />
+                            </div>
+                        </div>
+                        <h3 className="text-lg font-semibold">No Organization</h3>
+                        <p className="text-muted-foreground text-sm">
+                            You need to create or join an organization before managing properties.
+                        </p>
+                        <Button onClick={() => router.push("/dashboard/onboarding")}>
+                            Get Started
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+        )
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight">My Properties</h2>
+                <h2 className="text-2xl font-semibold tracking-tight">My Properties</h2>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                         <Button>
@@ -185,7 +226,7 @@ export default function PropertiesPage() {
             )}
 
             {isLoading ? (
-                <div>Loading properties...</div>
+                <div className="text-muted-foreground">Loading properties...</div>
             ) : properties.length === 0 ? (
                 <Card>
                     <CardContent className="pt-6">
