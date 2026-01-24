@@ -7,18 +7,18 @@ export class Expense extends Model {
     static enforceOrganizationIsolation(options: any) {
         const orgId = OrganizationContext.getOrgId();
         if (!orgId) {
-             // throw new Error('Organization context missing for isolation');
-        } else {
-            options.where = { ...options.where, orgId };
+            throw new Error('Organization context missing for isolation');
         }
+        options.where = { ...(options.where ?? {}), orgId };
     }
 
     @BeforeCreate
     static setOrgId(instance: Expense) {
         const orgId = OrganizationContext.getOrgId();
-        if (orgId) {
-            instance.orgId = orgId;
+        if (!orgId) {
+            throw new Error('Organization context required to create expense');
         }
+        instance.orgId = orgId;
     }
 
     @Column({

@@ -20,8 +20,10 @@ export class BillingController {
 
     @Get('ledger')
     getLedger(@Request() req: any) {
-        // SECURITY: Always use orgId from JWT - no query param override allowed
         const orgId = req.user?.orgId;
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required');
+        }
         return this.billingService.getLedger(orgId);
     }
 
@@ -34,8 +36,10 @@ export class BillingController {
 
     @Get('expenses')
     getExpenses(@Request() req: any, @Query() filters: any) {
-        // Ensure orgId filter from JWT
         const orgId = req.user?.orgId;
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required');
+        }
         return this.billingService.getExpenses({ ...filters, orgId });
     }
 

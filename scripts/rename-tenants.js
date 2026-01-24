@@ -18,10 +18,13 @@ async function renameTenants() {
             "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
         );
         const tableNames = res.rows.map(t => t.table_name);
-        
-        if (tableNames.includes('Tenants') && !tableNames.includes('Organizations')) {
-            console.log('Renaming Tenants to Organizations...');
-            await client.query('ALTER TABLE "Tenants" RENAME TO "Organizations";');
+        const tableNamesLower = new Set(tableNames.map(t => t.toLowerCase()));
+
+        if (tableNamesLower.has('tenants') && !tableNamesLower.has('organizations')) {
+            // Find actual table name (preserves case)
+            const actualTableName = tableNames.find(t => t.toLowerCase() === 'tenants');
+            console.log(`Renaming ${actualTableName} to Organizations...`);
+            await client.query(`ALTER TABLE "${actualTableName}" RENAME TO "Organizations";`);
             console.log('Done.');
         } else {
             console.log('Tenants table not found or Organizations already exists.');
