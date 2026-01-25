@@ -73,31 +73,31 @@
 └─────────────────┘
 ```
 
-For detailed architecture, see the [Wiki](./wiki/).
+For detailed architecture, see the [Wiki](https://github.com/sakibsadmanshajib/RentEase/wiki/).
 
 ---
 
 ## 📚 Documentation
 
-All detailed documentation lives in the [`wiki/`](./wiki/) folder:
+All detailed documentation lives in the [`wiki/`](https://github.com/sakibsadmanshajib/RentEase/wiki/) folder:
 
 ### Core Docs
 
-- [Architecture](./wiki/Architecture.md) - System design
-- [Master Implementation Plan](./wiki/Master%20Implementation%20Plan.md) - Roadmap
+- [Architecture](https://github.com/sakibsadmanshajib/RentEase/wiki/Architecture) - System design
+- [Master Implementation Plan](https://github.com/sakibsadmanshajib/RentEase/wiki/Master-Implementation-Plan) - Roadmap
 
 ### Product Requirements (PRDs)
 
-- [Gap Analysis PRD](./wiki/Gap%20Analysis%20PRD.md) - Industry comparison
-- [Tenant Portal PRD](./wiki/Tenant%20Portal%20PRD.md) - Tenant self-service
-- [Landlord Tenant Profile PRD](./wiki/Landlord%20Tenant%20Profile%20PRD.md) - 360° tenant view
-- [Feature Tiers PRD](./wiki/Feature%20Tiers%20and%20Organization%20Settings%20PRD.md) - Pricing tiers
-- [Integration Adapter PRD](./wiki/Third-Party%20Integration%20Adapter%20Architecture%20PRD.md) - Vendor abstraction
+- [Gap Analysis PRD](https://github.com/sakibsadmanshajib/RentEase/wiki/Gap-Analysis-PRD) - Industry comparison
+- [Tenant Portal PRD](https://github.com/sakibsadmanshajib/RentEase/wiki/Tenant-Portal-PRD) - Tenant self-service
+- [Landlord Tenant Profile PRD](https://github.com/sakibsadmanshajib/RentEase/wiki/Landlord-Tenant-Profile-PRD) - 360° tenant view
+- [Feature Tiers PRD](https://github.com/sakibsadmanshajib/RentEase/wiki/Feature-Tiers-and-Organization-Settings-PRD) - Pricing tiers
+- [Integration Adapter PRD](https://github.com/sakibsadmanshajib/RentEase/wiki/Third-Party-Integration-Adapter-Architecture-PRD) - Vendor abstraction
 
 ### Technical Docs
 
-- [Inter-Service Communication](./wiki/Inter-Service%20Communication%20PRD.md) - Service mesh design
-- [Known Limitations](./wiki/Known%20Limitations.md) - Technical debt
+- [Inter-Service Communication](https://github.com/sakibsadmanshajib/RentEase/wiki/Inter-Service-Communication-PRD) - Service mesh design
+- [Known Limitations](https://github.com/sakibsadmanshajib/RentEase/wiki/Known-Limitations) - Technical debt
 
 ---
 
@@ -179,7 +179,7 @@ npx playwright test --ui
 
 ## 📊 Comparison to Industry
 
-Based on [Gap Analysis PRD](./wiki/Gap%20Analysis%20PRD.md):
+Based on [Gap Analysis PRD](https://github.com/sakibsadmanshajib/RentEase/wiki/Gap-Analysis-PRD):
 
 | Feature             | TenantCloud | Buildium | RentEase   |
 | ------------------- | ----------- | -------- | ---------- |
@@ -201,7 +201,7 @@ Based on [Gap Analysis PRD](./wiki/Gap%20Analysis%20PRD.md):
 - **Encryption**: PII encrypted at rest (phone, SSN)
 - **RBAC**: Role-based access control per organization
 
-> ⚠️ **Known Gap**: Zero Trust cross-service validation not yet implemented. See [Known Limitations](./wiki/Known%20Limitations.md).
+> ⚠️ **Known Gap**: Zero Trust cross-service validation not yet implemented. See [Known Limitations](https://github.com/sakibsadmanshajib/RentEase/wiki/Known-Limitations).
 
 ---
 
@@ -228,7 +228,7 @@ RentEase/
 
 ## 🤝 Contributing
 
-1. Check [Known Limitations](./wiki/Known%20Limitations.md) for areas needing work
+1. Check [Known Limitations](https://github.com/sakibsadmanshajib/RentEase/wiki/Known-Limitations) for areas needing work
 2. Review relevant PRD in `wiki/` before implementing
 3. Write tests for new features
 4. Submit PR with clear description
