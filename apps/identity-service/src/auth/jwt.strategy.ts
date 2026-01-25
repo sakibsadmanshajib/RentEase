@@ -2,21 +2,20 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectModel } from '@nestjs/sequelize';
-import { User } from '../users/models/user.model';
-import { Role } from '../users/models/role.model';
-import { Permission } from '../users/models/permission.model';
-import { UserOrganizationMembership } from '../users/models/user-tenant-membership.model';
+import { Request } from 'express';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
     constructor(
-        @InjectModel(User)
-        private userModel: typeof User,
         private configService: ConfigService,
     ) {
         super({
-            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+            jwtFromRequest: ExtractJwt.fromExtractors([
+                // First try HTTP-only cookie (browser clients)
+                (request: Request) => request?.cookies?.accessToken || null,
+                // Fall back to Authorization header (API clients, testing)
+                ExtractJwt.fromAuthHeaderAsBearerToken(),
+            ]),
             ignoreExpiration: false,
             secretOrKey: configService.get<string>('JWT_SECRET')!,
         });
@@ -27,31 +26,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     async validate(payload: any) {
-        const user = await this.userModel.findByPk(payload.sub, {
-            include: [
-                {
-                    model: Role,
-                    include: [Permission],
-                },
-                {
-                    model: UserOrganizationMembership,
-                    include: [
-                        {
-                            model: Role,
-                            include: [Permission],
-                        },
-                    ],
-                },
-            ],
-        });
-
-        if (!user) {
+        // JWT payload already contains all needed info (sub, email, orgId, roles)
+        // No need to query the database on every request
+        if (!payload.sub) {
             throw new UnauthorizedException();
         }
 
-        // Flatten permissions for easier access in Guard if needed, 
-        // but Guard logic currently accesses user.roles and user.tenantMemberships directly.
-        // We return the full user object.
-        return user;
+        return {
+            sub: payload.sub,
+            id: payload.sub, // Alias for convenience
+            email: payload.email,
+            orgId: payload.orgId,
+            roles: payload.roles || [],
+        };
     }
 }
+

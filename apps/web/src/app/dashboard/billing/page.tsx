@@ -18,7 +18,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { useTenant } from "@/contexts/tenant-context"
+import { useOrg } from "@/contexts/org-context"
 
 interface Invoice {
     id: string;
@@ -38,7 +38,7 @@ interface Lease {
 }
 
 export default function BillingPage() {
-    const { tenantId, hasTenant, isLoading: tenantLoading } = useTenant()
+    const { orgId, hasOrg, isLoading: orgLoading } = useOrg()
     const router = useRouter()
     const [invoices, setInvoices] = useState<Invoice[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -49,15 +49,15 @@ export default function BillingPage() {
     const [leases, setLeases] = useState<Lease[]>([])
 
     useEffect(() => {
-        if (!tenantLoading && !hasTenant) {
+        if (!orgLoading && !hasOrg) {
             router.push("/dashboard/onboarding")
             return
         }
-        if (hasTenant) {
+        if (hasOrg) {
             fetchInvoices()
             fetchLeases()
         }
-    }, [hasTenant, tenantLoading])
+    }, [hasOrg, orgLoading])
 
     async function fetchLeases() {
         try {
@@ -106,13 +106,13 @@ export default function BillingPage() {
 
     async function handleCreateInvoice(e: React.FormEvent) {
         e.preventDefault()
-        if (!tenantId) {
+        if (!orgId) {
             setError("No organization selected")
             return
         }
         try {
             await api.post('/invoices', {
-                tenantId,
+                orgId,
                 leaseId: newInvoice.leaseId || undefined,
                 amount: parseFloat(newInvoice.amount),
                 description: newInvoice.description,
@@ -128,13 +128,13 @@ export default function BillingPage() {
     }
 
     async function handlePay(invoiceId: string, amount: number) {
-        if (!tenantId) {
+        if (!orgId) {
             setError("No organization selected")
             return
         }
         try {
             await api.post('/invoices/payments', {
-                tenantId,
+                orgId,
                 invoiceId,
                 amount,
                 date: new Date().toISOString(),
@@ -146,8 +146,8 @@ export default function BillingPage() {
         }
     }
 
-    // Show loading while checking tenant status
-    if (tenantLoading) {
+    // Show loading while checking org status
+    if (orgLoading) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
                 <div className="text-muted-foreground">Loading...</div>
@@ -155,8 +155,8 @@ export default function BillingPage() {
         )
     }
 
-    // No tenant - show prompt to create one
-    if (!hasTenant) {
+    // No organization - show prompt to create one
+    if (!hasOrg) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
                 <Card className="max-w-md w-full">

@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { getProfile } from "@/lib/auth"
+import { checkAuthStatus } from "@/lib/auth"
 
 function AuthCallbackContent() {
     const router = useRouter()
@@ -11,29 +11,31 @@ function AuthCallbackContent() {
 
     useEffect(() => {
         const handleAuth = async () => {
-            const token = searchParams.get("token")
-            const tenantId = searchParams.get("tenantId")
-            if (token) {
-                localStorage.setItem("token", token)
-                if (tenantId) {
-                    localStorage.setItem("tenantId", tenantId)
-                }
-                
-                try {
-                    const user = await getProfile(token)
+            const orgId = searchParams.get("orgId")
+            
+            if (orgId) {
+                localStorage.setItem("orgId", orgId)
+            } else {
+                localStorage.removeItem("orgId")
+            }
+            
+            try {
+                // Cookies should be set by the redirect response from backend
+                const user = await checkAuthStatus()
+                if (user) {
                     if (user.roles?.some((r: any) => r.name === 'Admin')) {
                         await router.push("/admin")
                     } else {
-                        // Always redirect to dashboard - tenant onboarding will handle users without org
+                        // Always redirect to dashboard - org onboarding will handle if needed
                         await router.push("/dashboard")
                     }
-                } catch (err) {
-                    console.error("Failed to fetch profile", err)
-                    setStatus("Failed to verify user profile.")
-                    await router.push("/auth/login")
+                } else {
+                    throw new Error("Authentication failed")
                 }
-            } else {
-                await router.push("/auth/login")
+            } catch (err) {
+                console.error("Failed to verify authentication", err)
+                setStatus("Authentication failed. Please try again.")
+                setTimeout(() => router.push("/auth/login"), 2000)
             }
         }
         handleAuth()
