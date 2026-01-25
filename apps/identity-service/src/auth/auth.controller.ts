@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { CsrfGuard } from './csrf.guard';
 
 interface CookieOptions {
     httpOnly: boolean;
@@ -46,6 +47,7 @@ export class AuthController {
     }
 
     @Post('login')
+    @UseGuards(CsrfGuard)
     @HttpCode(200)
     async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
         const { accessToken, refreshToken, orgId } = await this.authService.login(loginDto);
@@ -54,6 +56,7 @@ export class AuthController {
     }
 
     @Post('register')
+    @UseGuards(CsrfGuard)
     async register(@Body() registerDto: RegisterDto, @Res({ passthrough: true }) res: Response) {
         const result = await this.authService.register(registerDto);
         this.setAuthCookies(res, result.accessToken, result.refreshToken);
@@ -92,6 +95,7 @@ export class AuthController {
      * to login on refresh failure.
      */
     @Post('refresh')
+    @UseGuards(CsrfGuard)
     @HttpCode(200)
     async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         const refreshToken = req.cookies?.refreshToken;
@@ -131,7 +135,7 @@ export class AuthController {
      * in the target organization before issuing new tokens.
      */
     @Post('switch-org')
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(CsrfGuard, JwtAuthGuard)
     @HttpCode(200)
     async switchOrg(
         @Req() req: any,
@@ -159,6 +163,7 @@ export class AuthController {
      * See: https://jwt.io/introduction/ and Known Limitations wiki page
      */
     @Post('logout')
+    @UseGuards(CsrfGuard)
     @HttpCode(200)
     async logout(@Res({ passthrough: true }) res: Response) {
         this.clearAuthCookies(res);
