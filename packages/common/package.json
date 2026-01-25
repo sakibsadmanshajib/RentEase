@@ -8,9 +8,9 @@
     "lint": "eslint \"src/**/*.ts\" --fix"
   },
   "peerDependencies": {
-    "@nestjs/common": "^10.0.0 || ^11.0.0",
-    "@nestjs/core": "^10.0.0 || ^11.0.0",
-    "@nestjs/sequelize": "^10.0.0 || ^11.0.1",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/sequelize": "^11.0.1",
     "sequelize": "^6.37.5",
     "sequelize-typescript": "^2.1.6"
   },
