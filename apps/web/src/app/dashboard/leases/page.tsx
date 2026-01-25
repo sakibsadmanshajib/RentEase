@@ -18,7 +18,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { useTenant } from "@/contexts/tenant-context"
+import { useOrg } from "@/contexts/org-context"
 
 interface Lease {
     id: string;
@@ -26,7 +26,7 @@ interface Lease {
     endDate: string;
     rentAmount: number;
     propertyId: string;
-    tenantId: string;
+    orgId: string;
     status: string;
 }
 
@@ -42,7 +42,7 @@ interface Unit {
 }
 
 export default function LeasesPage() {
-    const { tenantId, hasTenant, isLoading: tenantLoading } = useTenant()
+    const { orgId, hasOrg, isLoading: orgLoading } = useOrg()
     const router = useRouter()
     const [leases, setLeases] = useState<Lease[]>([])
     const [properties, setProperties] = useState<Property[]>([])
@@ -83,15 +83,15 @@ export default function LeasesPage() {
     }, [])
 
     useEffect(() => {
-        if (!tenantLoading && !hasTenant) {
+        if (!orgLoading && !hasOrg) {
             router.push("/dashboard/onboarding")
             return
         }
-        if (hasTenant) {
+        if (hasOrg) {
             fetchLeases()
             fetchProperties()
         }
-    }, [hasTenant, tenantLoading, router, fetchLeases, fetchProperties])
+    }, [hasOrg, orgLoading, router, fetchLeases, fetchProperties])
 
     useEffect(() => {
         if (newLease.propertyId) {
@@ -103,14 +103,14 @@ export default function LeasesPage() {
 
     async function handleCreateLease(e: React.FormEvent) {
         e.preventDefault()
-        if (!tenantId) {
+        if (!orgId) {
             setError("No organization selected")
             return
         }
         try {
             const payload: any = {
                 ...newLease,
-                tenantId,
+                orgId,
                 rentAmount: parseFloat(newLease.rentAmount),
             }
             if (!payload.unitId) {
@@ -151,8 +151,8 @@ export default function LeasesPage() {
         }
     }
 
-    // Show loading while checking tenant status
-    if (tenantLoading) {
+    // Show loading while checking org status
+    if (orgLoading) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
                 <div className="text-muted-foreground">Loading...</div>
@@ -160,8 +160,8 @@ export default function LeasesPage() {
         )
     }
 
-    // No tenant - show prompt to create one
-    if (!hasTenant) {
+    // No organization - show prompt to create one
+    if (!hasOrg) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
                 <Card className="max-w-md w-full">

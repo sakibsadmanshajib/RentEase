@@ -18,17 +18,17 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { useTenant } from "@/contexts/tenant-context"
+import { useOrg } from "@/contexts/org-context"
 
 interface Property {
     id: string;
     name: string;
     address: string;
-    tenantId: string;
+    orgId: string;
 }
 
 export default function PropertiesPage() {
-    const { tenantId, hasTenant, isLoading: tenantLoading } = useTenant()
+    const { orgId, hasOrg, isLoading: orgLoading } = useOrg()
     const router = useRouter()
     const [properties, setProperties] = useState<Property[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -38,14 +38,14 @@ export default function PropertiesPage() {
     const [editingProperty, setEditingProperty] = useState<Property | null>(null)
 
     useEffect(() => {
-        if (!tenantLoading && !hasTenant) {
+        if (!orgLoading && !hasOrg) {
             router.push("/dashboard/onboarding")
             return
         }
-        if (hasTenant) {
+        if (hasOrg) {
             fetchProperties()
         }
-    }, [hasTenant, tenantLoading])
+    }, [hasOrg, orgLoading])
 
     async function fetchProperties() {
         try {
@@ -61,14 +61,14 @@ export default function PropertiesPage() {
 
     async function handleCreateProperty(e: React.FormEvent) {
         e.preventDefault()
-        if (!tenantId) {
+        if (!orgId) {
             setError("No organization selected")
             return
         }
         try {
             await api.post('/properties', {
                 ...newProperty,
-                tenantId,
+                orgId,
             })
             setIsDialogOpen(false)
             setNewProperty({ name: "", address: "" })
@@ -104,8 +104,8 @@ export default function PropertiesPage() {
         }
     }
 
-    // Show loading while checking tenant status
-    if (tenantLoading) {
+    // Show loading while checking org status
+    if (orgLoading) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
                 <div className="text-muted-foreground">Loading...</div>
@@ -113,8 +113,8 @@ export default function PropertiesPage() {
         )
     }
 
-    // No tenant - show prompt to create one
-    if (!hasTenant) {
+    // No organization - show prompt to create one
+    if (!hasOrg) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
                 <Card className="max-w-md w-full">

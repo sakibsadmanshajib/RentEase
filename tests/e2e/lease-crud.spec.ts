@@ -41,20 +41,14 @@ test.describe('Lease CRUD E2E', () => {
         await expect(page).toHaveURL(`${WEB_URL}/dashboard`);
 
         // Create Dependencies (Tenant and Property)
-        // Get token from localStorage
-        const token = await page.evaluate(() => localStorage.getItem('token'));
-
         // Create Property using the authenticated context
-        // No need to create a new Tenant Organization
+        // Cookies are shared with page.request
         const propertyRes = await page.request.post(`${WEB_URL.replace('3000', '4000')}/properties`, {
-            headers: { Authorization: `Bearer ${token}` },
             data: {
                 name: 'Lease Test Property',
                 address: '123 Lease St',
                 type: 'Residential',
-                units: 1,
-                // tenantId is required by DTO
-                tenantId: tenantId
+                units: 1
             }
         });
         if (!propertyRes.ok()) {
