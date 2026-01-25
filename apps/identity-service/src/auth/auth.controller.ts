@@ -1,4 +1,4 @@
-import { Body, Controller, Post, HttpCode, Get, UseGuards, Req, Res } from '@nestjs/common';
+import { Body, Controller, Post, HttpCode, Get, UseGuards, Req, Res, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
@@ -71,13 +71,23 @@ export class AuthController {
         res.redirect(`${frontendUrl}/auth/callback?${params.toString()}`);
     }
 
+    /**
+     * Refresh access token using HTTP-only refresh token cookie.
+     * 
+     * Design Decision: Throws UnauthorizedException (401) on failure rather than
+     * returning error objects with 200 status. This follows REST conventions where
+     * clients expect proper HTTP status codes for authentication failures.
+     * 
+     * The frontend api.ts handles 401 responses appropriately and will redirect
+     * to login on refresh failure.
+     */
     @Post('refresh')
     @HttpCode(200)
     async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
         const refreshToken = req.cookies?.refreshToken;
         if (!refreshToken) {
             this.clearAuthCookies(res);
-            return { error: 'No refresh token', authenticated: false };
+            throw new UnauthorizedException('No refresh token');
         }
 
         try {
@@ -86,7 +96,7 @@ export class AuthController {
             return { orgId: result.orgId, message: 'Token refreshed', authenticated: true };
         } catch (error) {
             this.clearAuthCookies(res);
-            return { error: 'Invalid refresh token', authenticated: false };
+            throw new UnauthorizedException('Invalid refresh token');
         }
     }
 
@@ -103,6 +113,13 @@ export class AuthController {
         };
     }
 
+    /**
+     * Switch the user's current organization context.
+     * 
+     * Requires a valid JWT and validates that orgId is provided.
+     * The authService.switchOrg method verifies the user has membership
+     * in the target organization before issuing new tokens.
+     */
     @Post('switch-org')
     @UseGuards(JwtAuthGuard)
     @HttpCode(200)
@@ -111,6 +128,9 @@ export class AuthController {
         @Body('orgId') orgId: string,
         @Res({ passthrough: true }) res: Response
     ) {
+        if (!orgId || typeof orgId !== 'string' || orgId.trim() === '') {
+            throw new BadRequestException('orgId is required');
+        }
         const result = await this.authService.switchOrg(req.user.sub, orgId);
         this.setAuthCookies(res, result.accessToken, result.refreshToken);
         return { orgId: result.orgId };
