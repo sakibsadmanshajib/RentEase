@@ -6,16 +6,26 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
+interface CookieOptions {
+    httpOnly: boolean;
+    secure: boolean;
+    sameSite: 'none' | 'lax' | 'strict';
+    path: string;
+}
+
 @Controller('auth')
 export class AuthController {
     constructor(private authService: AuthService) { }
 
     private readonly isProduction = process.env.NODE_ENV === 'production';
 
-    private readonly COOKIE_OPTIONS = {
+    // Cookie settings for cross-origin credential handling:
+    // - Production: sameSite='none' + secure=true required for cross-origin requests with credentials: 'include'
+    // - Development: sameSite='lax' works for localhost same-origin requests
+    private readonly COOKIE_OPTIONS: CookieOptions = {
         httpOnly: true,
         secure: this.isProduction,
-        sameSite: 'lax' as const, // Required for OAuth redirects
+        sameSite: this.isProduction ? 'none' : 'lax',
         path: '/',
     };
 
