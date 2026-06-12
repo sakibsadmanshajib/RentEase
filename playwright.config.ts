@@ -42,7 +42,7 @@ export default defineConfig({
         {
             name: 'api-tenant',
             testDir: './tests/api/tenant',
-            use: { baseURL: 'http://localhost:3002' },
+            use: { baseURL: 'http://localhost:3005' },
         },
         {
             name: 'api-property',
