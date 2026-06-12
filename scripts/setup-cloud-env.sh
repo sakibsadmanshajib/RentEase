@@ -12,10 +12,12 @@ if [ -s "$HOME/.nvm/nvm.sh" ]; then
   . "$HOME/.nvm/nvm.sh"
   nvm install 24 2>/dev/null || true
   nvm use 24
+  export PATH="$NVM_DIR/versions/node/$(nvm version)/bin:$PATH"
 elif [ -s "/root/.nvm/nvm.sh" ]; then
   # shellcheck source=/dev/null
   . "/root/.nvm/nvm.sh"
   nvm use 24
+  export PATH="$NVM_DIR/versions/node/$(nvm version)/bin:$PATH"
 fi
 
 log "Node version: $(node -v)"
@@ -86,8 +88,8 @@ DB_DATABASE=rentease
 DB_USERNAME=postgres
 DB_PASSWORD=password
 JWT_SECRET=${JWT_SECRET}
-GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-dev-placeholder-client-id}
+GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-dev-placeholder-client-secret}
 GOOGLE_CALLBACK_URL=http://localhost:3001/auth/google/callback
 ENCRYPTION_KEY=${ENCRYPTION_KEY}
 SERVICE_SECRET=${SERVICE_SECRET}
