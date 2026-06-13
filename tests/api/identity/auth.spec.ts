@@ -83,10 +83,10 @@ test.describe('Identity Service - Authentication @api', () => {
 
         expect(response.status()).toBe(200);
         const body = await response.json();
-        expect(body).toHaveProperty('accessToken');
-        expect(body).toHaveProperty('refreshToken');
-        expect(typeof body.accessToken).toBe('string');
-        expect(typeof body.refreshToken).toBe('string');
+        expect(body).toHaveProperty('message', 'Login successful');
+        const setCookie = response.headers()['set-cookie'] || '';
+        expect(setCookie).toContain('accessToken=');
+        expect(setCookie).toContain('refreshToken=');
     });
 
     test('should reject login with invalid credentials', async ({ request }) => {

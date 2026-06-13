@@ -151,6 +151,24 @@ export default function LeasesPage() {
         }
     }
 
+    async function handleActivateLease(id: string) {
+        try {
+            await api.post(`/leases/${id}/activate`, {})
+            fetchLeases()
+        } catch (err: any) {
+            setError(err.message)
+        }
+    }
+
+    async function handleTerminateLease(id: string) {
+        try {
+            await api.post(`/leases/${id}/terminate`, {})
+            fetchLeases()
+        } catch (err: any) {
+            setError(err.message)
+        }
+    }
+
     // Show loading while checking org status
     if (orgLoading) {
         return (
@@ -371,8 +389,14 @@ export default function LeasesPage() {
                                         Status: <span className="capitalize">{lease.status || 'Draft'}</span>
                                     </div>
                                 </div>
-                                <div className="flex gap-2 mt-4">
+                                <div className="flex flex-wrap gap-2 mt-4">
                                     <Button variant="outline" size="sm" onClick={() => setEditingLease(lease)}>Edit</Button>
+                                    {lease.status === 'DRAFT' && (
+                                        <Button size="sm" onClick={() => handleActivateLease(lease.id)}>Activate</Button>
+                                    )}
+                                    {lease.status === 'ACTIVE' && (
+                                        <Button size="sm" variant="secondary" onClick={() => handleTerminateLease(lease.id)}>Terminate</Button>
+                                    )}
                                     <Button variant="destructive" size="sm" onClick={() => handleDeleteLease(lease.id)}>Delete</Button>
                                 </div>
                             </CardContent>

@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Building2, LayoutDashboard, Building, Users, FileText, Settings, LogOut, DollarSign } from "lucide-react"
+import { Building2, LayoutDashboard, Building, Users, FileText, Settings, LogOut, DollarSign, DoorOpen, Receipt, Home } from "lucide-react"
 
 import { logout } from "@/lib/auth"
 
@@ -20,6 +20,11 @@ const sidebarItems = [
         icon: Building,
     },
     {
+        title: "Units",
+        href: "/dashboard/units",
+        icon: DoorOpen,
+    },
+    {
         title: "Tenants",
         href: "/dashboard/all-tenants",
         icon: Users,
@@ -33,6 +38,16 @@ const sidebarItems = [
         title: "Billing",
         href: "/dashboard/billing",
         icon: DollarSign,
+    },
+    {
+        title: "Expenses",
+        href: "/dashboard/expenses",
+        icon: Receipt,
+    },
+    {
+        title: "Tenant Portal",
+        href: "/dashboard/tenant",
+        icon: Home,
     },
     {
         title: "Settings",

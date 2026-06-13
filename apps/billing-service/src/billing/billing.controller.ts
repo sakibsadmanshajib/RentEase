@@ -59,7 +59,7 @@ export class BillingController {
     }
 
     @Get()
-    findAll(@OrgId() orgId: string, @Query() query: any) {
+    findAll(@OrgId() orgId: string, @Query() query: Record<string, string>) {
         return this.billingService.findAll({ ...query, orgId });
     }
 

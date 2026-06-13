@@ -1,7 +1,7 @@
 #!/bin/bash
 
 BASE_URL="http://localhost:3003"
-TENANT_SERVICE_URL="http://localhost:3002"
+TENANT_SERVICE_URL="http://localhost:3005"
 
 # 1. Create Property
 echo "Creating Property..."

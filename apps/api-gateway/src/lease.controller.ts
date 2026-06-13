@@ -3,18 +3,19 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Request } from 'express';
+import { buildAuthHeaders } from './proxy.util';
+
+const PROPERTY_SERVICE_URL = process.env.PROPERTY_SERVICE_URL || 'http://127.0.0.1:3003';
 
 @Controller('leases')
 export class LeaseController {
-    private readonly PROPERTY_SERVICE_URL = 'http://127.0.0.1:3003/leases';
-
     constructor(private readonly httpService: HttpService) { }
 
     @Post()
-    async create(@Body() body: any, @Req() req: Request) {
+    async create(@Body() body: Record<string, unknown>, @Req() req: Request) {
         const response = await firstValueFrom(
-            this.httpService.post(this.PROPERTY_SERVICE_URL, body, {
-                headers: { Authorization: req.headers.authorization }
+            this.httpService.post(`${PROPERTY_SERVICE_URL}/leases`, body, {
+                headers: buildAuthHeaders(req),
             }).pipe(
                 catchError((error) => {
                     throw new HttpException(
@@ -27,11 +28,46 @@ export class LeaseController {
         return response.data;
     }
 
+    @Get('me')
+    async findMine(@Req() req: Request) {
+        const response = await firstValueFrom(
+            this.httpService.get(`${PROPERTY_SERVICE_URL}/leases/me`, {
+                headers: buildAuthHeaders(req),
+            }).pipe(
+                catchError((error) => {
+                    throw new HttpException(
+                        error.response?.data || 'Failed to fetch your leases',
+                        error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+                    );
+                }),
+            ),
+        );
+        return response.data;
+    }
+
+    @Get('occupants')
+    async findOccupants(@Req() req: Request) {
+        const response = await firstValueFrom(
+            this.httpService.get(`${PROPERTY_SERVICE_URL}/leases/occupants`, {
+                headers: buildAuthHeaders(req),
+            }).pipe(
+                catchError((error) => {
+                    throw new HttpException(
+                        error.response?.data || 'Failed to fetch occupants',
+                        error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+                    );
+                }),
+            ),
+        );
+        return response.data;
+    }
+
     @Get()
     async findAll(@Req() req: Request) {
         const response = await firstValueFrom(
-            this.httpService.get(this.PROPERTY_SERVICE_URL, {
-                headers: { Authorization: req.headers.authorization }
+            this.httpService.get(`${PROPERTY_SERVICE_URL}/leases`, {
+                headers: buildAuthHeaders(req),
+                params: req.query,
             }).pipe(
                 catchError((error) => {
                     throw new HttpException(
@@ -47,8 +83,8 @@ export class LeaseController {
     @Get(':id')
     async findOne(@Param('id') id: string, @Req() req: Request) {
         const response = await firstValueFrom(
-            this.httpService.get(`${this.PROPERTY_SERVICE_URL}/${id}`, {
-                headers: { Authorization: req.headers.authorization }
+            this.httpService.get(`${PROPERTY_SERVICE_URL}/leases/${id}`, {
+                headers: buildAuthHeaders(req),
             }).pipe(
                 catchError((error) => {
                     throw new HttpException(
@@ -61,15 +97,49 @@ export class LeaseController {
         return response.data;
     }
 
-    @Get('tenant/:tenantId')
-    async findByTenant(@Param('tenantId') tenantId: string, @Req() req: Request) {
+    @Post(':id/activate')
+    async activate(@Param('id') id: string, @Req() req: Request) {
         const response = await firstValueFrom(
-            this.httpService.get(`${this.PROPERTY_SERVICE_URL}/tenant/${tenantId}`, {
-                headers: { Authorization: req.headers.authorization }
+            this.httpService.post(`${PROPERTY_SERVICE_URL}/leases/${id}/activate`, {}, {
+                headers: buildAuthHeaders(req),
             }).pipe(
                 catchError((error) => {
                     throw new HttpException(
-                        error.response?.data || 'Failed to fetch tenant leases',
+                        error.response?.data || 'Failed to activate lease',
+                        error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+                    );
+                }),
+            ),
+        );
+        return response.data;
+    }
+
+    @Post(':id/terminate')
+    async terminate(@Param('id') id: string, @Req() req: Request) {
+        const response = await firstValueFrom(
+            this.httpService.post(`${PROPERTY_SERVICE_URL}/leases/${id}/terminate`, {}, {
+                headers: buildAuthHeaders(req),
+            }).pipe(
+                catchError((error) => {
+                    throw new HttpException(
+                        error.response?.data || 'Failed to terminate lease',
+                        error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+                    );
+                }),
+            ),
+        );
+        return response.data;
+    }
+
+    @Post(':id/occupants')
+    async addOccupant(@Param('id') id: string, @Body() body: Record<string, unknown>, @Req() req: Request) {
+        const response = await firstValueFrom(
+            this.httpService.post(`${PROPERTY_SERVICE_URL}/leases/${id}/occupants`, body, {
+                headers: buildAuthHeaders(req),
+            }).pipe(
+                catchError((error) => {
+                    throw new HttpException(
+                        error.response?.data || 'Failed to add occupant',
                         error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
                     );
                 }),
@@ -79,10 +149,10 @@ export class LeaseController {
     }
 
     @Patch(':id')
-    async update(@Param('id') id: string, @Body() body: any, @Req() req: Request) {
+    async update(@Param('id') id: string, @Body() body: Record<string, unknown>, @Req() req: Request) {
         const response = await firstValueFrom(
-            this.httpService.patch(`${this.PROPERTY_SERVICE_URL}/${id}`, body, {
-                headers: { Authorization: req.headers.authorization }
+            this.httpService.patch(`${PROPERTY_SERVICE_URL}/leases/${id}`, body, {
+                headers: buildAuthHeaders(req),
             }).pipe(
                 catchError((error) => {
                     throw new HttpException(
@@ -98,8 +168,8 @@ export class LeaseController {
     @Delete(':id')
     async remove(@Param('id') id: string, @Req() req: Request) {
         const response = await firstValueFrom(
-            this.httpService.delete(`${this.PROPERTY_SERVICE_URL}/${id}`, {
-                headers: { Authorization: req.headers.authorization }
+            this.httpService.delete(`${PROPERTY_SERVICE_URL}/leases/${id}`, {
+                headers: buildAuthHeaders(req),
             }).pipe(
                 catchError((error) => {
                     throw new HttpException(

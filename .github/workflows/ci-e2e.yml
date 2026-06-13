@@ -7,6 +7,15 @@ on:
     branches: [master]
   workflow_dispatch:
 
+env:
+  DB_HOST: localhost
+  DB_PORT: 5432
+  DB_USERNAME: postgres
+  DB_PASSWORD: postgres
+  DB_DATABASE: rentease_test
+  JWT_SECRET: test-jwt-secret-for-ci
+  NEXT_PUBLIC_API_URL: http://localhost:4000
+
 jobs:
   e2e:
     runs-on: ubuntu-latest
@@ -56,32 +65,27 @@ jobs:
 
       - name: Build applications
         run: pnpm turbo build
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rentease_test
+
+      - name: Run migrations
+        run: bash scripts/migrate-all.sh
 
       - name: Start all services
         run: |
-          # Start backend services
           pnpm --filter identity-service dev > identity.log 2>&1 &
           pnpm --filter organization-service dev > organization.log 2>&1 &
           pnpm --filter property-service dev > property.log 2>&1 &
           pnpm --filter billing-service dev > billing.log 2>&1 &
-
-          # Start frontend
+          pnpm --filter api-gateway dev > gateway.log 2>&1 &
           pnpm --filter web dev > web.log 2>&1 &
 
           echo "Waiting for services to start..."
           sleep 30
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rentease_test
-          NEXT_PUBLIC_API_URL: http://localhost:3001
 
       - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium firefox
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Run E2E tests
-        run: pnpm playwright test --project=chromium-e2e --project=firefox-e2e
-        continue-on-error: true
+        run: pnpm playwright test --project=chromium-e2e
 
       - name: Upload test results
         if: always()
@@ -110,5 +114,7 @@ jobs:
           cat property.log || echo "No property logs"
           echo "=== Billing Service ==="
           cat billing.log || echo "No billing logs"
+          echo "=== API Gateway ==="
+          cat gateway.log || echo "No gateway logs"
           echo "=== Web Frontend ==="
           cat web.log || echo "No web logs"

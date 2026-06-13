@@ -123,7 +123,8 @@ cp .env.example .env
 # Edit .env with your database credentials
 
 # Run database migrations
-pnpm turbo migrate
+bash scripts/migrate-all.sh
+# Or per-service: pnpm --filter identity-service migrate
 
 # Start all services (dev mode)
 pnpm turbo dev

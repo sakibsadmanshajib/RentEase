@@ -32,11 +32,40 @@ export class LeaseService {
         if (!orgId) {
             return [];
         }
-        const where: any = { orgId };
+        const where: { orgId: string; unitId?: string } = { orgId };
         if (unitId) {
             where.unitId = unitId;
         }
         return this.leaseModel.findAll({ where });
+    }
+
+    async findByUserId(userId: string, orgId: string): Promise<Lease[]> {
+        const occupants = await this.occupantModel.findAll({ where: { userId } });
+        const leaseIds = occupants.map((occupant) => occupant.leaseId);
+        if (leaseIds.length === 0) {
+            return [];
+        }
+        return this.leaseModel.findAll({
+            where: {
+                id: leaseIds,
+                orgId,
+            },
+        });
+    }
+
+    async findAllOccupants(orgId: string): Promise<LeaseOccupant[]> {
+        const leases = await this.leaseModel.findAll({
+            where: { orgId },
+            attributes: ['id'],
+        });
+        const leaseIds = leases.map((lease) => lease.id);
+        if (leaseIds.length === 0) {
+            return [];
+        }
+        return this.occupantModel.findAll({
+            where: { leaseId: leaseIds },
+            include: [Lease],
+        });
     }
 
     /**

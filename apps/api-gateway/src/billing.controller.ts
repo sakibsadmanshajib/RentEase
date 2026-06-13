@@ -1,25 +1,58 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Req, HttpException, HttpStatus, Patch, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Req, HttpException, HttpStatus, Patch, Delete } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { Request } from 'express';
+import { buildAuthHeaders } from './proxy.util';
+
+const BILLING_SERVICE_URL = process.env.BILLING_SERVICE_URL || 'http://127.0.0.1:3004';
+const PROPERTY_SERVICE_URL = process.env.PROPERTY_SERVICE_URL || 'http://127.0.0.1:3003';
 
 @Controller('invoices')
 export class BillingController {
-    private readonly BILLING_SERVICE_URL = process.env.BILLING_SERVICE_URL || 'http://127.0.0.1:3004';
-
     constructor(private readonly httpService: HttpService) { }
 
+    private handleError(error: { response?: { data?: unknown; status?: number } }, fallback: string): never {
+        throw new HttpException(error.response?.data || fallback, error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     @Post()
-    async createInvoice(@Body() data: any, @Req() req: Request) {
+    async createInvoice(@Body() data: Record<string, unknown>, @Req() req: Request) {
         try {
             const response = await firstValueFrom(
-                this.httpService.post(`${this.BILLING_SERVICE_URL}/invoices`, data, {
-                    headers: { Authorization: req.headers.authorization }
-                })
+                this.httpService.post(`${BILLING_SERVICE_URL}/invoices`, data, {
+                    headers: buildAuthHeaders(req),
+                }),
             );
             return response.data;
-        } catch (error: any) {
-            throw new HttpException(error.response?.data || 'Billing Service Error', error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (error) {
+            this.handleError(error as { response?: { data?: unknown; status?: number } }, 'Billing Service Error');
+        }
+    }
+
+    @Get('me')
+    async getMyInvoices(@Req() req: Request) {
+        try {
+            const leasesResponse = await firstValueFrom(
+                this.httpService.get(`${PROPERTY_SERVICE_URL}/leases/me`, {
+                    headers: buildAuthHeaders(req),
+                }),
+            );
+            const leaseIds = (leasesResponse.data as Array<{ id: string }>).map((lease) => lease.id);
+            if (leaseIds.length === 0) {
+                return [];
+            }
+
+            const invoicesResponse = await firstValueFrom(
+                this.httpService.get(`${BILLING_SERVICE_URL}/invoices`, {
+                    headers: buildAuthHeaders(req),
+                }),
+            );
+
+            return (invoicesResponse.data as Array<{ leaseId?: string }>).filter(
+                (invoice) => invoice.leaseId && leaseIds.includes(invoice.leaseId),
+            );
+        } catch (error) {
+            this.handleError(error as { response?: { data?: unknown; status?: number } }, 'Billing Service Error');
         }
     }
 
@@ -27,14 +60,14 @@ export class BillingController {
     async getInvoices(@Req() req: Request) {
         try {
             const response = await firstValueFrom(
-                this.httpService.get(`${this.BILLING_SERVICE_URL}/invoices`, {
-                    headers: { Authorization: req.headers.authorization },
-                    params: req.query
-                })
+                this.httpService.get(`${BILLING_SERVICE_URL}/invoices`, {
+                    headers: buildAuthHeaders(req),
+                    params: req.query,
+                }),
             );
             return response.data;
-        } catch (error: any) {
-            throw new HttpException(error.response?.data || 'Billing Service Error', error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (error) {
+            this.handleError(error as { response?: { data?: unknown; status?: number } }, 'Billing Service Error');
         }
     }
 
@@ -42,41 +75,41 @@ export class BillingController {
     async getInvoiceById(@Param('id') id: string, @Req() req: Request) {
         try {
             const response = await firstValueFrom(
-                this.httpService.get(`${this.BILLING_SERVICE_URL}/invoices/${id}`, {
-                    headers: { Authorization: req.headers.authorization }
-                })
+                this.httpService.get(`${BILLING_SERVICE_URL}/invoices/${id}`, {
+                    headers: buildAuthHeaders(req),
+                }),
             );
             return response.data;
-        } catch (error: any) {
-            throw new HttpException(error.response?.data || 'Billing Service Error', error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (error) {
+            this.handleError(error as { response?: { data?: unknown; status?: number } }, 'Billing Service Error');
         }
     }
 
     @Post('payments')
-    async createPayment(@Body() data: any, @Req() req: Request) {
+    async createPayment(@Body() data: Record<string, unknown>, @Req() req: Request) {
         try {
             const response = await firstValueFrom(
-                this.httpService.post(`${this.BILLING_SERVICE_URL}/invoices/payments`, data, {
-                    headers: { Authorization: req.headers.authorization }
-                })
+                this.httpService.post(`${BILLING_SERVICE_URL}/invoices/payments`, data, {
+                    headers: buildAuthHeaders(req),
+                }),
             );
             return response.data;
-        } catch (error: any) {
-            throw new HttpException(error.response?.data || 'Billing Service Error', error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (error) {
+            this.handleError(error as { response?: { data?: unknown; status?: number } }, 'Billing Service Error');
         }
     }
 
     @Patch(':id')
-    async updateInvoice(@Param('id') id: string, @Body() data: any, @Req() req: Request) {
+    async updateInvoice(@Param('id') id: string, @Body() data: Record<string, unknown>, @Req() req: Request) {
         try {
             const response = await firstValueFrom(
-                this.httpService.patch(`${this.BILLING_SERVICE_URL}/invoices/${id}`, data, {
-                    headers: { Authorization: req.headers.authorization }
-                })
+                this.httpService.patch(`${BILLING_SERVICE_URL}/invoices/${id}`, data, {
+                    headers: buildAuthHeaders(req),
+                }),
             );
             return response.data;
-        } catch (error: any) {
-            throw new HttpException(error.response?.data || 'Billing Service Error', error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (error) {
+            this.handleError(error as { response?: { data?: unknown; status?: number } }, 'Billing Service Error');
         }
     }
 
@@ -84,45 +117,41 @@ export class BillingController {
     async deleteInvoice(@Param('id') id: string, @Req() req: Request) {
         try {
             const response = await firstValueFrom(
-                this.httpService.delete(`${this.BILLING_SERVICE_URL}/invoices/${id}`, {
-                    headers: { Authorization: req.headers.authorization }
-                })
+                this.httpService.delete(`${BILLING_SERVICE_URL}/invoices/${id}`, {
+                    headers: buildAuthHeaders(req),
+                }),
             );
             return response.data;
-        } catch (error: any) {
-            throw new HttpException(error.response?.data || 'Billing Service Error', error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (error) {
+            this.handleError(error as { response?: { data?: unknown; status?: number } }, 'Billing Service Error');
         }
     }
-
-    // ============ LEDGER ROUTES ============
 
     @Get('ledger')
     async getLedger(@Req() req: Request) {
         try {
             const response = await firstValueFrom(
-                this.httpService.get(`${this.BILLING_SERVICE_URL}/invoices/ledger`, {
-                    headers: { Authorization: req.headers.authorization }
-                })
+                this.httpService.get(`${BILLING_SERVICE_URL}/invoices/ledger`, {
+                    headers: buildAuthHeaders(req),
+                }),
             );
             return response.data;
-        } catch (error: any) {
-            throw new HttpException(error.response?.data || 'Billing Service Error', error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (error) {
+            this.handleError(error as { response?: { data?: unknown; status?: number } }, 'Billing Service Error');
         }
     }
 
-    // ============ EXPENSE ROUTES ============
-
     @Post('expenses')
-    async createExpense(@Body() data: any, @Req() req: Request) {
+    async createExpense(@Body() data: Record<string, unknown>, @Req() req: Request) {
         try {
             const response = await firstValueFrom(
-                this.httpService.post(`${this.BILLING_SERVICE_URL}/invoices/expenses`, data, {
-                    headers: { Authorization: req.headers.authorization }
-                })
+                this.httpService.post(`${BILLING_SERVICE_URL}/invoices/expenses`, data, {
+                    headers: buildAuthHeaders(req),
+                }),
             );
             return response.data;
-        } catch (error: any) {
-            throw new HttpException(error.response?.data || 'Billing Service Error', error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (error) {
+            this.handleError(error as { response?: { data?: unknown; status?: number } }, 'Billing Service Error');
         }
     }
 
@@ -130,14 +159,14 @@ export class BillingController {
     async getExpenses(@Req() req: Request) {
         try {
             const response = await firstValueFrom(
-                this.httpService.get(`${this.BILLING_SERVICE_URL}/invoices/expenses`, {
-                    headers: { Authorization: req.headers.authorization },
-                    params: req.query
-                })
+                this.httpService.get(`${BILLING_SERVICE_URL}/invoices/expenses`, {
+                    headers: buildAuthHeaders(req),
+                    params: req.query,
+                }),
             );
             return response.data;
-        } catch (error: any) {
-            throw new HttpException(error.response?.data || 'Billing Service Error', error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (error) {
+            this.handleError(error as { response?: { data?: unknown; status?: number } }, 'Billing Service Error');
         }
     }
 
@@ -145,27 +174,27 @@ export class BillingController {
     async getExpenseById(@Param('id') id: string, @Req() req: Request) {
         try {
             const response = await firstValueFrom(
-                this.httpService.get(`${this.BILLING_SERVICE_URL}/invoices/expenses/${id}`, {
-                    headers: { Authorization: req.headers.authorization }
-                })
+                this.httpService.get(`${BILLING_SERVICE_URL}/invoices/expenses/${id}`, {
+                    headers: buildAuthHeaders(req),
+                }),
             );
             return response.data;
-        } catch (error: any) {
-            throw new HttpException(error.response?.data || 'Billing Service Error', error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (error) {
+            this.handleError(error as { response?: { data?: unknown; status?: number } }, 'Billing Service Error');
         }
     }
 
     @Patch('expenses/:id')
-    async updateExpense(@Param('id') id: string, @Body() data: any, @Req() req: Request) {
+    async updateExpense(@Param('id') id: string, @Body() data: Record<string, unknown>, @Req() req: Request) {
         try {
             const response = await firstValueFrom(
-                this.httpService.patch(`${this.BILLING_SERVICE_URL}/invoices/expenses/${id}`, data, {
-                    headers: { Authorization: req.headers.authorization }
-                })
+                this.httpService.patch(`${BILLING_SERVICE_URL}/invoices/expenses/${id}`, data, {
+                    headers: buildAuthHeaders(req),
+                }),
             );
             return response.data;
-        } catch (error: any) {
-            throw new HttpException(error.response?.data || 'Billing Service Error', error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (error) {
+            this.handleError(error as { response?: { data?: unknown; status?: number } }, 'Billing Service Error');
         }
     }
 
@@ -173,13 +202,13 @@ export class BillingController {
     async deleteExpense(@Param('id') id: string, @Req() req: Request) {
         try {
             const response = await firstValueFrom(
-                this.httpService.delete(`${this.BILLING_SERVICE_URL}/invoices/expenses/${id}`, {
-                    headers: { Authorization: req.headers.authorization }
-                })
+                this.httpService.delete(`${BILLING_SERVICE_URL}/invoices/expenses/${id}`, {
+                    headers: buildAuthHeaders(req),
+                }),
             );
             return response.data;
-        } catch (error: any) {
-            throw new HttpException(error.response?.data || 'Billing Service Error', error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (error) {
+            this.handleError(error as { response?: { data?: unknown; status?: number } }, 'Billing Service Error');
         }
     }
 }

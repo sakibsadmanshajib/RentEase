@@ -9,12 +9,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Building2, Loader2 } from "lucide-react"
 import { api } from "@/lib/api"
+import { refreshAuth } from "@/lib/auth"
+import { useOrg } from "@/contexts/org-context"
 
 export default function OnboardingPage() {
     const router = useRouter()
+    const { setOrgId } = useOrg()
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState("")
     const [step, setStep] = useState<"choice" | "create" | "join">("choice")
+    const [invitationToken, setInvitationToken] = useState("")
 
     async function handleCreateOrg(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
@@ -24,7 +28,7 @@ export default function OnboardingPage() {
         const formData = new FormData(event.currentTarget)
         const name = formData.get("name")
 
-        if (!name || typeof name !== 'string') {
+        if (!name || typeof name !== "string") {
             setError("Organization name is required")
             setIsLoading(false)
             return
@@ -32,14 +36,39 @@ export default function OnboardingPage() {
 
         try {
             const response = await api.post("/tenants", { name })
-            localStorage.setItem("orgId", response.id)
-            
-            // Note: The JWT won't include the new orgId until user re-logs in or refreshes token.
-            // For now this is acceptable as orgId is also read from localStorage.
+            setOrgId(response.id)
+            await refreshAuth()
             router.push("/dashboard")
             router.refresh()
-        } catch (err: any) {
-            setError(err.message || "Failed to create organization")
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to create organization")
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    async function handleJoinOrg(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault()
+        setIsLoading(true)
+        setError("")
+
+        if (!invitationToken.trim()) {
+            setError("Invitation token is required")
+            setIsLoading(false)
+            return
+        }
+
+        try {
+            const response = await api.post(`/tenants/invitations/${invitationToken.trim()}/accept`, {})
+            const orgId = response.tenantId || response.orgId
+            if (orgId) {
+                setOrgId(orgId)
+            }
+            await refreshAuth()
+            router.push("/dashboard")
+            router.refresh()
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to accept invitation")
         } finally {
             setIsLoading(false)
         }
@@ -62,7 +91,7 @@ export default function OnboardingPage() {
                     </div>
 
                     <div className="grid gap-4">
-                        <Card 
+                        <Card
                             className="cursor-pointer hover:bg-accent/50 transition-colors"
                             onClick={() => setStep("create")}
                         >
@@ -74,14 +103,14 @@ export default function OnboardingPage() {
                             </CardHeader>
                         </Card>
 
-                        <Card 
-                            className="cursor-pointer hover:bg-accent/50 transition-colors opacity-50"
-                            onClick={() => setError("Join via invitation link coming soon!")}
+                        <Card
+                            className="cursor-pointer hover:bg-accent/50 transition-colors"
+                            onClick={() => setStep("join")}
                         >
                             <CardHeader className="pb-3">
                                 <CardTitle className="text-lg">Join Existing</CardTitle>
                                 <CardDescription>
-                                    You&apos;ll need an invitation link from an existing organization.
+                                    Accept an invitation using the token from your invite email.
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -147,5 +176,52 @@ export default function OnboardingPage() {
         )
     }
 
-    return null
+    return (
+        <div className="flex items-center justify-center min-h-[80vh]">
+            <Card className="w-full max-w-md">
+                <CardHeader>
+                    <CardTitle>Join Organization</CardTitle>
+                    <CardDescription>
+                        Paste the invitation token you received from your organization admin.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleJoinOrg}>
+                        <div className="grid gap-4">
+                            {error && (
+                                <Alert variant="destructive">
+                                    <AlertDescription>{error}</AlertDescription>
+                                </Alert>
+                            )}
+                            <div className="grid gap-2">
+                                <Label htmlFor="token">Invitation Token</Label>
+                                <Input
+                                    id="token"
+                                    value={invitationToken}
+                                    onChange={(e) => setInvitationToken(e.target.value)}
+                                    placeholder="Paste invitation token"
+                                    disabled={isLoading}
+                                    required
+                                />
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setStep("choice")}
+                                    disabled={isLoading}
+                                >
+                                    Back
+                                </Button>
+                                <Button type="submit" className="flex-1" disabled={isLoading}>
+                                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Join Organization
+                                </Button>
+                            </div>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
+        </div>
+    )
 }

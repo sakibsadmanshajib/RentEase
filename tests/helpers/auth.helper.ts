@@ -1,72 +1,80 @@
-import { request, APIRequestContext } from '@playwright/test';
+import { request } from '@playwright/test';
+
+function extractCookieValue(setCookieHeader: string | string[] | undefined, cookieName: string): string | undefined {
+    if (!setCookieHeader) {
+        return undefined;
+    }
+
+    const cookies = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader];
+    for (const cookie of cookies) {
+        const match = cookie.match(new RegExp(`${cookieName}=([^;]+)`));
+        if (match?.[1]) {
+            return match[1];
+        }
+    }
+
+    return undefined;
+}
 
 export class AuthHelper {
     private baseUrl: string;
     private token?: string;
     private refreshToken?: string;
+    private lastEmail?: string;
+    private lastPassword?: string;
 
     constructor(baseUrl: string) {
         this.baseUrl = baseUrl;
     }
 
-    /**
-     * Register a new user
-     */
     async register(userData: {
         email: string;
         password: string;
         firstName: string;
         lastName: string;
         phone: string;
-    }): Promise<any> {
+    }): Promise<Record<string, unknown>> {
         const context = await request.newContext();
-        console.log(`Registering user at ${this.baseUrl}/auth/register with data:`, JSON.stringify(userData));
         const response = await context.post(`${this.baseUrl}/auth/register`, {
-            data: userData
+            data: userData,
         });
 
         if (!response.ok()) {
-            console.log(`Registration response: ${response.status()} ${await response.text()}`);
             throw new Error(`Registration failed: ${response.status()} ${await response.text()}`);
         }
 
+        this.captureTokensFromResponse(response);
         return response.json();
     }
 
-    /**
-     * Login with email and password
-     */
     async login(email: string, password: string): Promise<string> {
         this.lastEmail = email;
         this.lastPassword = password;
         const context = await request.newContext();
         const response = await context.post(`${this.baseUrl}/auth/login`, {
-            data: { email, password }
+            data: { email, password },
         });
 
         if (!response.ok()) {
             throw new Error(`Login failed: ${response.status()} ${await response.text()}`);
         }
 
-        const body = await response.json();
-        this.token = body.accessToken;
-        this.refreshToken = body.refreshToken;
-        return this.token!;
+        this.captureTokensFromResponse(response);
+
+        if (!this.token) {
+            throw new Error('Login succeeded but no access token cookie was returned');
+        }
+
+        return this.token;
     }
 
-    /**
-     * Get authorization headers for authenticated requests
-     */
     getAuthHeaders(): Record<string, string> {
         if (!this.token) {
             throw new Error('Not authenticated. Call login() first.');
         }
-        return { 'Authorization': `Bearer ${this.token}` };
+        return { Authorization: `Bearer ${this.token}` };
     }
 
-    /**
-     * Get the current access token
-     */
     getToken(): string {
         if (!this.token) {
             throw new Error('Not authenticated. Call login() first.');
@@ -74,52 +82,44 @@ export class AuthHelper {
         return this.token;
     }
 
-    /**
-     * Refresh the access token
-     */
     async refreshAccessToken(): Promise<string> {
-        if (!this.refreshToken) {
-            throw new Error('No refresh token available');
-        }
-
-        const context = await request.newContext();
-        const response = await context.post(`${this.baseUrl}/auth/refresh`, {
-            data: { refreshToken: this.refreshToken }
+        const context = await request.newContext({
+            extraHTTPHeaders: this.refreshToken
+                ? { Cookie: `refreshToken=${this.refreshToken}` }
+                : {},
         });
+        const response = await context.post(`${this.baseUrl}/auth/refresh`);
 
         if (!response.ok()) {
             throw new Error(`Token refresh failed: ${response.status()}`);
         }
 
-        const body = await response.json();
-        this.token = body.accessToken;
-        return this.token!;
+        this.captureTokensFromResponse(response);
+
+        if (!this.token) {
+            throw new Error('Refresh succeeded but no access token cookie was returned');
+        }
+
+        return this.token;
     }
 
-    /**
-     * Clear stored tokens
-     */
     clearTokens(): void {
         this.token = undefined;
         this.refreshToken = undefined;
     }
-    /**
-     * Create a new tenant organization for the authenticated user
-     * Note: After creating a tenant, you should call relogin() to get a new token with tenantId
-     */
-    async createTenant(name: string): Promise<any> {
+
+    async createTenant(name: string): Promise<Record<string, unknown>> {
         if (!this.token) {
             throw new Error('Not authenticated. Call login() first.');
         }
 
         const context = await request.newContext();
-        console.log(`Creating tenant '${name}' at ${this.baseUrl}/tenants`);
         const response = await context.post(`${this.baseUrl}/tenants`, {
             headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
+                Authorization: `Bearer ${this.token}`,
+                'Content-Type': 'application/json',
             },
-            data: { name }
+            data: { name },
         });
 
         if (!response.ok()) {
@@ -127,16 +127,24 @@ export class AuthHelper {
         }
 
         const tenant = await response.json();
-        
-        // Re-login to get updated JWT with tenantId (membership was just created)
+
         if (this.lastEmail && this.lastPassword) {
-            console.log(`Re-logging in as ${this.lastEmail} to get updated JWT with tenantId`);
             await this.login(this.lastEmail, this.lastPassword);
         }
-        
+
         return tenant;
     }
-    
-    private lastEmail?: string;
-    private lastPassword?: string;
+
+    private captureTokensFromResponse(response: { headers: () => Record<string, string> }): void {
+        const setCookie = response.headers()['set-cookie'];
+        const accessToken = extractCookieValue(setCookie, 'accessToken');
+        const refreshToken = extractCookieValue(setCookie, 'refreshToken');
+
+        if (accessToken) {
+            this.token = accessToken;
+        }
+        if (refreshToken) {
+            this.refreshToken = refreshToken;
+        }
+    }
 }

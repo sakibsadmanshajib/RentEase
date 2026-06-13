@@ -16,12 +16,12 @@ cd ../..
 echo "✅ Identity Service migrations complete"
 echo ""
 
-# Tenant Service
-echo "📦 Tenant Service..."
-cd apps/tenant-service
+# Organization Service
+echo "📦 Organization Service..."
+cd apps/organization-service
 pnpm migrate
 cd ../..
-echo "✅ Tenant Service migrations complete"
+echo "✅ Organization Service migrations complete"
 echo ""
 
 # Property Service
