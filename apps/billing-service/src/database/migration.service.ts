@@ -15,7 +15,7 @@ export class MigrationService implements OnModuleInit {
         @InjectConnection() private sequelize: Sequelize,
         private configService: ConfigService,
     ) {
-        const migrationsPath = path.join(__dirname, 'migrations/*.js');
+        const migrationsPath = path.join(__dirname, 'migrations', '*.ts');
 
         this.umzug = new Umzug({
             migrations: {

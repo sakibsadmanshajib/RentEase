@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { AuthHelper } from '../../helpers/auth.helper';
 
-const BASE_URL = process.env.API_GATEWAY_URL || 'http://localhost:4000';
-const AUTH_URL = process.env.IDENTITY_SERVICE_URL || 'http://localhost:4000';
+const BASE_URL = process.env.BILLING_SERVICE_URL || 'http://localhost:3004';
+const AUTH_URL = process.env.IDENTITY_SERVICE_URL || 'http://localhost:3001';
 
 test.describe('Billing Service - Payments @api', () => {
     let authHelper: AuthHelper;
@@ -28,7 +28,6 @@ test.describe('Billing Service - Payments @api', () => {
 
         // Create an invoice for payment tests
         const invoiceData = {
-            orgId,
             amount: 1000,
             dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
             currency: 'USD',
@@ -62,7 +61,6 @@ test.describe('Billing Service - Payments @api', () => {
         const invoiceResponse = await request.post(`${BASE_URL}/invoices`, {
             headers: getHeaders(),
             data: {
-                orgId,
                 amount: 500,
                 dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
                 currency: 'USD',
@@ -96,7 +94,6 @@ test.describe('Billing Service - Payments @api', () => {
         const invoiceResponse = await request.post(`${BASE_URL}/invoices`, {
             headers: getHeaders(),
             data: {
-                orgId,
                 amount: 300,
                 dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
                 currency: 'USD',
@@ -131,7 +128,6 @@ test.describe('Billing Service - Payments @api', () => {
         const invoiceResponse = await request.post(`${BASE_URL}/invoices`, {
             headers: getHeaders(),
             data: {
-                orgId,
                 amount: 200,
                 dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
                 currency: 'USD',
@@ -168,7 +164,6 @@ test.describe('Billing Service - Payments @api', () => {
         const invoiceResponse = await request.post(`${BASE_URL}/invoices`, {
             headers: getHeaders(),
             data: {
-                orgId,
                 amount: 1000,
                 dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
                 currency: 'USD',

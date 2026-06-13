@@ -9,6 +9,7 @@ on:
 jobs:
   integration-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     services:
       postgres:
@@ -28,11 +29,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service:
-          - identity
-          - organization
-          - property
-          - billing
+        include:
+          - service: identity
+            filter: identity-service
+            project: api-identity
+            port: 3001
+          - service: organization
+            filter: "@rentease/organization-service"
+            project: api-tenant
+            port: 3005
+          - service: property
+            filter: property-service
+            project: api-property
+            port: 3003
+          - service: billing
+            filter: billing-service
+            project: api-billing
+            port: 3004
 
     steps:
       - name: Checkout code
@@ -59,43 +72,49 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
+      - name: Export CI test environment
+        run: bash scripts/ci/export-test-env.sh
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build common package
-        run: pnpm --filter @rentease/common build
-
-      - name: Build auth package
-        run: pnpm --filter @rentease/auth build
+      - name: Build shared packages
+        run: |
+          pnpm --filter @rentease/common build
+          pnpm --filter @rentease/auth build
 
       - name: Build service
-        run: pnpm --filter ${{ matrix.service }}-service build
+        run: pnpm --filter "${{ matrix.filter }}" build
 
-      - name: Start service
+      - name: Run database migrations
         run: |
-          pnpm --filter ${{ matrix.service }}-service dev > service.log 2>&1 &
-          echo "Waiting for service to start..."
-          sleep 15
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rentease_test
+          pnpm --filter identity-service migrate
+          pnpm --filter "@rentease/organization-service" migrate
+          pnpm --filter property-service migrate
+          pnpm --filter billing-service migrate
+        continue-on-error: false
 
-      - name: Install Playwright
-        run: pnpm exec playwright install --with-deps chromium
+      - name: Start test stack
+        run: bash scripts/ci/start-test-stack.sh "${{ matrix.service }}"
 
       - name: Run Playwright API tests
-        run: pnpm playwright test --project=api-${{ matrix.service }}
-        continue-on-error: true
+        run: pnpm exec playwright test --project=${{ matrix.project }} --grep @api
+        timeout-minutes: 5
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report-${{ matrix.service }}
-          path: playwright-report/
+          path: |
+            playwright-report/
+            test-results/
           retention-days: 7
+          if-no-files-found: ignore
 
       - name: Print service logs on failure
         if: failure()
         run: |
           echo "=== Service Logs ==="
           cat service.log || echo "No service logs found"
+          cat identity-dep.log || true

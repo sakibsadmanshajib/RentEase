@@ -1,0 +1,6 @@
+version: 2
+
+# CI workflows use documented, non-production test credentials for the
+# ephemeral Postgres service container. These are not real secrets.
+paths-ignore:
+  - ".github/workflows/**"

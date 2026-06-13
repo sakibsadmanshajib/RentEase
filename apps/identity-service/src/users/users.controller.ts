@@ -11,7 +11,9 @@ export class UsersController {
 
     @Get('me')
     async getProfile(@Req() req: any) {
-        return req.user;
+        const user = await this.usersService.getUserById(req.user.id);
+        const { password, ...userWithoutPassword } = user.toJSON();
+        return userWithoutPassword;
     }
 
     @Patch('me')

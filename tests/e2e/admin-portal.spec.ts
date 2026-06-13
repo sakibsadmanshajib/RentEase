@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { AuthHelper } from '../helpers/auth.helper';
+import { IDENTITY_SERVICE_URL } from '../helpers/test-env';
 import { dbHelper } from '../helpers/database.helper';
 import { randomUUID } from 'crypto';
 
@@ -10,7 +11,7 @@ test.describe('Admin Portal E2E', () => {
     let adminEmail: string;
 
     test.beforeAll(async () => {
-        authHelper = new AuthHelper('http://localhost:4000');
+        authHelper = new AuthHelper(IDENTITY_SERVICE_URL);
         
         await dbHelper.connect('identity', {
             dialect: 'postgres',

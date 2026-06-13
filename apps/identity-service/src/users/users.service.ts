@@ -28,6 +28,14 @@ export class UsersService {
         return userWithoutPassword;
     }
 
+    async getUserById(userId: string): Promise<User> {
+        const user = await this.userModel.findByPk(userId);
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+        return user;
+    }
+
     async addMembership(userId: string, createMembershipDto: CreateMembershipDto) {
         const user = await this.userModel.findByPk(userId);
         if (!user) {

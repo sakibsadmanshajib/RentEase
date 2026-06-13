@@ -1,6 +1,20 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, request as playwrightRequest } from '@playwright/test';
 import { AuthHelper } from '../../helpers/auth.helper';
 import { ApiHelper } from '../../helpers/api.helper';
+
+function readCookie(setCookieHeader: string | string[] | undefined, name: string): string | undefined {
+    if (!setCookieHeader) {
+        return undefined;
+    }
+    const headers = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader];
+    for (const header of headers) {
+        const match = header.match(new RegExp(`${name}=([^;]+)`));
+        if (match?.[1]) {
+            return match[1];
+        }
+    }
+    return undefined;
+}
 
 const BASE_URL = process.env.IDENTITY_SERVICE_URL || 'http://localhost:3001';
 
@@ -83,10 +97,12 @@ test.describe('Identity Service - Authentication @api', () => {
 
         expect(response.status()).toBe(200);
         const body = await response.json();
-        expect(body).toHaveProperty('accessToken');
-        expect(body).toHaveProperty('refreshToken');
-        expect(typeof body.accessToken).toBe('string');
-        expect(typeof body.refreshToken).toBe('string');
+        expect(body).toHaveProperty('message', 'Login successful');
+
+        const accessToken = readCookie(response.headers()['set-cookie'], 'accessToken');
+        const refreshToken = readCookie(response.headers()['set-cookie'], 'refreshToken');
+        expect(accessToken).toBeTruthy();
+        expect(refreshToken).toBeTruthy();
     });
 
     test('should reject login with invalid credentials', async ({ request }) => {
@@ -138,10 +154,12 @@ test.describe('Identity Service - Authentication @api', () => {
         });
         expect(firstResponse.status()).toBe(201);
 
-        // Second registration with same email should fail
-        const secondResponse = await request.post(`${BASE_URL}/auth/register`, {
+        // Second registration with same email should fail (use a fresh context so CSRF cookies from the first request are not sent)
+        const isolatedRequest = await playwrightRequest.newContext();
+        const secondResponse = await isolatedRequest.post(`${BASE_URL}/auth/register`, {
             data: userData
         });
+        await isolatedRequest.dispose();
         expect(secondResponse.status()).toBe(409);
     });
 });

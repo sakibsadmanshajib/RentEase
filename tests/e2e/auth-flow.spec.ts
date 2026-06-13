@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { AuthHelper } from '../helpers/auth.helper';
+import { IDENTITY_SERVICE_URL } from '../helpers/test-env';
 
 const WEB_URL = process.env.WEB_URL || 'http://localhost:3000';
 
@@ -14,7 +15,7 @@ test.describe('Authentication Flow E2E', () => {
     };
 
     test.beforeAll(async () => {
-        authHelper = new AuthHelper('http://localhost:4000');
+        authHelper = new AuthHelper(IDENTITY_SERVICE_URL);
         // We will register dynamically in the "Sign Up" test, 
         // but for Login test we might need a pre-existing user if we want them separate.
         // For simplicity, let's keep tests independent or sequential. 

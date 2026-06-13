@@ -3,8 +3,8 @@ import { ApiHelper } from '../../helpers/api.helper';
 import { AuthHelper } from '../../helpers/auth.helper';
 import { randomUUID } from 'crypto';
 
-const BASE_URL = process.env.API_GATEWAY_URL || 'http://localhost:4000';
-const AUTH_URL = process.env.IDENTITY_SERVICE_URL || 'http://localhost:4000';
+const BASE_URL = process.env.PROPERTY_SERVICE_URL || 'http://localhost:3003';
+const AUTH_URL = process.env.IDENTITY_SERVICE_URL || 'http://localhost:3001';
 
 test.describe('Property Service - Leases @api', () => {
     let authHelper: AuthHelper;

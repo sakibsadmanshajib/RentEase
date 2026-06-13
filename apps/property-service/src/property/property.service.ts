@@ -13,7 +13,11 @@ export class PropertyService {
     ) { }
 
     async create(createPropertyDto: CreatePropertyDto): Promise<Property> {
-        return this.propertyModel.create(createPropertyDto as any);
+        const orgId = OrganizationContext.getOrgId();
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required to create property');
+        }
+        return this.propertyModel.create({ ...createPropertyDto, orgId } as any);
     }
 
     /**

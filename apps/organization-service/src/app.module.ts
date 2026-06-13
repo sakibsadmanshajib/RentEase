@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { TenantModule } from './tenant/tenant.module';
 import { DatabaseModule } from './database/database.module';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from '@rentease/auth';
 import { MigrationService } from './database/migration.service';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { OrganizationContextInterceptor } from '@rentease/common';

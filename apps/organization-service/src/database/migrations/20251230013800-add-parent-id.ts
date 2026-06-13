@@ -1,20 +1,22 @@
-import { QueryInterface, DataTypes } from 'sequelize';
+import { DataTypes } from 'sequelize';
 
-export const up = async (queryInterface: QueryInterface): Promise<void> => {
-    try {
+export const up = async ({ context: sequelize }: { context: { getQueryInterface: () => import('sequelize').QueryInterface } }) => {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('Tenants');
+
+    if (!('parentId' in tableDescription)) {
         await queryInterface.addColumn('Tenants', 'parentId', {
             type: DataTypes.UUID,
             allowNull: true,
         });
-    } catch (error) {
-        console.warn('Migration add-parent-id failed (likely already exists):', error);
     }
 };
 
-export const down = async (queryInterface: QueryInterface): Promise<void> => {
-    try {
+export const down = async ({ context: sequelize }: { context: { getQueryInterface: () => import('sequelize').QueryInterface } }) => {
+    const queryInterface = sequelize.getQueryInterface();
+    const tableDescription = await queryInterface.describeTable('Tenants');
+
+    if ('parentId' in tableDescription) {
         await queryInterface.removeColumn('Tenants', 'parentId');
-    } catch (error) {
-        console.warn('Migration remove-parent-id failed:', error);
     }
 };
