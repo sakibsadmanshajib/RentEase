@@ -18,8 +18,13 @@ export class LeaseService {
     ) { }
 
     async create(createLeaseDto: CreateLeaseDto): Promise<Lease> {
+        const orgId = OrganizationContext.getOrgId();
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required to create lease');
+        }
         return this.leaseModel.create({
             ...createLeaseDto,
+            orgId,
             status: 'DRAFT',
         });
     }
