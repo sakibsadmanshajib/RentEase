@@ -1,27 +1,35 @@
-import { QueryInterface } from 'sequelize';
-
-module.exports = {
-  up: async (queryInterface: QueryInterface) => {
-    // Check if old table exists
+export const up = async ({ context: sequelize }: { context: { getQueryInterface: () => import('sequelize').QueryInterface } }) => {
+    const queryInterface = sequelize.getQueryInterface();
     const tables = await queryInterface.showAllTables();
-    // tables might include schema prefix, so check loosely
-    const hasOldTable = tables.some(t => t === 'UserTenantMemberships' || t.endsWith('.UserTenantMemberships'));
-    const hasNewTable = tables.some(t => t === 'UserOrganizationMemberships' || t.endsWith('.UserOrganizationMemberships'));
+    const hasOldTable = tables.some((table) => table === 'UserTenantMemberships' || table.endsWith('.UserTenantMemberships'));
+    const hasNewTable = tables.some((table) => table === 'UserOrganizationMemberships' || table.endsWith('.UserOrganizationMemberships'));
 
     if (hasOldTable && !hasNewTable) {
-      console.log('Renaming UserTenantMemberships to UserOrganizationMemberships...');
-      await queryInterface.renameTable('UserTenantMemberships', 'UserOrganizationMemberships');
-      
-      // Rename column
-      await queryInterface.renameColumn('UserOrganizationMemberships', 'tenantId', 'orgId');
-    } else {
-      console.log('Skipping rename: Table state already correct or ambiguous.', { hasOldTable, hasNewTable });
+        await queryInterface.renameTable('UserTenantMemberships', 'UserOrganizationMemberships');
     }
-  },
 
-  down: async (queryInterface: QueryInterface) => {
-    // Revert logic
-    await queryInterface.renameColumn('UserOrganizationMemberships', 'orgId', 'tenantId');
+    if (hasNewTable || hasOldTable) {
+        const tableName = hasNewTable ? 'UserOrganizationMemberships' : 'UserTenantMemberships';
+        const tableDescription = await queryInterface.describeTable(tableName);
+        if ('tenantId' in tableDescription && !('orgId' in tableDescription)) {
+            await queryInterface.renameColumn(tableName, 'tenantId', 'orgId');
+        }
+    }
+};
+
+export const down = async ({ context: sequelize }: { context: { getQueryInterface: () => import('sequelize').QueryInterface } }) => {
+    const queryInterface = sequelize.getQueryInterface();
+    const tables = await queryInterface.showAllTables();
+    const hasNewTable = tables.some((table) => table === 'UserOrganizationMemberships' || table.endsWith('.UserOrganizationMemberships'));
+
+    if (!hasNewTable) {
+        return;
+    }
+
+    const tableDescription = await queryInterface.describeTable('UserOrganizationMemberships');
+    if ('orgId' in tableDescription) {
+        await queryInterface.renameColumn('UserOrganizationMemberships', 'orgId', 'tenantId');
+    }
+
     await queryInterface.renameTable('UserOrganizationMemberships', 'UserTenantMemberships');
-  }
 };

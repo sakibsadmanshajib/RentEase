@@ -1,8 +1,37 @@
-import { request, APIRequestContext } from '@playwright/test';
+import { request, APIRequestContext, APIResponse } from '@playwright/test';
+
+function readCookie(setCookieHeader: string | string[] | undefined, name: string): string | undefined {
+    if (!setCookieHeader) {
+        return undefined;
+    }
+
+    const headers = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader];
+    for (const header of headers) {
+        const match = header.match(new RegExp(`${name}=([^;]+)`));
+        if (match?.[1]) {
+            return match[1];
+        }
+    }
+
+    return undefined;
+}
+
+function storeTokensFromResponse(response: APIResponse, auth: AuthHelper): void {
+    const setCookie = response.headers()['set-cookie'];
+    const accessToken = readCookie(setCookie, 'accessToken');
+    const refreshToken = readCookie(setCookie, 'refreshToken');
+
+    if (accessToken) {
+        auth.token = accessToken;
+    }
+    if (refreshToken) {
+        auth.refreshToken = refreshToken;
+    }
+}
 
 export class AuthHelper {
     private baseUrl: string;
-    private token?: string;
+    token?: string;
     private refreshToken?: string;
 
     constructor(baseUrl: string) {
@@ -30,6 +59,7 @@ export class AuthHelper {
             throw new Error(`Registration failed: ${response.status()} ${await response.text()}`);
         }
 
+        storeTokensFromResponse(response, this);
         return response.json();
     }
 
@@ -48,10 +78,12 @@ export class AuthHelper {
             throw new Error(`Login failed: ${response.status()} ${await response.text()}`);
         }
 
-        const body = await response.json();
-        this.token = body.accessToken;
-        this.refreshToken = body.refreshToken;
-        return this.token!;
+        storeTokensFromResponse(response, this);
+        if (!this.token) {
+            throw new Error('Login succeeded but accessToken cookie was not set');
+        }
+
+        return this.token;
     }
 
     /**
@@ -92,8 +124,11 @@ export class AuthHelper {
         }
 
         const body = await response.json();
-        this.token = body.accessToken;
-        return this.token!;
+        this.token = body.accessToken ?? readCookie(response.headers()['set-cookie'], 'accessToken');
+        if (!this.token) {
+            throw new Error('Token refresh succeeded but accessToken was not returned');
+        }
+        return this.token;
     }
 
     /**
@@ -112,14 +147,22 @@ export class AuthHelper {
             throw new Error('Not authenticated. Call login() first.');
         }
 
+        const organizationUrl =
+            process.env.ORGANIZATION_SERVICE_URL ||
+            process.env.TENANT_SERVICE_URL ||
+            'http://localhost:3005';
+
         const context = await request.newContext();
-        console.log(`Creating tenant '${name}' at ${this.baseUrl}/tenants`);
-        const response = await context.post(`${this.baseUrl}/tenants`, {
+        console.log(`Creating tenant '${name}' at ${organizationUrl}/tenants`);
+        const response = await context.post(`${organizationUrl}/tenants`, {
             headers: {
                 'Authorization': `Bearer ${this.token}`,
                 'Content-Type': 'application/json'
             },
-            data: { name }
+            data: {
+                name,
+                contactEmail: `${name.toLowerCase().replace(/\s+/g, '.')}.${Date.now()}@example.com`,
+            }
         });
 
         if (!response.ok()) {

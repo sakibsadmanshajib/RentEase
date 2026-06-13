@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { AuthHelper } from '../../helpers/auth.helper';
 
-const BASE_URL = process.env.API_GATEWAY_URL || 'http://localhost:4000';
-const AUTH_URL = process.env.IDENTITY_SERVICE_URL || 'http://localhost:4000';
+const BASE_URL = process.env.BILLING_SERVICE_URL || 'http://localhost:3004';
+const AUTH_URL = process.env.IDENTITY_SERVICE_URL || 'http://localhost:3001';
 
 test.describe('Billing Service - Invoices @api', () => {
     let authHelper: AuthHelper;
@@ -36,7 +36,6 @@ test.describe('Billing Service - Invoices @api', () => {
 
     test('should create an invoice and generate ledger entries', async ({ request }) => {
         const invoiceData = {
-            orgId,
             amount: 1500,
             dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
             currency: 'USD',
@@ -59,7 +58,6 @@ test.describe('Billing Service - Invoices @api', () => {
 
     test('should reject invoice without amount (required field)', async ({ request }) => {
         const invoiceData = {
-            orgId,
             dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
             currency: 'USD',
             description: 'Test',
@@ -76,7 +74,6 @@ test.describe('Billing Service - Invoices @api', () => {
 
     test('should reject invoice without dueDate (required field)', async ({ request }) => {
         const invoiceData = {
-            orgId,
             amount: 1500,
             currency: 'USD',
             description: 'Test',
@@ -93,7 +90,6 @@ test.describe('Billing Service - Invoices @api', () => {
 
     test('should create ledger entries when invoice is created', async ({ request }) => {
         const invoiceData = {
-            orgId,
             amount: 1000,
             dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
             currency: 'USD',
@@ -121,7 +117,6 @@ test.describe('Billing Service - Invoices @api', () => {
         await request.post(`${BASE_URL}/invoices`, {
             headers: getHeaders(),
             data: {
-                orgId,
                 amount: 500,
                 dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
                 currency: 'USD',
@@ -144,7 +139,6 @@ test.describe('Billing Service - Invoices @api', () => {
         const createResponse = await request.post(`${BASE_URL}/invoices`, {
             headers: getHeaders(),
             data: {
-                orgId,
                 amount: 750,
                 dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
                 currency: 'USD',

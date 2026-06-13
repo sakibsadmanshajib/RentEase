@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { AuthHelper } from '../helpers/auth.helper';
+import { IDENTITY_SERVICE_URL } from '../helpers/test-env';
 
 const WEB_URL = process.env.WEB_URL || 'http://localhost:3000';
 
@@ -18,7 +19,7 @@ test.describe('Full Stack CRUD E2E', () => {
     let tenantId: string;
 
     test.beforeAll(async ({ request }) => {
-        authHelper = new AuthHelper('http://localhost:4000');
+        authHelper = new AuthHelper(IDENTITY_SERVICE_URL);
         await authHelper.register({
             ...landlordData,
             phone: '555-0123'

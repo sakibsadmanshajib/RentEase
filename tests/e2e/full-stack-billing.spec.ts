@@ -1,10 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { ApiHelper } from '../helpers/api.helper';
 import { AuthHelper } from '../helpers/auth.helper';
-
-const WEB_URL = process.env.WEB_URL || 'http://localhost:3000';
-const API_GATEWAY_URL = process.env.API_GATEWAY_URL || 'http://localhost:4000';
-const IDENTITY_URL = process.env.IDENTITY_SERVICE_URL || 'http://localhost:3001';
+import { API_GATEWAY_URL, IDENTITY_SERVICE_URL, WEB_URL } from '../helpers/test-env';
 
 test.describe('Full Stack Billing E2E', () => {
     let landlordAuth: AuthHelper;
@@ -12,7 +9,7 @@ test.describe('Full Stack Billing E2E', () => {
 
     test.beforeAll(async () => {
         // 1. Register Landlord via API (use API Gateway for tenant creation)
-        landlordAuth = new AuthHelper(API_GATEWAY_URL);
+        landlordAuth = new AuthHelper(IDENTITY_SERVICE_URL);
         landlordData = {
             email: `landlord-${ApiHelper.generateTestId()}@example.com`,
             password: 'Password123!',

@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { randomUUID } from 'crypto';
 import { AuthHelper } from '../helpers/auth.helper';
 import { dbHelper } from '../helpers/database.helper';
+import { IDENTITY_SERVICE_URL, ORGANIZATION_SERVICE_URL } from '../helpers/test-env';
 
 const WEB_URL = process.env.WEB_URL || 'http://localhost:3000';
 
@@ -11,7 +12,7 @@ test.describe('Tenant Portal E2E', () => {
     let tenantData: any;
 
     test.beforeAll(async ({ request }) => {
-        authHelper = new AuthHelper('http://localhost:4000');
+        authHelper = new AuthHelper(IDENTITY_SERVICE_URL);
         
         await dbHelper.connect('identity-service', {
             dialect: 'postgres',
@@ -50,7 +51,7 @@ test.describe('Tenant Portal E2E', () => {
         const token = authHelper.getToken();
 
         // Create Tenant via API
-        const createTenantResponse = await request.post('http://localhost:4000/tenants', {
+        const createTenantResponse = await request.post(`${ORGANIZATION_SERVICE_URL}/tenants`, {
             headers: { 'Authorization': `Bearer ${token}` },
             data: {
                 name: `${tenantData.firstName} ${tenantData.lastName}`,

@@ -7,21 +7,6 @@ on:
     branches: [master]
   workflow_dispatch:
 
-env:
-  DB_HOST: localhost
-  DB_PORT: 5432
-  DB_USERNAME: postgres
-  DB_PASSWORD: postgres
-  DB_DATABASE: rentease_test
-  JWT_SECRET: ci-test-jwt-secret-key-for-github-actions
-  ENCRYPTION_KEY: "01234567890123456789012345678901"
-  SERVICE_SECRET: ci-test-service-secret-for-github-actions
-  GOOGLE_CLIENT_ID: dev-placeholder-client-id
-  GOOGLE_CLIENT_SECRET: dev-placeholder-client-secret
-  AUTO_MIGRATE: "false"
-  NEXT_PUBLIC_API_URL: http://localhost:3001
-  CI: "true"
-
 jobs:
   e2e:
     runs-on: ubuntu-latest
@@ -67,6 +52,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
+      - name: Export CI test environment
+        run: bash scripts/ci/export-test-env.sh
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -82,10 +70,15 @@ jobs:
 
       - name: Start backend services
         run: |
-          bash scripts/ci/start-backend-service.sh identity-service 3001 identity.log
-          bash scripts/ci/start-backend-service.sh "@rentease/organization-service" 3005 organization.log
-          bash scripts/ci/start-backend-service.sh property-service 3003 property.log
-          bash scripts/ci/start-backend-service.sh billing-service 3004 billing.log
+          bash scripts/ci/start-test-stack.sh identity
+          bash scripts/ci/start-test-stack.sh organization
+          bash scripts/ci/start-test-stack.sh property
+          bash scripts/ci/start-test-stack.sh billing
+
+      - name: Start API gateway
+        run: |
+          ENABLE_SWAGGER=true pnpm --filter api-gateway dev > api-gateway.log 2>&1 &
+          bash scripts/ci/wait-for-http.sh http://127.0.0.1:4000/api/docs 90
 
       - name: Start frontend
         run: |
@@ -124,12 +117,14 @@ jobs:
         if: failure()
         run: |
           echo "=== Identity Service ==="
-          cat identity.log || echo "No identity logs"
+          cat identity.log || cat identity-dep.log || echo "No identity logs"
           echo "=== Organization Service ==="
           cat organization.log || echo "No organization logs"
           echo "=== Property Service ==="
           cat property.log || echo "No property logs"
           echo "=== Billing Service ==="
           cat billing.log || echo "No billing logs"
+          echo "=== API Gateway ==="
+          cat api-gateway.log || echo "No api-gateway logs"
           echo "=== Web Frontend ==="
           cat web.log || echo "No web logs"
