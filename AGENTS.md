@@ -57,7 +57,8 @@ pnpm test:unit
 pnpm test:api
 
 # E2E browser tests (requires full stack + Playwright browsers)
-pnpm exec playwright install --with-deps chromium
+# Requires @playwright/test@^1.60.0 on Node 24.16+ (older versions hang during install)
+pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 

@@ -58,6 +58,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Playwright <1.60.0 hangs after download on Node 24.16+ during zip extraction
+      # (nodejs/node#63487). Requires @playwright/test@^1.60.0 in package.json.
+      - name: Install Playwright browser
+        run: pnpm exec playwright install chromium
+        timeout-minutes: 5
+
       - name: Build applications
         run: pnpm turbo build
 
@@ -84,10 +90,6 @@ jobs:
         run: |
           pnpm --filter web dev > web.log 2>&1 &
           bash scripts/ci/wait-for-http.sh http://127.0.0.1:3000 120
-
-      - name: Install Playwright browser
-        run: pnpm exec playwright install chromium
-        timeout-minutes: 15
 
       - name: Run E2E tests
         run: pnpm exec playwright test --project=chromium-e2e

@@ -34,7 +34,7 @@
     "node": ">=24.0.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.57.0",
+    "@playwright/test": "^1.60.0",
     "@types/node": "^24.10.4",
     "axios": "^1.13.2",
     "eslint": "^9.39.2",
