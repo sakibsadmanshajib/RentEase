@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { AuthHelper } from '../../helpers/auth.helper';
 
-const BASE_URL = process.env.API_GATEWAY_URL || 'http://localhost:4000';
-const AUTH_URL = process.env.IDENTITY_SERVICE_URL || 'http://localhost:4000';
+const BASE_URL = process.env.BILLING_SERVICE_URL || 'http://localhost:3004';
+const AUTH_URL = process.env.IDENTITY_SERVICE_URL || 'http://localhost:3001';
 
 test.describe('Billing Service - Expenses @api', () => {
     let authHelper: AuthHelper;
@@ -34,7 +34,6 @@ test.describe('Billing Service - Expenses @api', () => {
 
     test('should create a one-time expense', async ({ request }) => {
         const expenseData = {
-            orgId,
             category: 'REPAIR',
             description: 'Plumbing repair',
             amount: 250,
@@ -57,7 +56,6 @@ test.describe('Billing Service - Expenses @api', () => {
 
     test('should create a weekly recurring expense', async ({ request }) => {
         const expenseData = {
-            orgId,
             category: 'MAINTENANCE',
             description: 'Weekly cleaning service',
             amount: 100,
@@ -82,7 +80,6 @@ test.describe('Billing Service - Expenses @api', () => {
 
     test('should create a monthly recurring expense', async ({ request }) => {
         const expenseData = {
-            orgId,
             category: 'INSURANCE',
             description: 'Monthly insurance payment',
             amount: 500,
@@ -106,7 +103,6 @@ test.describe('Billing Service - Expenses @api', () => {
 
     test('should create a custom recurring expense (first Sunday of month)', async ({ request }) => {
         const expenseData = {
-            orgId,
             category: 'MAINTENANCE',
             description: 'Monthly garden service',
             amount: 150,
@@ -133,7 +129,6 @@ test.describe('Billing Service - Expenses @api', () => {
         await request.post(`${BASE_URL}/invoices/expenses`, {
             headers: getHeaders(),
             data: {
-                orgId,
                 category: 'UTILITY',
                 description: 'Water bill',
                 amount: 75,
@@ -154,7 +149,6 @@ test.describe('Billing Service - Expenses @api', () => {
 
     test('should create ledger entries when expense is recorded', async ({ request }) => {
         const expenseData = {
-            orgId,
             category: 'REPAIR',
             description: 'AC repair',
             amount: 300,

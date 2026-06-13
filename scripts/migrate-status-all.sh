@@ -15,9 +15,9 @@ pnpm migrate:status
 cd ../..
 echo ""
 
-# Tenant Service
-echo "📦 Tenant Service:"
-cd apps/tenant-service
+# Organization Service
+echo "📦 Organization Service:"
+cd apps/organization-service
 pnpm migrate:status
 cd ../..
 echo ""

@@ -2,8 +2,11 @@ import { test, expect } from '@playwright/test';
 import { ApiHelper } from '../../helpers/api.helper';
 import { AuthHelper } from '../../helpers/auth.helper';
 
-const BASE_URL = process.env.TENANT_SERVICE_URL || 'http://localhost:3005';
-const AUTH_URL = process.env.IDENTITY_SERVICE_URL || 'http://localhost:4000';
+const BASE_URL =
+    process.env.ORGANIZATION_SERVICE_URL ||
+    process.env.TENANT_SERVICE_URL ||
+    'http://localhost:3005';
+const AUTH_URL = process.env.IDENTITY_SERVICE_URL || 'http://localhost:3001';
 
 test.describe('Tenant Service - Tenants @api', () => {
     let authHelper: AuthHelper;

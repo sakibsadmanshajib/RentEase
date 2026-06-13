@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { ApiHelper } from '../helpers/api.helper';
 import { AuthHelper } from '../helpers/auth.helper';
+import { API_GATEWAY_URL, BILLING_SERVICE_URL, IDENTITY_SERVICE_URL, PROPERTY_SERVICE_URL } from '../helpers/test-env';
 
-const API_GATEWAY_URL = process.env.API_GATEWAY_URL || 'http://localhost:4000';
-const PROPERTY_URL = process.env.PROPERTY_SERVICE_URL || 'http://localhost:3003';
-const BILLING_URL = process.env.BILLING_SERVICE_URL || 'http://localhost:3004';
+const PROPERTY_URL = PROPERTY_SERVICE_URL;
+const BILLING_URL = BILLING_SERVICE_URL;
 
 // Run this test serially to avoid resource contention
 test.describe.configure({ mode: 'serial' });
@@ -24,7 +24,7 @@ test.describe('Billing Lifecycle E2E @e2e', () => {
 
     test.beforeAll(async () => {
         // 1. Register Landlord
-        landlordAuth = new AuthHelper(API_GATEWAY_URL);
+        landlordAuth = new AuthHelper(IDENTITY_SERVICE_URL);
         const landlordData = {
             email: `landlord-${ApiHelper.generateTestId()}@example.com`,
             password: 'Password123!',
@@ -39,12 +39,12 @@ test.describe('Billing Lifecycle E2E @e2e', () => {
         await landlordAuth.createTenant('Billing Lifecycle Test Org');
         landlordToken = landlordAuth.getToken();
         
-        const landlordProfile = await ApiHelper.get(`${API_GATEWAY_URL}/users/me`, landlordToken);
+        const landlordProfile = await ApiHelper.get(`${IDENTITY_SERVICE_URL}/users/me`, landlordToken);
         const landlordJson = await landlordProfile.json();
         landlordId = landlordJson.id;
 
         // 2. Register Tenant
-        tenantAuth = new AuthHelper(API_GATEWAY_URL);
+        tenantAuth = new AuthHelper(IDENTITY_SERVICE_URL);
         const tenantData = {
             email: `tenant-${ApiHelper.generateTestId()}@example.com`,
             password: 'Password123!',
@@ -54,7 +54,7 @@ test.describe('Billing Lifecycle E2E @e2e', () => {
         };
         await tenantAuth.register(tenantData);
         tenantToken = await tenantAuth.login(tenantData.email, tenantData.password);
-        const tenantProfile = await ApiHelper.get(`${API_GATEWAY_URL}/users/me`, tenantToken);
+        const tenantProfile = await ApiHelper.get(`${IDENTITY_SERVICE_URL}/users/me`, tenantToken);
         const tenantJson = await tenantProfile.json();
         tenantId = tenantJson.id;
     });

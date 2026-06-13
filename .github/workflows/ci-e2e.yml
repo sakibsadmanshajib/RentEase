@@ -10,6 +10,7 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     services:
       postgres:
@@ -51,45 +52,59 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
+      - name: Export CI test environment
+        run: bash scripts/ci/export-test-env.sh
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Playwright <1.60.0 hangs after download on Node 24.16+ during zip extraction
+      # (nodejs/node#63487). Requires @playwright/test@^1.60.0 in package.json.
+      - name: Install Playwright browser
+        run: pnpm exec playwright install chromium
+        timeout-minutes: 5
+
       - name: Build applications
         run: pnpm turbo build
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rentease_test
 
-      - name: Start all services
+      - name: Run database migrations
         run: |
-          # Start backend services
-          pnpm --filter identity-service dev > identity.log 2>&1 &
-          pnpm --filter organization-service dev > organization.log 2>&1 &
-          pnpm --filter property-service dev > property.log 2>&1 &
-          pnpm --filter billing-service dev > billing.log 2>&1 &
+          pnpm --filter identity-service migrate || true
+          pnpm --filter "@rentease/organization-service" migrate || true
+          pnpm --filter property-service migrate || true
+          pnpm --filter billing-service migrate || true
 
-          # Start frontend
+      - name: Start backend services
+        run: |
+          bash scripts/ci/start-test-stack.sh identity
+          bash scripts/ci/start-test-stack.sh organization
+          bash scripts/ci/start-test-stack.sh property
+          bash scripts/ci/start-test-stack.sh billing
+
+      - name: Start API gateway
+        run: |
+          ENABLE_SWAGGER=true pnpm --filter api-gateway dev > api-gateway.log 2>&1 &
+          bash scripts/ci/wait-for-http.sh http://127.0.0.1:4000/api/docs 90
+
+      - name: Start frontend
+        run: |
           pnpm --filter web dev > web.log 2>&1 &
-
-          echo "Waiting for services to start..."
-          sleep 30
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rentease_test
-          NEXT_PUBLIC_API_URL: http://localhost:3001
-
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium firefox
+          bash scripts/ci/wait-for-http.sh http://127.0.0.1:3000 120
 
       - name: Run E2E tests
-        run: pnpm playwright test --project=chromium-e2e --project=firefox-e2e
-        continue-on-error: true
+        run: pnpm exec playwright test --project=chromium-e2e
+        timeout-minutes: 10
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report-e2e
-          path: playwright-report/
+          path: |
+            playwright-report/
+            test-results/
           retention-days: 7
+          if-no-files-found: ignore
 
       - name: Upload test videos
         if: failure()
@@ -98,17 +113,20 @@ jobs:
           name: test-videos
           path: test-results/
           retention-days: 3
+          if-no-files-found: ignore
 
       - name: Print service logs on failure
         if: failure()
         run: |
-          echo "=== Identity Service ===" 
-          cat identity.log || echo "No identity logs"
+          echo "=== Identity Service ==="
+          cat identity.log || cat identity-dep.log || echo "No identity logs"
           echo "=== Organization Service ==="
           cat organization.log || echo "No organization logs"
           echo "=== Property Service ==="
           cat property.log || echo "No property logs"
           echo "=== Billing Service ==="
           cat billing.log || echo "No billing logs"
+          echo "=== API Gateway ==="
+          cat api-gateway.log || echo "No api-gateway logs"
           echo "=== Web Frontend ==="
           cat web.log || echo "No web logs"

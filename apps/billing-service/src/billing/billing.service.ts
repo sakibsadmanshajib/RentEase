@@ -36,8 +36,8 @@ export class BillingService {
             throw new ForbiddenException('Organization context required to create invoice');
         }
 
-        // 1. Create Invoice (orgId is auto-set by @BeforeCreate hook)
-        const invoice = await this.invoiceModel.create(createInvoiceDto as any);
+        // 1. Create Invoice (orgId set explicitly; Sequelize hooks may run outside ALS context)
+        const invoice = await this.invoiceModel.create({ ...createInvoiceDto, orgId } as any);
 
         // 2. Ledger Entries (Double-Entry)
         // Debit: Accounts Receivable (Asset)
@@ -46,8 +46,9 @@ export class BillingService {
         const incomeAccount = await this.getOrCreateAccount(orgId, '4000', 'Rental Income', 'REVENUE');
         const journalId = uuidv4();
 
-        // Debit AR (orgId set by hook)
+        // Debit AR
         await this.ledgerEntryModel.create({
+            orgId,
             journalId,
             accountId: arAccount.id,
             debit: createInvoiceDto.amount,
@@ -56,8 +57,9 @@ export class BillingService {
             correlationId: invoice.id,
         });
 
-        // Credit Income (orgId set by hook)
+        // Credit Income
         await this.ledgerEntryModel.create({
+            orgId,
             journalId,
             accountId: incomeAccount.id,
             debit: 0,
@@ -78,6 +80,7 @@ export class BillingService {
         // 1. Create Payment
         const payment = await this.paymentModel.create({
             ...recordPaymentDto,
+            orgId: recordPaymentDto.orgId,
             status: 'COMPLETED',
         } as any);
 
@@ -216,9 +219,15 @@ export class BillingService {
     // ============ EXPENSE METHODS ============
 
     async createExpense(createExpenseDto: CreateExpenseDto): Promise<Expense> {
+        const orgId = OrganizationContext.getOrgId();
+        if (!orgId) {
+            throw new ForbiddenException('Organization context required to create expense');
+        }
+
         // 1. Create Expense
         const expense = await this.expenseModel.create({
             ...createExpenseDto,
+            orgId,
             date: createExpenseDto.date || new Date(),
         } as any);
 

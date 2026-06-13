@@ -1,13 +1,18 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const isCi = !!process.env.CI;
+
 export default defineConfig({
     testDir: './tests',
 
     // Test organization
     fullyParallel: true,
-    forbidOnly: !!process.env.CI,
-    retries: process.env.CI ? 2 : 0,
-    workers: process.env.CI ? 4 : undefined,
+    forbidOnly: isCi,
+    retries: isCi ? 2 : 0,
+    workers: isCi ? 4 : undefined,
+
+    // Fail fast in CI instead of running until the 6h GitHub job limit
+    globalTimeout: isCi ? 8 * 60 * 1000 : undefined,
 
     // Reporting
     reporter: [
@@ -23,12 +28,13 @@ export default defineConfig({
         timeout: 5000
     },
 
-    // Base URL for API tests
+    // API request timeout (prevents hung connections when services are down)
     use: {
         baseURL: 'http://localhost:3000',
         trace: 'retain-on-failure',
         screenshot: 'only-on-failure',
         video: 'retain-on-failure',
+        actionTimeout: isCi ? 10_000 : undefined,
     },
 
     // Projects for different test types
@@ -42,7 +48,7 @@ export default defineConfig({
         {
             name: 'api-tenant',
             testDir: './tests/api/tenant',
-            use: { baseURL: 'http://localhost:3002' },
+            use: { baseURL: 'http://localhost:3005' },
         },
         {
             name: 'api-property',

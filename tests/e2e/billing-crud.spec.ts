@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { AuthHelper } from '../helpers/auth.helper';
+import { IDENTITY_SERVICE_URL } from '../helpers/test-env';
 import { randomUUID } from 'crypto';
 
 const WEB_URL = process.env.WEB_URL || 'http://localhost:3000';
@@ -13,7 +14,7 @@ test.describe('Billing CRUD E2E', () => {
     let landlordData: any;
 
     test.beforeAll(async ({ request }) => {
-        authHelper = new AuthHelper('http://localhost:4000');
+        authHelper = new AuthHelper(IDENTITY_SERVICE_URL);
         landlordData = {
             email: `landlord-billing-${Date.now()}@example.com`,
             password: 'Password123!',
