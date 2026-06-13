@@ -1,7 +1,15 @@
-import { Controller, Get, Post, Body, Param, Query, Patch, Delete, NotFoundException, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Patch, Delete, UseGuards, Req } from '@nestjs/common';
 import { LeaseService } from './lease.service';
 import { CreateLeaseDto } from './dto/create-lease.dto';
 import { JwtAuthGuard, RequireOrgGuard, OrgId } from '@rentease/auth';
+import { Request } from 'express';
+
+interface AuthenticatedRequest extends Request {
+    user: {
+        id: string;
+        orgId?: string;
+    };
+}
 
 @Controller('leases')
 @UseGuards(JwtAuthGuard, RequireOrgGuard)
@@ -11,6 +19,16 @@ export class LeaseController {
     @Post()
     create(@Body() createLeaseDto: CreateLeaseDto) {
         return this.leaseService.create(createLeaseDto);
+    }
+
+    @Get('me')
+    findMine(@OrgId() orgId: string, @Req() req: AuthenticatedRequest) {
+        return this.leaseService.findByUserId(req.user.id, orgId);
+    }
+
+    @Get('occupants')
+    findOccupants(@OrgId() orgId: string) {
+        return this.leaseService.findAllOccupants(orgId);
     }
 
     @Get()

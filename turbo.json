@@ -29,6 +29,10 @@
         "test:watch": {
             "cache": false,
             "persistent": true
+        },
+        "migrate": {
+            "dependsOn": [],
+            "cache": false
         }
     }
 }

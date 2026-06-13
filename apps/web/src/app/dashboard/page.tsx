@@ -15,6 +15,7 @@ export default function DashboardPage() {
         properties: 0,
         tenants: 0,
         revenue: 0,
+        occupancy: 0,
     })
     const [isLoading, setIsLoading] = useState(true)
 
@@ -30,20 +31,27 @@ export default function DashboardPage() {
 
     async function fetchStats() {
         try {
-            // Fetch actual data
-            const [properties, invoices] = await Promise.all([
+            const [properties, invoices, occupants, leases] = await Promise.all([
                 api.get('/properties'),
                 api.get('/invoices'),
+                api.get('/leases/occupants'),
+                api.get('/leases'),
             ])
             
             const totalRevenue = invoices
-                .filter((inv: any) => inv.status === 'PAID')
-                .reduce((sum: number, inv: any) => sum + Number(inv.amount), 0)
+                .filter((inv: { status: string }) => inv.status === 'PAID')
+                .reduce((sum: number, inv: { amount: number }) => sum + Number(inv.amount), 0)
+
+            const activeLeases = leases.filter((lease: { status: string }) => lease.status === 'ACTIVE').length
+            const occupancy = properties.length > 0
+                ? Math.round((activeLeases / properties.length) * 100)
+                : 0
 
             setStats({
                 properties: properties.length,
-                tenants: 0, // TODO: Fetch actual tenants count
+                tenants: occupants.length,
                 revenue: totalRevenue,
+                occupancy,
             })
         } catch (err) {
             console.error("Error fetching stats:", err)
@@ -140,7 +148,7 @@ export default function DashboardPage() {
                         <Activity className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">0%</div>
+                        <div className="text-2xl font-bold">{stats.occupancy}%</div>
                         <p className="text-xs text-muted-foreground">
                             Units occupied
                         </p>

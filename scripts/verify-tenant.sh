@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE_URL="http://localhost:3002"
+BASE_URL="http://localhost:3005"
 IDENTITY_URL="http://localhost:3001"
 
 # 1. Register a user in Identity Service to get a token

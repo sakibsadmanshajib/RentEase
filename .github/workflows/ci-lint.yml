@@ -40,8 +40,6 @@ jobs:
 
       - name: Run ESLint
         run: pnpm turbo lint
-        continue-on-error: true
 
       - name: Run Prettier check
         run: pnpm prettier --check "**/*.{ts,tsx,json,md}"
-        continue-on-error: true

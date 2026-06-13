@@ -6,6 +6,14 @@ on:
   pull_request:
     branches: [master, develop]
 
+env:
+  DB_HOST: localhost
+  DB_PORT: 5432
+  DB_USERNAME: postgres
+  DB_PASSWORD: postgres
+  DB_DATABASE: rentease_test
+  JWT_SECRET: test-jwt-secret-for-ci
+
 jobs:
   integration-tests:
     runs-on: ubuntu-latest
@@ -28,11 +36,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service:
-          - identity
-          - organization
-          - property
-          - billing
+        include:
+          - service: identity
+            project: api-identity
+          - service: organization
+            project: api-organization
+          - service: property
+            project: api-property
+          - service: billing
+            project: api-billing
 
     steps:
       - name: Checkout code
@@ -71,20 +83,20 @@ jobs:
       - name: Build service
         run: pnpm --filter ${{ matrix.service }}-service build
 
+      - name: Run migrations
+        run: pnpm --filter ${{ matrix.service }}-service migrate
+
       - name: Start service
         run: |
           pnpm --filter ${{ matrix.service }}-service dev > service.log 2>&1 &
           echo "Waiting for service to start..."
           sleep 15
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rentease_test
 
       - name: Install Playwright
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Run Playwright API tests
-        run: pnpm playwright test --project=api-${{ matrix.service }}
-        continue-on-error: true
+        run: pnpm playwright test --project=${{ matrix.project }}
 
       - name: Upload test results
         if: always()

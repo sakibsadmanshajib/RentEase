@@ -3,18 +3,19 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Request } from 'express';
+import { buildAuthHeaders } from './proxy.util';
+
+const ORGANIZATION_SERVICE_URL = process.env.ORGANIZATION_SERVICE_URL || 'http://127.0.0.1:3005';
 
 @Controller('tenants')
 export class TenantController {
-    private readonly TENANT_SERVICE_URL = 'http://127.0.0.1:3005/tenants';
-
     constructor(private readonly httpService: HttpService) { }
 
     @Post()
-    async create(@Body() body: any, @Req() req: Request) {
+    async create(@Body() body: Record<string, unknown>, @Req() req: Request) {
         const response = await firstValueFrom(
-            this.httpService.post(this.TENANT_SERVICE_URL, body, {
-                headers: { Authorization: req.headers.authorization }
+            this.httpService.post(`${ORGANIZATION_SERVICE_URL}/tenants`, body, {
+                headers: buildAuthHeaders(req),
             }).pipe(
                 catchError((error) => {
                     throw new HttpException(
@@ -30,8 +31,8 @@ export class TenantController {
     @Get()
     async findAll(@Req() req: Request) {
         const response = await firstValueFrom(
-            this.httpService.get(this.TENANT_SERVICE_URL, {
-                headers: { Authorization: req.headers.authorization }
+            this.httpService.get(`${ORGANIZATION_SERVICE_URL}/tenants`, {
+                headers: buildAuthHeaders(req),
             }).pipe(
                 catchError((error) => {
                     throw new HttpException(
@@ -44,11 +45,79 @@ export class TenantController {
         return response.data;
     }
 
+    @Post('invitations/:token/accept')
+    async acceptInvitation(@Param('token') token: string, @Req() req: Request) {
+        const response = await firstValueFrom(
+            this.httpService.post(`${ORGANIZATION_SERVICE_URL}/tenants/invitations/${token}/accept`, {}, {
+                headers: buildAuthHeaders(req),
+            }).pipe(
+                catchError((error) => {
+                    throw new HttpException(
+                        error.response?.data || 'Failed to accept invitation',
+                        error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+                    );
+                }),
+            ),
+        );
+        return response.data;
+    }
+
+    @Post(':id/invitations')
+    async createInvitation(@Param('id') id: string, @Body() body: Record<string, unknown>, @Req() req: Request) {
+        const response = await firstValueFrom(
+            this.httpService.post(`${ORGANIZATION_SERVICE_URL}/tenants/${id}/invitations`, body, {
+                headers: buildAuthHeaders(req),
+            }).pipe(
+                catchError((error) => {
+                    throw new HttpException(
+                        error.response?.data || 'Failed to create invitation',
+                        error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+                    );
+                }),
+            ),
+        );
+        return response.data;
+    }
+
+    @Post(':id/suspend')
+    async suspend(@Param('id') id: string, @Req() req: Request) {
+        const response = await firstValueFrom(
+            this.httpService.post(`${ORGANIZATION_SERVICE_URL}/tenants/${id}/suspend`, {}, {
+                headers: buildAuthHeaders(req),
+            }).pipe(
+                catchError((error) => {
+                    throw new HttpException(
+                        error.response?.data || 'Failed to suspend tenant',
+                        error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+                    );
+                }),
+            ),
+        );
+        return response.data;
+    }
+
+    @Post(':id/activate')
+    async activate(@Param('id') id: string, @Req() req: Request) {
+        const response = await firstValueFrom(
+            this.httpService.post(`${ORGANIZATION_SERVICE_URL}/tenants/${id}/activate`, {}, {
+                headers: buildAuthHeaders(req),
+            }).pipe(
+                catchError((error) => {
+                    throw new HttpException(
+                        error.response?.data || 'Failed to activate tenant',
+                        error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+                    );
+                }),
+            ),
+        );
+        return response.data;
+    }
+
     @Get(':id')
     async findOne(@Param('id') id: string, @Req() req: Request) {
         const response = await firstValueFrom(
-            this.httpService.get(`${this.TENANT_SERVICE_URL}/${id}`, {
-                headers: { Authorization: req.headers.authorization }
+            this.httpService.get(`${ORGANIZATION_SERVICE_URL}/tenants/${id}`, {
+                headers: buildAuthHeaders(req),
             }).pipe(
                 catchError((error) => {
                     throw new HttpException(
@@ -62,10 +131,10 @@ export class TenantController {
     }
 
     @Patch(':id')
-    async update(@Param('id') id: string, @Body() body: any, @Req() req: Request) {
+    async update(@Param('id') id: string, @Body() body: Record<string, unknown>, @Req() req: Request) {
         const response = await firstValueFrom(
-            this.httpService.patch(`${this.TENANT_SERVICE_URL}/${id}`, body, {
-                headers: { Authorization: req.headers.authorization }
+            this.httpService.patch(`${ORGANIZATION_SERVICE_URL}/tenants/${id}`, body, {
+                headers: buildAuthHeaders(req),
             }).pipe(
                 catchError((error) => {
                     throw new HttpException(
@@ -81,8 +150,8 @@ export class TenantController {
     @Delete(':id')
     async remove(@Param('id') id: string, @Req() req: Request) {
         const response = await firstValueFrom(
-            this.httpService.delete(`${this.TENANT_SERVICE_URL}/${id}`, {
-                headers: { Authorization: req.headers.authorization }
+            this.httpService.delete(`${ORGANIZATION_SERVICE_URL}/tenants/${id}`, {
+                headers: buildAuthHeaders(req),
             }).pipe(
                 catchError((error) => {
                     throw new HttpException(

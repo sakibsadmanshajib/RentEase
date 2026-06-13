@@ -1,13 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { api } from "@/lib/api"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Users, Plus, Mail, Phone } from "lucide-react"
+import { Users, Plus } from "lucide-react"
 import {
     Dialog,
     DialogContent,
@@ -17,208 +18,131 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
+import { useOrg } from "@/contexts/org-context"
 
-interface Tenant {
+interface Occupant {
     id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
+    userId: string;
+    leaseId: string;
+    lease?: {
+        id: string;
+        status: string;
+        rentAmount: number;
+    };
 }
 
-// Tenants Page - Landlord view for managing tenants
 export default function TenantsPage() {
-    const [tenants, setTenants] = useState<Tenant[]>([])
+    const { hasOrg, isLoading: orgLoading } = useOrg()
+    const router = useRouter()
+    const [occupants, setOccupants] = useState<Occupant[]>([])
+    const [leases, setLeases] = useState<Array<{ id: string; status: string }>>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState("")
     const [isDialogOpen, setIsDialogOpen] = useState(false)
-    const [newTenant, setNewTenant] = useState({ firstName: "", lastName: "", email: "", phone: "" })
-    const [editingTenant, setEditingTenant] = useState<Tenant | null>(null)
+    const [newOccupant, setNewOccupant] = useState({ leaseId: "", userId: "" })
 
     useEffect(() => {
-        fetchTenants()
-    }, [])
+        if (!orgLoading && !hasOrg) {
+            router.push("/dashboard/onboarding")
+            return
+        }
+        if (hasOrg) {
+            fetchOccupants()
+            fetchLeases()
+        }
+    }, [hasOrg, orgLoading, router])
 
-    async function fetchTenants() {
+    async function fetchOccupants() {
         try {
-            const data = await api.get(`/tenants`)
-            const mappedTenants = data.map((t: any) => {
-                const nameParts = t.name ? t.name.split(' ') : ['', ''];
-                return {
-                    id: t.id,
-                    firstName: nameParts[0] || '',
-                    lastName: nameParts.slice(1).join(' ') || '',
-                    email: t.contactEmail || '',
-                    phone: t.contactPhone || ''
-                };
-            });
-            setTenants(mappedTenants)
-        } catch (err: any) {
-            console.error('Fetch error:', err);
-            setError(err.message)
+            const data = await api.get("/leases/occupants")
+            setOccupants(data)
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to load occupants")
         } finally {
             setIsLoading(false)
         }
     }
 
-    async function handleCreateTenant(e: React.FormEvent) {
+    async function fetchLeases() {
+        try {
+            const data = await api.get("/leases")
+            setLeases(data)
+        } catch (err: unknown) {
+            console.error("Failed to load leases", err)
+        }
+    }
+
+    async function handleAddOccupant(e: React.FormEvent) {
         e.preventDefault()
         try {
-            await api.post('/tenants', {
-                name: `${newTenant.firstName} ${newTenant.lastName}`.trim(),
-                contactEmail: newTenant.email,
-                contactPhone: newTenant.phone
+            await api.post(`/leases/${newOccupant.leaseId}/occupants`, {
+                userId: newOccupant.userId,
             })
             setIsDialogOpen(false)
-            setNewTenant({ firstName: "", lastName: "", email: "", phone: "" })
-            fetchTenants()
-        } catch (err: any) {
-            setError(err.message)
+            setNewOccupant({ leaseId: "", userId: "" })
+            fetchOccupants()
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to add occupant")
         }
     }
 
-    async function handleUpdateTenant(e: React.FormEvent) {
-        e.preventDefault()
-        if (!editingTenant) return
-        try {
-            await api.patch(`/tenants/${editingTenant.id}`, {
-                name: `${editingTenant.firstName} ${editingTenant.lastName}`.trim(),
-                contactEmail: editingTenant.email,
-                contactPhone: editingTenant.phone
-            })
-            setEditingTenant(null)
-            fetchTenants()
-        } catch (err: any) {
-            setError(err.message)
-        }
-    }
-
-    async function handleDeleteTenant(id: string) {
-        if (!confirm("Are you sure you want to delete this tenant?")) return
-        try {
-            await api.delete(`/tenants/${id}`)
-            fetchTenants()
-        } catch (err: any) {
-            setError(err.message)
-        }
+    if (orgLoading || !hasOrg) {
+        return <div className="text-muted-foreground">Loading...</div>
     }
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight">Tenants</h2>
+                <div>
+                    <h2 className="text-2xl font-semibold tracking-tight">Tenants</h2>
+                    <p className="text-sm text-muted-foreground">Lease occupants linked to identity user accounts.</p>
+                </div>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                         <Button>
                             <Plus className="mr-2 h-4 w-4" />
-                            Add Tenant
+                            Add Occupant
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Add New Tenant</DialogTitle>
+                            <DialogTitle>Add Lease Occupant</DialogTitle>
                             <DialogDescription>
-                                Enter the details of the new tenant.
+                                Link a registered user to a lease by user ID.
                             </DialogDescription>
                         </DialogHeader>
-                        <form onSubmit={handleCreateTenant}>
+                        <form onSubmit={handleAddOccupant}>
                             <div className="grid gap-4 py-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="firstName">First Name</Label>
-                                        <Input
-                                            id="firstName"
-                                            value={newTenant.firstName}
-                                            onChange={(e) => setNewTenant({ ...newTenant, firstName: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="lastName">Last Name</Label>
-                                        <Input
-                                            id="lastName"
-                                            value={newTenant.lastName}
-                                            onChange={(e) => setNewTenant({ ...newTenant, lastName: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="email">Email</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        value={newTenant.email}
-                                        onChange={(e) => setNewTenant({ ...newTenant, email: e.target.value })}
+                                    <Label htmlFor="leaseId">Lease</Label>
+                                    <select
+                                        id="leaseId"
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        value={newOccupant.leaseId}
+                                        onChange={(e) => setNewOccupant({ ...newOccupant, leaseId: e.target.value })}
                                         required
-                                    />
+                                    >
+                                        <option value="">Select a lease</option>
+                                        {leases.map((lease) => (
+                                            <option key={lease.id} value={lease.id}>
+                                                Lease #{lease.id.slice(0, 8)} ({lease.status})
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="phone">Phone</Label>
+                                    <Label htmlFor="userId">User ID</Label>
                                     <Input
-                                        id="phone"
-                                        value={newTenant.phone}
-                                        onChange={(e) => setNewTenant({ ...newTenant, phone: e.target.value })}
+                                        id="userId"
+                                        value={newOccupant.userId}
+                                        onChange={(e) => setNewOccupant({ ...newOccupant, userId: e.target.value })}
+                                        placeholder="Identity service user UUID"
                                         required
                                     />
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button type="submit">Create Tenant</Button>
-                            </DialogFooter>
-                        </form>
-                    </DialogContent>
-                </Dialog>
-
-                <Dialog open={!!editingTenant} onOpenChange={(open) => !open && setEditingTenant(null)}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Edit Tenant</DialogTitle>
-                        </DialogHeader>
-                        <form onSubmit={handleUpdateTenant}>
-                            <div className="grid gap-4 py-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="edit-firstName">First Name</Label>
-                                        <Input
-                                            id="edit-firstName"
-                                            value={editingTenant?.firstName || ""}
-                                            onChange={(e) => setEditingTenant(prev => prev ? { ...prev, firstName: e.target.value } : null)}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="edit-lastName">Last Name</Label>
-                                        <Input
-                                            id="edit-lastName"
-                                            value={editingTenant?.lastName || ""}
-                                            onChange={(e) => setEditingTenant(prev => prev ? { ...prev, lastName: e.target.value } : null)}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="edit-email">Email</Label>
-                                    <Input
-                                        id="edit-email"
-                                        type="email"
-                                        value={editingTenant?.email || ""}
-                                        onChange={(e) => setEditingTenant(prev => prev ? { ...prev, email: e.target.value } : null)}
-                                        required
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="edit-phone">Phone</Label>
-                                    <Input
-                                        id="edit-phone"
-                                        value={editingTenant?.phone || ""}
-                                        onChange={(e) => setEditingTenant(prev => prev ? { ...prev, phone: e.target.value } : null)}
-                                        required
-                                    />
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <Button type="submit">Update Tenant</Button>
+                                <Button type="submit">Add Occupant</Button>
                             </DialogFooter>
                         </form>
                     </DialogContent>
@@ -233,36 +157,28 @@ export default function TenantsPage() {
 
             {isLoading ? (
                 <div>Loading tenants...</div>
-            ) : tenants.length === 0 ? (
+            ) : occupants.length === 0 ? (
                 <Card>
                     <CardContent className="pt-6">
-                        <p className="text-muted-foreground">No tenants found.</p>
+                        <p className="text-muted-foreground">No lease occupants found. Add occupants from active leases.</p>
                     </CardContent>
                 </Card>
             ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {tenants.map((tenant) => (
-                        <Card key={tenant.id}>
+                    {occupants.map((occupant) => (
+                        <Card key={occupant.id}>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">
-                                    {tenant.firstName} {tenant.lastName}
+                                    User {occupant.userId.slice(0, 8)}
                                 </CardTitle>
                                 <Users className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="space-y-2 mt-2">
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Mail className="h-4 w-4" />
-                                        <span>{tenant.email}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Phone className="h-4 w-4" />
-                                        <span>{tenant.phone}</span>
-                                    </div>
-                                </div>
-                                <div className="flex gap-2 mt-4">
-                                    <Button variant="outline" size="sm" onClick={() => setEditingTenant(tenant)}>Edit</Button>
-                                    <Button variant="destructive" size="sm" onClick={() => handleDeleteTenant(tenant.id)}>Delete</Button>
+                                <div className="space-y-2 text-sm text-muted-foreground">
+                                    <p>Lease: #{occupant.leaseId.slice(0, 8)}</p>
+                                    {occupant.lease && (
+                                        <p>Status: {occupant.lease.status} · ${occupant.lease.rentAmount}/mo</p>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>

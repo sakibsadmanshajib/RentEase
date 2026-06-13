@@ -22,6 +22,13 @@
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.12.1",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "bcrypt",
+      "@nestjs/core",
+      "sharp"
+    ]
+  },
   "engines": {
     "node": ">=24.0.0"
   },
