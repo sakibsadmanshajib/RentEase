@@ -87,8 +87,12 @@ jobs:
         run: pnpm --filter "${{ matrix.filter }}" build
 
       - name: Run database migrations
-        run: pnpm --filter "${{ matrix.filter }}" migrate
-        continue-on-error: true
+        run: |
+          pnpm --filter identity-service migrate
+          pnpm --filter "@rentease/organization-service" migrate
+          pnpm --filter property-service migrate
+          pnpm --filter billing-service migrate
+        continue-on-error: false
 
       - name: Start test stack
         run: bash scripts/ci/start-test-stack.sh "${{ matrix.service }}"

@@ -1,24 +1,30 @@
 export const up = async ({ context: sequelize }: { context: { getQueryInterface: () => import('sequelize').QueryInterface } }) => {
     const queryInterface = sequelize.getQueryInterface();
-    const tables = await queryInterface.showAllTables();
+    let tables = await queryInterface.showAllTables();
     const hasOldTable = tables.some((table) => table === 'UserTenantMemberships' || table.endsWith('.UserTenantMemberships'));
     const hasNewTable = tables.some((table) => table === 'UserOrganizationMemberships' || table.endsWith('.UserOrganizationMemberships'));
 
     if (hasOldTable && !hasNewTable) {
         await queryInterface.renameTable('UserTenantMemberships', 'UserOrganizationMemberships');
+        tables = await queryInterface.showAllTables();
     }
 
-    const targetTable = hasNewTable || (!hasOldTable && !hasNewTable)
-        ? 'UserOrganizationMemberships'
-        : 'UserTenantMemberships';
+    const membershipTable = tables.find(
+        (table) =>
+            table === 'UserOrganizationMemberships' ||
+            table.endsWith('.UserOrganizationMemberships') ||
+            table === 'UserTenantMemberships' ||
+            table.endsWith('.UserTenantMemberships'),
+    );
 
-    if (!tables.some((table) => table === targetTable || table.endsWith(`.${targetTable}`))) {
+    if (!membershipTable) {
         return;
     }
 
-    const tableDescription = await queryInterface.describeTable(targetTable);
+    const tableName = membershipTable.includes('.') ? membershipTable.split('.').pop()! : membershipTable;
+    const tableDescription = await queryInterface.describeTable(tableName);
     if ('tenantId' in tableDescription && !('orgId' in tableDescription)) {
-        await queryInterface.renameColumn(targetTable, 'tenantId', 'orgId');
+        await queryInterface.renameColumn(tableName, 'tenantId', 'orgId');
     }
 };
 
